@@ -394,7 +394,8 @@ auto FireworksStarType::GetRandomizedSetupParams(const float defaultPathLength) 
   setupParams.gravity =
       INITIAL_GRAVITY_FACTOR * GetGoomRand().GetRandInRange(GetMinGravity(), GetMaxGravity());
 
-  setupParams.starTAgeInc = GetTAgeInc();
+  static constexpr auto T_AGE_INC_FACTOR = 1.5F;
+  setupParams.starTAgeInc                = T_AGE_INC_FACTOR * GetTAgeInc();
 
   return setupParams;
 }
@@ -424,7 +425,8 @@ auto RainStarType::GetRandomizedSetupParams(const float defaultPathLength) const
   setupParams.gravity =
       INITIAL_GRAVITY_FACTOR * GetGoomRand().GetRandInRange(GetMinGravity(), GetMaxGravity());
 
-  setupParams.starTAgeInc = GetTAgeInc();
+  static constexpr auto T_AGE_INC_FACTOR = 2.0F;
+  setupParams.starTAgeInc                = T_AGE_INC_FACTOR * GetTAgeInc();
 
   return setupParams;
 }
@@ -454,7 +456,8 @@ auto FountainStarType::GetRandomizedSetupParams(const float defaultPathLength) c
   setupParams.gravity =
       INITIAL_GRAVITY_FACTOR * GetGoomRand().GetRandInRange(GetMinGravity(), GetMaxGravity());
 
-  setupParams.starTAgeInc = GetTAgeInc();
+  static constexpr auto T_AGE_INC_FACTOR = 1.0F;
+  setupParams.starTAgeInc                = T_AGE_INC_FACTOR * GetTAgeInc();
 
   return setupParams;
 }

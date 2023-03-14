@@ -66,10 +66,10 @@ inline auto StarColors::GetFinalMixedColors(const MixedColorsParams& mixedColors
     return {mixedMainColor, mixedLowColor};
   }
 
-  static constexpr auto T_MAIN_LOW_MIX = 0.4F;
+  static constexpr auto MAIN_LOW_MIX_T = 0.4F;
   const auto remixedLowColor =
       GetColorCorrection(mixedColorsParams.brightness,
-                         IColorMap::GetColorMix(mixedMainColor, mixedLowColor, T_MAIN_LOW_MIX));
+                         IColorMap::GetColorMix(mixedMainColor, mixedLowColor, MAIN_LOW_MIX_T));
 
   return {mixedMainColor, remixedLowColor};
 }
