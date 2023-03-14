@@ -21,7 +21,9 @@ public:
   auto SetVerticalMoveNumSteps(uint32_t numSteps) noexcept -> void;
   auto SetYScaleNumSteps(uint32_t numSteps) noexcept -> void;
   auto SetRotateDegreesAdjustNumSteps(uint32_t numSteps) noexcept -> void;
+  auto SetSpinDegreesAdjustNumSteps(uint32_t numSteps) noexcept -> void;
   auto ReverseRotateDirection() noexcept -> void;
+  auto ReverseSpinDirection() noexcept -> void;
   auto SetTranslateAdjust(const Vec2dFlt& translateAdjust) noexcept -> void;
 
   auto UpdateCurrentTransformArray() noexcept -> void;
@@ -49,6 +51,8 @@ private:
     // This is the order the transform operations should occur in.
     float xScale{};
     float yScale{};
+    float sinSpinAngle{};
+    float cosSpinAngle{};
     float verticalMove{};
     float sinRotateAngle{};
     float cosRotateAngle{};
@@ -56,9 +60,9 @@ private:
   };
   std::vector<TransformAdjust> m_transformAdjustArray{};
   [[nodiscard]] auto GetTransformAdjustArray() const noexcept -> std::vector<TransformAdjust>;
-  Vec2dFlt m_translateAdjust{};
-  float m_rotateSign = +1.0F;
   std::vector<TransformLSys> m_currentTransformArray{};
+
+  Vec2dFlt m_translateAdjust{};
 
   static constexpr auto DEFAULT_NUM_ROTATE_DEGREES_STEPS = 100U;
   UTILS::IncrementedValue<float> m_rotateDegreesAdjust{
@@ -66,6 +70,14 @@ private:
       UTILS::MATH::DEGREES_360,
       UTILS::TValue::StepType::CONTINUOUS_REVERSIBLE,
       DEFAULT_NUM_ROTATE_DEGREES_STEPS};
+  float m_rotateSign = +1.0F;
+
+  static constexpr auto DEFAULT_NUM_SPIN_DEGREES_STEPS = 100U;
+  UTILS::IncrementedValue<float> m_spinDegreesAdjust{0.0F,
+                                                     UTILS::MATH::DEGREES_360,
+                                                     UTILS::TValue::StepType::CONTINUOUS_REVERSIBLE,
+                                                     DEFAULT_NUM_SPIN_DEGREES_STEPS};
+  float m_spinSign = -1.0F;
 
   static constexpr auto MIN_Y_SCALE_ADJUST           = 1.0F;
   static constexpr auto MAX_Y_SCALE_ADJUST           = 1.9F;
@@ -89,6 +101,11 @@ inline auto LSysGeometry::ReverseRotateDirection() noexcept -> void
   m_rotateSign = -m_rotateSign;
 }
 
+inline auto LSysGeometry::ReverseSpinDirection() noexcept -> void
+{
+  m_spinSign = -m_spinSign;
+}
+
 inline auto LSysGeometry::SetTranslateAdjust(const Vec2dFlt& translateAdjust) noexcept -> void
 {
   m_translateAdjust = translateAdjust;
@@ -103,6 +120,11 @@ inline auto LSysGeometry::SetVerticalMoveMaxMin(const float verticalMoveMin,
 inline auto LSysGeometry::SetRotateDegreesAdjustNumSteps(const uint32_t numSteps) noexcept -> void
 {
   m_rotateDegreesAdjust.SetNumSteps(numSteps);
+}
+
+inline auto LSysGeometry::SetSpinDegreesAdjustNumSteps(const uint32_t numSteps) noexcept -> void
+{
+  m_spinDegreesAdjust.SetNumSteps(numSteps);
 }
 
 inline auto LSysGeometry::SetVerticalMoveNumSteps(uint32_t numSteps) noexcept -> void

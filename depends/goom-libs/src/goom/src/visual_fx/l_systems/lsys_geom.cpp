@@ -21,6 +21,7 @@ LSysGeometry::LSysGeometry(const UTILS::MATH::IGoomRand& goomRand,
 auto LSysGeometry::IncrementTs() noexcept -> void
 {
   m_rotateDegreesAdjust.Increment();
+  m_spinDegreesAdjust.Increment();
   m_yScaleAdjust.Increment();
   m_verticalMove.Increment();
 }
@@ -65,6 +66,7 @@ auto LSysGeometry::UpdateCurrentTransformArray() noexcept -> void
   {
     const auto rotateRadians = m_rotateSign * ToRadians(m_transformAdjustArray.at(i).rotateDegrees +
                                                         m_rotateDegreesAdjust());
+    const auto spinRadians   = m_spinSign * ToRadians(m_spinDegreesAdjust());
 
     auto& currentTransform = m_currentTransformArray.at(i);
 
@@ -73,6 +75,8 @@ auto LSysGeometry::UpdateCurrentTransformArray() noexcept -> void
     currentTransform.verticalMove   = m_verticalMove();
     currentTransform.sinRotateAngle = std::sin(rotateRadians);
     currentTransform.cosRotateAngle = std::cos(rotateRadians);
+    currentTransform.sinSpinAngle   = std::sin(spinRadians);
+    currentTransform.cosSpinAngle   = std::cos(spinRadians);
     currentTransform.translate      = m_transformAdjustArray.at(i).translate + m_translateAdjust;
   }
 }
@@ -86,6 +90,9 @@ auto LSysGeometry::GetTransformedPoint(const Point2dFlt& point,
   transformedPoint = Scale(transformedPoint,
                            m_currentTransformArray.at(copyNum).xScale,
                            m_currentTransformArray.at(copyNum).yScale);
+  transformedPoint = Rotate(transformedPoint,
+                            m_currentTransformArray.at(copyNum).sinSpinAngle,
+                            m_currentTransformArray.at(copyNum).cosSpinAngle);
   transformedPoint = TranslateY(transformedPoint, m_currentTransformArray.at(copyNum).verticalMove);
   transformedPoint = Rotate(transformedPoint,
                             m_currentTransformArray.at(copyNum).sinRotateAngle,

@@ -35,7 +35,7 @@ private:
 
   using LineDrawerWithMovingNoiseEffect = DRAW::SHAPE_DRAWERS::LineDrawerWithMovingNoiseEffect;
 
-  static constexpr MinMaxValues<uint8_t> MIN_MAX_MOVING_NOISE_RADIUS{3U, 10U};
+  static constexpr MinMaxValues<uint8_t> MIN_MAX_MOVING_NOISE_RADIUS{3U, 6U};
   static constexpr auto NUM_MOVING_NOISE_RADIUS_STEPS = 10000U;
   static constexpr MinMaxValues<uint8_t> MIN_MAX_NUM_MOVING_NOISE_PIXELS{3U, 5U};
   static constexpr auto NUM_NUM_MOVING_NOISE_PIXEL_STEPS = 10000U;

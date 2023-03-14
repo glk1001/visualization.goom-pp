@@ -42,10 +42,10 @@ using UTILS::MATH::IGoomRand;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::LINES_ONLY;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::LINES_STARS;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::LINES_TENTACLES;
-//static constexpr auto FORCED_GOOM_STATE = GoomStates::L_SYSTEM_ONLY;
+static constexpr auto FORCED_GOOM_STATE = GoomStates::L_SYSTEM_ONLY;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::SHAPES_ONLY;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::SHAPES_STARS_LINES;
-static constexpr auto FORCED_GOOM_STATE = GoomStates::STARS_ONLY;
+//static constexpr auto FORCED_GOOM_STATE = GoomStates::STARS_ONLY;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::TENTACLES_ONLY;
 //static constexpr auto FORCED_GOOM_STATE = GoomStates::TUBES_ONLY;
 

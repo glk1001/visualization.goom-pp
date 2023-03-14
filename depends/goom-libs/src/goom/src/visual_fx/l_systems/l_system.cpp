@@ -210,6 +210,11 @@ auto LSystem::GetLSysModelSet(const PluginInfo& goomInfo,
 
 auto LSystem::UpdateLSysModel() noexcept -> void
 {
+  if (not m_lSysInterpreter->AllDone())
+  {
+    return;
+  }
+
   //LogInfo("Update L-System model.");
 
   if (static constexpr auto PROB_NEW_LSYS_INTERPRETER = 0.5F;
@@ -249,6 +254,9 @@ auto LSystem::InitNextLSysInterpreter() -> void
   m_lSysGeometry.SetRotateDegreesAdjustNumSteps(
       m_goomRand->GetRandInRange(m_lSysModelSet.lSysOverrides.minNumRotateDegreeSteps,
                                  m_lSysModelSet.lSysOverrides.maxNumRotateDegreeSteps + 1));
+  m_lSysGeometry.SetSpinDegreesAdjustNumSteps(
+      m_goomRand->GetRandInRange(m_lSysModelSet.lSysOverrides.minNumSpinDegreeSteps,
+                                 m_lSysModelSet.lSysOverrides.maxNumSpinDegreeSteps + 1));
 
   m_lSysPath.SetPathNumSteps(
       m_goomRand->GetRandInRange(MIN_PATH_NUM_STEPS, MAX_PATH_NUM_STEPS + 1U));
@@ -346,10 +354,15 @@ inline auto LSystem::ResetLSysParams() noexcept -> void
 {
   //LogInfo("Reset lsys params.");
 
-  if (static constexpr auto PROB_CHANGE_ROTATE_DIRECTION = 0.001F;
+  if (static constexpr auto PROB_CHANGE_ROTATE_DIRECTION = 0.00001F;
       m_goomRand->ProbabilityOf(PROB_CHANGE_ROTATE_DIRECTION))
   {
     m_lSysGeometry.ReverseRotateDirection();
+  }
+  if (static constexpr auto PROB_CHANGE_SPIN_DIRECTION = 0.00001F;
+      m_goomRand->ProbabilityOf(PROB_CHANGE_SPIN_DIRECTION))
+  {
+    m_lSysGeometry.ReverseSpinDirection();
   }
 
   UpdateInterpreterParams();
@@ -364,13 +377,13 @@ inline auto LSystem::ResetLSysParams() noexcept -> void
 inline auto LSystem::GetLSystemFilename(const std::string& lSystemDirectory,
                                         const LSystemFile& lSystemFile) noexcept -> std::string
 {
-  return lSystemDirectory + "/" + lSystemFile.filename + ".in";
+  return lSystemDirectory + PATH_SEP + lSystemFile.filename + ".in";
 }
 
 inline auto LSystem::GetBoundsFilename(const std::string& lSystemDirectory,
                                        const LSystemFile& lSystemFile) noexcept -> std::string
 {
-  return lSystemDirectory + "/" + lSystemFile.filename + ".bnds";
+  return lSystemDirectory + PATH_SEP + lSystemFile.filename + ".bnds";
 }
 
 inline auto LSystem::ResetModelNamedArgs() -> void
@@ -397,18 +410,48 @@ auto LSystem::DrawLSystem() noexcept -> void
 
 inline auto LSystem::DrawLSystemBatch() noexcept -> void
 {
-  const auto numModules = m_lSysModuleList->size();
-  for (auto i = 0U; i < numModules; ++i)
+  /**
+  //static constexpr auto NUM = 100U;
+  static auto n             = 1;
+  static auto subtract      = false;
+  static auto counter       = 0U;
+  const auto numModules     = n;
+  if (counter > 0)
   {
-    if (not m_lSysInterpreter->InterpretNext())
+    ++counter;
+    if (counter == 100U)
     {
-      //LogInfo("Unexpected finish to interpreting modules.");
-      FailFast();
+      counter = 0U;
     }
   }
-
-  Expects(not m_lSysInterpreter->InterpretNext());
-  //LogInfo("Finished interpreting all modules.");
+  else if (subtract)
+  {
+    n -= 10;
+    if (n <= 1)
+    {
+      n = 1;
+      subtract = false;
+    }
+  }
+  else
+  {
+    n += 10;
+    if (n >= static_cast<int32_t>(m_lSysModuleList->size()))
+    {
+      subtract = true;
+      counter  = 1U;
+    }
+  }
+  **/
+  const auto numModules = static_cast<int32_t>(m_lSysModuleList->size());
+  for (auto i = 0; i < numModules; ++i)
+  {
+    if (m_lSysInterpreter->AllDone())
+    {
+      break;
+    }
+    m_lSysInterpreter->InterpretNext();
+  }
 }
 
 inline auto LSystem::GetBoundingBox2d(const float expandBounds,

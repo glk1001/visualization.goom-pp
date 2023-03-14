@@ -43,6 +43,8 @@ public:
       float expandBounds;
       uint32_t minNumRotateDegreeSteps;
       uint32_t maxNumRotateDegreeSteps;
+      uint32_t minNumSpinDegreeSteps;
+      uint32_t maxNumSpinDegreeSteps;
       float xScale;
       float yScale;
       float verticalMoveMin;
@@ -155,7 +157,7 @@ private:
   UTILS::Timer m_timeForThisLSysInterpreter{TIME_TO_KEEP_INTERPRETER};
   auto UpdateLSysModel() noexcept -> void;
   auto InitNextLSysInterpreter() -> void;
-  static constexpr auto DEFAULT_NUM_INTERPRETER_PARAMS_STEPS = 50U;
+  static constexpr auto DEFAULT_NUM_INTERPRETER_PARAMS_STEPS = 100U;
   UTILS::IncrementedValue<::LSYS::Interpreter::DefaultParams> m_defaultInterpreterParams{
       UTILS::TValue::StepType::SINGLE_CYCLE, DEFAULT_NUM_INTERPRETER_PARAMS_STEPS};
   auto UpdateInterpreterParams() noexcept -> void;

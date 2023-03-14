@@ -57,6 +57,7 @@ private:
 
   [[nodiscard]] static auto GetLSystemFileList() noexcept -> std::vector<LSystem::LSystemFile>;
   static inline const std::vector<LSystem::LSystemFile> L_SYS_FILE_LIST = GetLSystemFileList();
+  static inline const auto NUM_L_SYSTEMS = static_cast<uint32_t>(L_SYS_FILE_LIST.size());
   std::vector<std::unique_ptr<LSystem>> m_lSystems;
   [[nodiscard]] static auto GetLSystems(IGoomDraw& draw,
                                         const PluginInfo& goomInfo,
@@ -75,6 +76,8 @@ private:
 
   static constexpr auto MIN_NUM_ROTATE_DEGREES_STEPS = 50U;
   static constexpr auto MAX_NUM_ROTATE_DEGREES_STEPS = 500U;
+  static constexpr auto MIN_NUM_SPIN_DEGREES_STEPS   = 50U;
+  static constexpr auto MAX_NUM_SPIN_DEGREES_STEPS   = 200U;
   static constexpr auto MAX_VERTICAL_MOVE            = +100.0F;
   static constexpr auto MIN_VERTICAL_MOVE            = -100.0F;
   auto InitNextActiveLSystems() noexcept -> void;
@@ -155,6 +158,8 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.expandBounds =*/DEFAULT_BOUNDS_EXPAND_FACTOR,
                            /*.minNumRotateDegreeSteps =*/MIN_NUM_ROTATE_DEGREES_STEPS,
                            /*.maxNumRotateDegreeSteps =*/MAX_NUM_ROTATE_DEGREES_STEPS,
+                           /*.minNumSpinDegreeSteps =*/MIN_NUM_SPIN_DEGREES_STEPS,
+                           /*.maxNumSpinDegreeSteps =*/MAX_NUM_SPIN_DEGREES_STEPS,
                            /*.xScale =*/1.0F,
                            /*.yScale =*/0.5F,
                            /*.verticalMoveMin =*/MIN_VERTICAL_MOVE,
@@ -166,7 +171,7 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.minDefaultTurnAngleInDegreesFactor =*/0.1F,
                            /*.maxDefaultTurnAngleInDegreesFactor =*/1.0F,
                            /*.probabilityOfSimpleColors =*/0.75F,
-                           /*.probabilityOfNoise =*/0.95F,
+                           /*.probabilityOfNoise =*/0.75F,
                            /*.namedArgs = */ {},
                            }},
       LSystem::LSystemFile{"bourke_pentaplexity",
@@ -179,6 +184,8 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.expandBounds =*/DEFAULT_BOUNDS_EXPAND_FACTOR,
                            /*.minNumRotateDegreeSteps =*/MIN_NUM_ROTATE_DEGREES_STEPS,
                            /*.maxNumRotateDegreeSteps =*/MAX_NUM_ROTATE_DEGREES_STEPS,
+                           /*.minNumSpinDegreeSteps =*/MIN_NUM_SPIN_DEGREES_STEPS,
+                           /*.maxNumSpinDegreeSteps =*/MAX_NUM_SPIN_DEGREES_STEPS,
                            /*.xScale =*/1.0F,
                            /*.yScale =*/1.0F,
                            /*.verticalMoveMin =*/MIN_VERTICAL_MOVE,
@@ -190,7 +197,7 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.minDefaultTurnAngleInDegreesFactor =*/1.0F,
                            /*.maxDefaultTurnAngleInDegreesFactor =*/1.00001F,
                            /*.probabilityOfSimpleColors =*/0.8F,
-                           /*.probabilityOfNoise =*/0.95F,
+                           /*.probabilityOfNoise =*/0.5F,
                            /*.namedArgs = */ {},
                            }},
       LSystem::LSystemFile{       "honda_tree_b",
@@ -203,6 +210,8 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.expandBounds =*/DEFAULT_BOUNDS_EXPAND_FACTOR,
                            /*.minNumRotateDegreeSteps =*/MIN_NUM_ROTATE_DEGREES_STEPS,
                            /*.maxNumRotateDegreeSteps =*/MAX_NUM_ROTATE_DEGREES_STEPS,
+                           /*.minNumSpinDegreeSteps =*/MIN_NUM_SPIN_DEGREES_STEPS,
+                           /*.maxNumSpinDegreeSteps =*/MAX_NUM_SPIN_DEGREES_STEPS,
                            /*.xScale =*/2.0F,
                            /*.yScale =*/1.0F,
                            /*.verticalMoveMin =*/MIN_VERTICAL_MOVE,
@@ -214,7 +223,7 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.minDefaultTurnAngleInDegreesFactor =*/1.0F,
                            /*.maxDefaultTurnAngleInDegreesFactor =*/1.01F,
                            /*.probabilityOfSimpleColors =*/0.8F,
-                           /*.probabilityOfNoise =*/0.95F,
+                           /*.probabilityOfNoise =*/0.75F,
                            /*.namedArgs = */
                            {
                            {"r2", 0.7F, 0.9F},
@@ -233,6 +242,8 @@ auto LSystemFx::LSystemFxImpl::GetLSystemFileList() noexcept -> std::vector<LSys
                            /*.expandBounds =*/DEFAULT_BOUNDS_EXPAND_FACTOR,
                            /*.minNumRotateDegreeSteps =*/MIN_NUM_ROTATE_DEGREES_STEPS,
                            /*.maxNumRotateDegreeSteps =*/MAX_NUM_ROTATE_DEGREES_STEPS,
+                           /*.minNumSpinDegreeSteps =*/MIN_NUM_SPIN_DEGREES_STEPS,
+                           /*.maxNumSpinDegreeSteps =*/MAX_NUM_SPIN_DEGREES_STEPS,
                            /*.xScale =*/0.8F,
                            /*.yScale =*/1.0F,
                            /*.verticalMoveMin =*/2.0F * MIN_VERTICAL_MOVE,
@@ -278,9 +289,8 @@ auto LSystemFx::LSystemFxImpl::InitNextActiveLSystems() noexcept -> void
   //LogInfo("Setting new active l-systems.");
 
   m_activeLSystems.clear();
-  const auto lSystemIndex =
-      m_goomRand->GetRandInRange(0U, static_cast<uint32_t>(L_SYS_FILE_LIST.size()));
-  //  const auto lSystemIndex = 2U;
+  const auto lSystemIndex = m_goomRand->GetRandInRange(0U, NUM_L_SYSTEMS);
+  //const auto lSystemIndex = 1U;
   // m_activeLSystems.push_back(m_lSystems.at(lSystemIndex).get());
   m_activeLSystems.push_back(m_lSystems.at(lSystemIndex).get());
   m_timeForTheseActiveLSys.SetTimeLimit(
