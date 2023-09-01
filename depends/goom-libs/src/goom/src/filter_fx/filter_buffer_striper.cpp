@@ -29,6 +29,20 @@ ZoomFilterBufferStriper::ZoomFilterBufferStriper(
 {
 }
 
+auto ZoomFilterBufferStriper::Start() noexcept -> void
+{
+  // Make sure the previous transform buffer is filled and valid and
+  // the current buffer is ready to be updated.
+  m_transformBufferYLineStart = 0;
+  DoNextStripe(m_dimensions.GetHeight());
+
+  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
+  std::swap(m_previousTransformBuffer, m_transformBuffer);
+
+  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
+  Ensures(0 == m_transformBufferYLineStart);
+}
+
 auto ZoomFilterBufferStriper::ResetTransformBufferToStart() noexcept -> void
 {
   m_transformBufferYLineStart = 0;
@@ -37,6 +51,27 @@ auto ZoomFilterBufferStriper::ResetTransformBufferToStart() noexcept -> void
 auto ZoomFilterBufferStriper::ResetTransformBufferIsReadyFlag() noexcept -> void
 {
   m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
+}
+
+auto ZoomFilterBufferStriper::StartNewTransformBuffer() noexcept -> void
+{
+  Expects(m_transformBufferYLineStart == 0U);
+  Expects(TransformBufferUpdateStatus::HAS_BEEN_COPIED == m_transformBufferUpdateStatus);
+
+  std::swap(m_previousTransformBuffer, m_transformBuffer);
+
+  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
+}
+
+auto ZoomFilterBufferStriper::CopyTransformBuffer(
+    // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
+    std_spn::span<Point2dFlt> destBuff) noexcept -> void
+{
+  Expects(m_transformBufferYLineStart == 0U);
+  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
+
+  std::copy(m_transformBuffer.cbegin(), m_transformBuffer.cend(), destBuff.begin());
+  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::HAS_BEEN_COPIED;
 }
 
 /*
@@ -50,7 +85,7 @@ auto ZoomFilterBufferStriper::DoNextStripe(const uint32_t transformBufferStripeH
     -> void
 {
   Expects(m_transformBuffer.size() == m_dimensions.GetSize());
-  Expects(m_transformBufferUpdateStatus == TransformBufferUpdateStatus::IN_PROGRESS);
+  Expects(TransformBufferUpdateStatus::IN_PROGRESS == m_transformBufferUpdateStatus);
 
   const auto screenWidth                  = m_dimensions.GetWidth();
   const auto screenSpan                   = static_cast<float>(screenWidth - 1);

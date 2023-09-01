@@ -42,10 +42,11 @@ public:
       -> void;
 
   auto UpdateTransformBuffer() noexcept -> void;
-  [[nodiscard]] auto IsTransformBufferReady() const noexcept -> bool;
+  [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
+  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto RestartTransformBuffer() noexcept -> void;
+  auto StartNewTransformBuffer() noexcept -> void;
 
   [[nodiscard]] auto GetNameValueParams(const std::string& paramGroup) const noexcept
       -> UTILS::NameValuePairs;
@@ -60,9 +61,9 @@ private:
   auto StartFreshTransformBuffer() noexcept -> void;
 };
 
-inline auto FilterBuffersService::IsTransformBufferReady() const noexcept -> bool
+inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
 {
-  return m_filterBuffers.IsTransformBufferReady();
+  return m_filterBuffers.IsTransformBufferReadyToCopy();
 }
 
 inline auto FilterBuffersService::GetPreviousTransformBuffer() const noexcept
@@ -71,15 +72,16 @@ inline auto FilterBuffersService::GetPreviousTransformBuffer() const noexcept
   return m_filterBuffers.GetPreviousTransformBuffer();
 }
 
+// NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
 inline auto FilterBuffersService::CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept
     -> void
 {
   m_filterBuffers.CopyTransformBuffer(destBuff);
 }
 
-inline auto FilterBuffersService::RestartTransformBuffer() noexcept -> void
+inline auto FilterBuffersService::StartNewTransformBuffer() noexcept -> void
 {
-  m_filterBuffers.RestartTransformBuffer();
+  m_filterBuffers.StartNewTransformBuffer();
 }
 
 } // namespace GOOM::FILTER_FX

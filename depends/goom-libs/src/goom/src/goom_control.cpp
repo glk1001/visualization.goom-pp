@@ -357,7 +357,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
   m_frameData->imageArrays.mainImagePixelBufferNeedsUpdating = true;
   m_frameData->imageArrays.lowImagePixelBufferNeedsUpdating  = true;
 
-  if (not m_filterBuffersService.IsTransformBufferReady())
+  if (not m_filterBuffersService.IsTransformBufferReadyToCopy())
   {
     m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = false;
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = false;
@@ -392,7 +392,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterSrcePosBuffer() const no
 auto GoomControl::GoomControlImpl::UpdateFrameDataFilterDestPosBuffer() noexcept -> void
 {
   m_filterBuffersService.CopyTransformBuffer(m_frameData->filterPosArrays.filterDestPos);
-  m_filterBuffersService.RestartTransformBuffer();
+  m_filterBuffersService.StartNewTransformBuffer();
 
   m_frameData->filterPosArrays.filterDestPosNeedsUpdating = true;
 }

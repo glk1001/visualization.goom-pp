@@ -5,7 +5,6 @@
 #include "goom/point2d.h"
 #include "normalized_coords.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <functional>
 #include <span> // NOLINT: Waiting to use C++20.
@@ -51,15 +50,15 @@ public:
   auto ResetTransformBufferToStart() noexcept -> void;
   auto ResetTransformBufferIsReadyFlag() noexcept -> void;
 
-  auto InitTransformBuffer() noexcept -> void;
+  auto Start() noexcept -> void;
   auto UpdateNextTransformBufferStripe() noexcept -> void;
 
   [[nodiscard]] auto GetTransformBufferUpdateStatus() const noexcept -> TransformBufferUpdateStatus;
-  [[nodiscard]] auto IsTransformBufferReady() const noexcept -> bool;
+  [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto StartFreshTransformBuffer() noexcept -> void;
+  auto StartNewTransformBuffer() noexcept -> void;
 
   [[nodiscard]] auto GetTransformBufferYLineStart() const noexcept -> uint32_t;
 
@@ -88,43 +87,6 @@ private:
   auto DoNextStripe(uint32_t transformBufferStripeHeight) noexcept -> void;
 };
 
-inline auto ZoomFilterBufferStriper::GetTransformBufferYLineStart() const noexcept -> uint32_t
-{
-  return m_transformBufferYLineStart;
-}
-
-inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noexcept
-    -> TransformBufferUpdateStatus
-{
-  return m_transformBufferUpdateStatus;
-}
-
-inline auto ZoomFilterBufferStriper::IsTransformBufferReady() const noexcept -> bool
-{
-  return m_transformBufferUpdateStatus == TransformBufferUpdateStatus::READY_TO_COPY;
-}
-
-inline auto ZoomFilterBufferStriper::CopyTransformBuffer(
-    // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
-    std_spn::span<Point2dFlt> destBuff) noexcept -> void
-{
-  Expects(m_transformBufferYLineStart == 0U);
-  Expects(m_transformBufferUpdateStatus == TransformBufferUpdateStatus::READY_TO_COPY);
-
-  std::copy(m_transformBuffer.cbegin(), m_transformBuffer.cend(), destBuff.begin());
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::HAS_BEEN_COPIED;
-}
-
-inline auto ZoomFilterBufferStriper::StartFreshTransformBuffer() noexcept -> void
-{
-  Expects(m_transformBufferYLineStart == 0U);
-  Expects(m_transformBufferUpdateStatus == TransformBufferUpdateStatus::HAS_BEEN_COPIED);
-
-  std::swap(m_previousTransformBuffer, m_transformBuffer);
-
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
-}
-
 inline auto ZoomFilterBufferStriper::GetTransformBufferMidpoint() const noexcept -> Point2dInt
 {
   return m_midpoint;
@@ -144,16 +106,20 @@ inline auto ZoomFilterBufferStriper::SetFilterViewport(const Viewport& viewport)
   m_filterViewport = viewport;
 }
 
-inline auto ZoomFilterBufferStriper::InitTransformBuffer() noexcept -> void
+inline auto ZoomFilterBufferStriper::GetTransformBufferYLineStart() const noexcept -> uint32_t
 {
-  // Make sure the previous transform buffer is filled and valid and
-  // the current buffer is ready to be updated.
-  m_transformBufferYLineStart = 0;
-  DoNextStripe(m_dimensions.GetHeight());
+  return m_transformBufferYLineStart;
+}
 
-  std::swap(m_previousTransformBuffer, m_transformBuffer);
+inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noexcept
+    -> TransformBufferUpdateStatus
+{
+  return m_transformBufferUpdateStatus;
+}
 
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
+inline auto ZoomFilterBufferStriper::IsTransformBufferReadyToCopy() const noexcept -> bool
+{
+  return TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus;
 }
 
 inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept -> void
@@ -164,6 +130,7 @@ inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept 
 inline auto ZoomFilterBufferStriper::GetPreviousTransformBuffer() const noexcept
     -> const std::vector<Point2dFlt>&
 {
+  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
   return m_previousTransformBuffer;
 }
 
