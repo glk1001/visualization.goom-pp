@@ -19,7 +19,7 @@ public:
   {
     START_FRESH_TRANSFORM_BUFFER,
     RESET_TRANSFORM_BUFFER,
-    TRANSFORM_BUFFER_READY,
+    TRANSFORM_BUFFER_READY_FOR_UPDATES,
   };
 
   explicit ZoomFilterBuffers(std::unique_ptr<FilterStriper> filterStriper) noexcept;
@@ -33,6 +33,7 @@ public:
 
   [[nodiscard]] auto IsTransformBufferReady() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
+  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
   auto RestartTransformBuffer() noexcept -> void;
 
@@ -48,8 +49,9 @@ protected:
 private:
   std::unique_ptr<FilterStriper> m_filterStriper;
 
-  bool m_filterSettingsHaveChanged            = false;
-  TransformBufferState m_transformBufferState = TransformBufferState::TRANSFORM_BUFFER_READY;
+  bool m_filterSettingsHaveChanged = false;
+  TransformBufferState m_transformBufferState =
+      TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES;
 
   auto InitTransformBuffer() noexcept -> void;
   auto StartFreshTranBuffer() noexcept -> void;
@@ -72,6 +74,7 @@ inline auto ZoomFilterBuffers<FilterStriper>::IsTransformBufferReady() const noe
 
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::CopyTransformBuffer(
+    // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
     std_spn::span<Point2dFlt> destBuff) noexcept -> void
 {
   m_filterStriper->CopyTransformBuffer(destBuff);
@@ -80,7 +83,7 @@ inline auto ZoomFilterBuffers<FilterStriper>::CopyTransformBuffer(
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::RestartTransformBuffer() noexcept -> void
 {
-  m_filterStriper->RestartTransformBuffer();
+  m_filterStriper->StartFreshTransformBuffer();
 }
 
 template<class FilterStriper>
@@ -139,8 +142,7 @@ inline auto ZoomFilterBuffers<FilterStriper>::Start() noexcept -> void
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::InitTransformBuffer() noexcept -> void
 {
-  m_filterStriper->FillTransformBuffer();
-  m_filterStriper->ResetStripes();
+  m_filterStriper->InitTransformBuffer();
   m_transformBufferState = TransformBufferState::START_FRESH_TRANSFORM_BUFFER;
 }
 
@@ -157,6 +159,7 @@ inline auto ZoomFilterBuffers<FilterStriper>::UpdateTransformBuffer() noexcept -
   }
   else
   {
+    Expects(m_transformBufferState == TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES);
     UpdateNextTransformBufferStripe();
   }
 }
@@ -164,28 +167,38 @@ inline auto ZoomFilterBuffers<FilterStriper>::UpdateTransformBuffer() noexcept -
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::StartFreshTranBuffer() noexcept -> void
 {
+  Expects(m_transformBufferState == TransformBufferState::START_FRESH_TRANSFORM_BUFFER);
+
   if (not m_filterSettingsHaveChanged)
   {
     return;
   }
 
   m_filterSettingsHaveChanged = false;
-  m_filterStriper->ResetStripes();
+  m_filterStriper->ResetTransformBufferToStart();
   m_filterStriper->ResetTransformBufferIsReadyFlag();
-  m_transformBufferState = TransformBufferState::TRANSFORM_BUFFER_READY;
+  m_transformBufferState = TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES;
+
+  Ensures(m_transformBufferState == TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES);
 }
 
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::ResetTransformBuffer() noexcept -> void
 {
-  m_filterStriper->ResetStripes();
+  Expects(m_transformBufferState == TransformBufferState::RESET_TRANSFORM_BUFFER);
+
+  m_filterStriper->ResetTransformBufferToStart();
   m_transformBufferState = TransformBufferState::START_FRESH_TRANSFORM_BUFFER;
+
+  Ensures(m_transformBufferState == TransformBufferState::START_FRESH_TRANSFORM_BUFFER);
 }
 
 template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::UpdateNextTransformBufferStripe() noexcept -> void
 {
-  m_filterStriper->UpdateNextStripe();
+  Expects(m_transformBufferState == TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES);
+
+  m_filterStriper->UpdateNextTransformBufferStripe();
   if (0 == m_filterStriper->GetTransformBufferYLineStart())
   {
     m_transformBufferState = TransformBufferState::RESET_TRANSFORM_BUFFER;
@@ -196,6 +209,7 @@ template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::GetPreviousTransformBuffer() const noexcept
     -> const std::vector<Point2dFlt>&
 {
+  Expects(IsTransformBufferReady());
   return m_filterStriper->GetPreviousTransformBuffer();
 }
 

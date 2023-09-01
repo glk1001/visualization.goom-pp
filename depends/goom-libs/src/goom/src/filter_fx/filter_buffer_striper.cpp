@@ -29,14 +29,14 @@ ZoomFilterBufferStriper::ZoomFilterBufferStriper(
 {
 }
 
-auto ZoomFilterBufferStriper::ResetStripes() noexcept -> void
+auto ZoomFilterBufferStriper::ResetTransformBufferToStart() noexcept -> void
 {
   m_transformBufferYLineStart = 0;
 }
 
 auto ZoomFilterBufferStriper::ResetTransformBufferIsReadyFlag() noexcept -> void
 {
-  m_transformBufferIsReady = false;
+  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
 }
 
 /*
@@ -50,7 +50,7 @@ auto ZoomFilterBufferStriper::DoNextStripe(const uint32_t transformBufferStripeH
     -> void
 {
   Expects(m_transformBuffer.size() == m_dimensions.GetSize());
-  Expects(not m_transformBufferIsReady);
+  Expects(m_transformBufferUpdateStatus == TransformBufferUpdateStatus::IN_PROGRESS);
 
   const auto screenWidth                  = m_dimensions.GetWidth();
   const auto screenSpan                   = static_cast<float>(screenWidth - 1);
@@ -92,8 +92,8 @@ auto ZoomFilterBufferStriper::DoNextStripe(const uint32_t transformBufferStripeH
   m_transformBufferYLineStart += transformBufferStripeHeight;
   if (tranBuffYLineEnd >= m_dimensions.GetHeight())
   {
-    m_transformBufferYLineStart = 0;
-    m_transformBufferIsReady    = true;
+    m_transformBufferYLineStart   = 0;
+    m_transformBufferUpdateStatus = TransformBufferUpdateStatus::READY_TO_COPY;
   }
 }
 

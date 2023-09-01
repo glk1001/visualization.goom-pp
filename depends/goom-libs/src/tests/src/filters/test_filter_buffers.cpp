@@ -218,7 +218,7 @@ auto FullyUpdateDestBuffer(FilterBuffers& filterBuffers) noexcept -> void
           filterBuffers.GetTransformBufferState());
 
   filterBuffers.UpdateTransformBuffer();
-  REQUIRE(FilterBuffers::TransformBufferState::TRANSFORM_BUFFER_READY ==
+  REQUIRE(FilterBuffers::TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES ==
           filterBuffers.GetTransformBufferState());
 
   filterBuffers.UpdateTransformBuffer();
