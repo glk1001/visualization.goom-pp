@@ -46,7 +46,6 @@ public:
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto StartNewTransformBuffer() noexcept -> void;
 
   [[nodiscard]] auto GetNameValueParams(const std::string& paramGroup) const noexcept
       -> UTILS::NameValuePairs;
@@ -58,7 +57,7 @@ private:
   FilterEffectsSettings m_nextFilterEffectsSettings{};
   bool m_pendingFilterEffectsSettings = false;
 
-  auto StartFreshTransformBuffer() noexcept -> void;
+  auto UpdateAllPendingSettings() noexcept -> void;
 };
 
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
@@ -77,11 +76,6 @@ inline auto FilterBuffersService::CopyTransformBuffer(std_spn::span<Point2dFlt> 
     -> void
 {
   m_filterBuffers.CopyTransformBuffer(destBuff);
-}
-
-inline auto FilterBuffersService::StartNewTransformBuffer() noexcept -> void
-{
-  m_filterBuffers.StartNewTransformBuffer();
 }
 
 } // namespace GOOM::FILTER_FX

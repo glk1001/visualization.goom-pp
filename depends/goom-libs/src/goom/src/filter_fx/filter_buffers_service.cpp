@@ -51,12 +51,12 @@ auto FilterBuffersService::Start() noexcept -> void
   Expects(m_pendingFilterEffectsSettings);
   Expects(m_nextFilterEffectsSettings.zoomAdjustmentEffect != nullptr);
 
-  StartFreshTransformBuffer();
+  UpdateAllPendingSettings();
 
   m_filterBuffers.Start();
 }
 
-auto FilterBuffersService::StartFreshTransformBuffer() noexcept -> void
+auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
 {
   if (not m_pendingFilterEffectsSettings)
   {
@@ -77,10 +77,9 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 {
   m_filterBuffers.UpdateTransformBuffer();
 
-  if (m_filterBuffers.GetTransformBufferState() ==
-      FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER)
+  if (m_filterBuffers.HasTransformBufferBeenCopied())
   {
-    StartFreshTransformBuffer();
+    UpdateAllPendingSettings();
   }
 }
 

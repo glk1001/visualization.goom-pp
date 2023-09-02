@@ -214,12 +214,7 @@ const auto CONSTANT_ZOOM_VECTOR = TestZoomVector{true};
 
 auto FullyUpdateDestBuffer(FilterBuffers& filterBuffers) noexcept -> void
 {
-  REQUIRE(FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER ==
-          filterBuffers.GetTransformBufferState());
-
   filterBuffers.UpdateTransformBuffer();
-  REQUIRE(FilterBuffers::TransformBufferState::TRANSFORM_BUFFER_READY_FOR_UPDATES ==
-          filterBuffers.GetTransformBufferState());
 
   filterBuffers.UpdateTransformBuffer();
   while (true)
@@ -230,8 +225,6 @@ auto FullyUpdateDestBuffer(FilterBuffers& filterBuffers) noexcept -> void
       break;
     }
   }
-  REQUIRE(FilterBuffers::TransformBufferState::RESET_TRANSFORM_BUFFER ==
-          filterBuffers.GetTransformBufferState());
 
   filterBuffers.UpdateTransformBuffer();
 }
@@ -271,8 +264,6 @@ TEST_CASE("ZoomFilterBuffers Basic")
 
   SECTION("Correct Starting TranBuffersState")
   {
-    REQUIRE(FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER ==
-            filterBuffers.GetTransformBufferState());
   }
   SECTION("Correct Starting BuffYLineStart")
   {
@@ -346,8 +337,6 @@ auto TestCorrectStripesBasicValues(const FilterBuffers& filterBuffers) -> void
   REQUIRE(NML_CONST_ZOOM_VECTOR_COORDS1.Equals(
       CONSTANT_ZOOM_VECTOR.GetZoomPoint(DUMMY_NML_COORDS, DUMMY_NML_COORDS)));
 
-  REQUIRE(FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER ==
-          filterBuffers.GetTransformBufferState());
   REQUIRE(not filterBuffers.HaveSettingsChanged());
 }
 
@@ -359,8 +348,6 @@ auto TestCorrectStripesFullyUpdate(FilterBuffers& filterBuffers,
   REQUIRE(filterBuffers.HaveSettingsChanged());
 
   FullyUpdateDestBuffer(filterBuffers);
-  REQUIRE(FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER ==
-          filterBuffers.GetTransformBufferState());
   REQUIRE(0 == filterBuffers.GetBufferYLineStart());
   REQUIRE(CONST_ZOOM_VECTOR_COORDS_2 == constantZoomVector.GetConstCoords());
   REQUIRE(MID_PT == filterBuffers.GetBufferBuffMidpoint());
@@ -468,8 +455,6 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
     filterBuffers.NotifyFilterSettingsHaveChanged();
     REQUIRE(filterBuffers.HaveSettingsChanged());
     FullyUpdateDestBuffer(filterBuffers);
-    REQUIRE(FilterBuffers::TransformBufferState::START_FRESH_TRANSFORM_BUFFER ==
-            filterBuffers.GetTransformBufferState());
 
     //    const auto expectedTranPoint = ZoomCoordTransforms::ScreenToTranPoint(TEST_SRCE_POINT);
     //    const auto expectedZoomedInTranPoint = Point2dInt{

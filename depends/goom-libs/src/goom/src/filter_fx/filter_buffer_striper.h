@@ -54,11 +54,9 @@ public:
   auto UpdateNextTransformBufferStripe() noexcept -> void;
 
   [[nodiscard]] auto GetTransformBufferUpdateStatus() const noexcept -> TransformBufferUpdateStatus;
-  [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto StartNewTransformBuffer() noexcept -> void;
 
   [[nodiscard]] auto GetTransformBufferYLineStart() const noexcept -> uint32_t;
 
@@ -115,11 +113,6 @@ inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noex
     -> TransformBufferUpdateStatus
 {
   return m_transformBufferUpdateStatus;
-}
-
-inline auto ZoomFilterBufferStriper::IsTransformBufferReadyToCopy() const noexcept -> bool
-{
-  return TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus;
 }
 
 inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept -> void

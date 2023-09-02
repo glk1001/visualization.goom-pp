@@ -53,16 +53,6 @@ auto ZoomFilterBufferStriper::ResetTransformBufferIsReadyFlag() noexcept -> void
   m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
 }
 
-auto ZoomFilterBufferStriper::StartNewTransformBuffer() noexcept -> void
-{
-  Expects(m_transformBufferYLineStart == 0U);
-  Expects(TransformBufferUpdateStatus::HAS_BEEN_COPIED == m_transformBufferUpdateStatus);
-
-  std::swap(m_previousTransformBuffer, m_transformBuffer);
-
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
-}
-
 auto ZoomFilterBufferStriper::CopyTransformBuffer(
     // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
     std_spn::span<Point2dFlt> destBuff) noexcept -> void
