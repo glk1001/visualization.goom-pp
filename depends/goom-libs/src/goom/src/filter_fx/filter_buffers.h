@@ -3,7 +3,6 @@
 #include "goom/point2d.h"
 #include "normalized_coords.h"
 
-#include <cstdint>
 #include <memory>
 #include <span> // NOLINT: Waiting to use C++20.
 #include <vector>
@@ -22,28 +21,23 @@ public:
   auto SetTransformBufferMidpoint(const Point2dInt& val) noexcept -> void;
   auto SetFilterViewport(const Viewport& val) noexcept -> void;
 
-  auto NotifyFilterSettingsHaveChanged() noexcept -> void;
-
+  [[nodiscard]] auto IsTransformBufferInProgress() const noexcept -> bool;
   [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto HasTransformBufferBeenCopied() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
+  auto StartFreshTranBuffer() noexcept -> void;
 
   auto UpdateTransformBuffer() noexcept -> void;
 
 protected:
   // For testing only.
   [[nodiscard]] auto GetTransformBufferBuffMidpoint() const noexcept -> Point2dInt;
-  [[nodiscard]] auto GetTransformBufferYLineStart() const noexcept -> uint32_t;
-  [[nodiscard]] auto HaveFilterSettingsChanged() const noexcept -> bool;
 
 private:
   std::unique_ptr<FilterStriper> m_filterStriper;
 
-  bool m_filterSettingsHaveChanged = false;
-
-  auto StartFreshTranBuffer() noexcept -> void;
   auto UpdateNextTransformBufferStripe() noexcept -> void;
 };
 
@@ -52,6 +46,13 @@ ZoomFilterBuffers<FilterStriper>::ZoomFilterBuffers(
     std::unique_ptr<FilterStriper> filterStriper) noexcept
   : m_filterStriper{std::move(filterStriper)}
 {
+}
+
+template<class FilterStriper>
+inline auto ZoomFilterBuffers<FilterStriper>::IsTransformBufferInProgress() const noexcept -> bool
+{
+  return m_filterStriper->GetTransformBufferUpdateStatus() ==
+         ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS;
 }
 
 template<class FilterStriper>
@@ -98,25 +99,6 @@ inline auto ZoomFilterBuffers<FilterStriper>::SetFilterViewport(const Viewport& 
 }
 
 template<class FilterStriper>
-inline auto ZoomFilterBuffers<FilterStriper>::HaveFilterSettingsChanged() const noexcept -> bool
-{
-  return m_filterSettingsHaveChanged;
-}
-
-template<class FilterStriper>
-inline auto ZoomFilterBuffers<FilterStriper>::NotifyFilterSettingsHaveChanged() noexcept -> void
-{
-  m_filterSettingsHaveChanged = true;
-}
-
-template<class FilterStriper>
-inline auto ZoomFilterBuffers<FilterStriper>::GetTransformBufferYLineStart() const noexcept
-    -> uint32_t
-{
-  return m_filterStriper->GetTransformBufferYLineStart();
-}
-
-template<class FilterStriper>
 inline auto ZoomFilterBuffers<FilterStriper>::Start() noexcept -> void
 {
   m_filterStriper->Start();
@@ -130,14 +112,18 @@ inline auto ZoomFilterBuffers<FilterStriper>::UpdateTransformBuffer() noexcept -
   if (m_filterStriper->GetTransformBufferUpdateStatus() ==
       ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED)
   {
-    StartFreshTranBuffer();
+    return;
   }
-  else
-  {
-    Expects(m_filterStriper->GetTransformBufferUpdateStatus() ==
-            ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
-    UpdateNextTransformBufferStripe();
-  }
+
+  Expects(m_filterStriper->GetTransformBufferUpdateStatus() ==
+          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+
+  UpdateNextTransformBufferStripe();
+
+  Ensures((m_filterStriper->GetTransformBufferUpdateStatus() ==
+           ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS) or
+          (m_filterStriper->GetTransformBufferUpdateStatus() ==
+           ZoomFilterBufferStriper::TransformBufferUpdateStatus::READY_TO_COPY));
 }
 
 template<class FilterStriper>
@@ -146,14 +132,7 @@ inline auto ZoomFilterBuffers<FilterStriper>::StartFreshTranBuffer() noexcept ->
   Expects(m_filterStriper->GetTransformBufferUpdateStatus() ==
           ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED);
 
-  if (not m_filterSettingsHaveChanged)
-  {
-    return;
-  }
-
-  m_filterSettingsHaveChanged = false;
   m_filterStriper->ResetTransformBufferToStart();
-  m_filterStriper->ResetTransformBufferIsReadyFlag();
 
   Ensures(m_filterStriper->GetTransformBufferUpdateStatus() ==
           ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);

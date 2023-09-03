@@ -3,7 +3,6 @@
 #include "filter_buffers_service.h"
 
 #include "filter_buffer_striper.h"
-#include "filter_buffers.h"
 #include "filter_settings.h"
 #include "goom/goom_config.h"
 #include "goom_plugin_info.h"
@@ -58,29 +57,25 @@ auto FilterBuffersService::Start() noexcept -> void
 
 auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
 {
-  if (not m_pendingFilterEffectsSettings)
-  {
-    return;
-  }
-
   m_nextFilterEffectsSettings.afterEffectsSettings.rotationAdjustments.Reset();
   m_zoomVector->SetFilterEffectsSettings(m_nextFilterEffectsSettings);
   m_filterBuffers.SetTransformBufferMidpoint(m_nextFilterEffectsSettings.zoomMidpoint);
   m_filterBuffers.SetFilterViewport(m_nextFilterEffectsSettings.filterViewport);
   m_pendingFilterEffectsSettings = false;
-
-  // Notify buffer maker of settings change - now we'll get a fresh buffer.
-  m_filterBuffers.NotifyFilterSettingsHaveChanged();
 }
 
 auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 {
-  m_filterBuffers.UpdateTransformBuffer();
-
-  if (m_filterBuffers.HasTransformBufferBeenCopied())
+  if (m_pendingFilterEffectsSettings and m_filterBuffers.HasTransformBufferBeenCopied())
   {
     UpdateAllPendingSettings();
+    Ensures(not m_pendingFilterEffectsSettings);
+
+    m_filterBuffers.StartFreshTranBuffer();
+    Ensures(not m_filterBuffers.HasTransformBufferBeenCopied());
   }
+
+  m_filterBuffers.UpdateTransformBuffer();
 }
 
 auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) const noexcept

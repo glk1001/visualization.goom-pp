@@ -42,23 +42,21 @@ public:
                           const NormalizedCoordsConverter& normalizedCoordsConverter,
                           const ZoomPointFunc& getZoomPointFunc) noexcept;
 
-  [[nodiscard]] auto GetTransformBufferMidpoint() const noexcept -> Point2dInt;
   auto SetTransformBufferMidpoint(const Point2dInt& midpoint) noexcept -> void;
-
   auto SetFilterViewport(const Viewport& viewport) noexcept -> void;
 
-  auto ResetTransformBufferToStart() noexcept -> void;
-  auto ResetTransformBufferIsReadyFlag() noexcept -> void;
-
   auto Start() noexcept -> void;
-  auto UpdateNextTransformBufferStripe() noexcept -> void;
 
   [[nodiscard]] auto GetTransformBufferUpdateStatus() const noexcept -> TransformBufferUpdateStatus;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
+  auto ResetTransformBufferToStart() noexcept -> void;
 
-  [[nodiscard]] auto GetTransformBufferYLineStart() const noexcept -> uint32_t;
+  auto UpdateNextTransformBufferStripe() noexcept -> void;
+
+  // For testing only.
+  [[nodiscard]] auto GetTransformBufferMidpoint() const noexcept -> Point2dInt;
 
 private:
   Dimensions m_dimensions;
@@ -102,11 +100,6 @@ inline auto ZoomFilterBufferStriper::SetFilterViewport(const Viewport& viewport)
 {
   Expects(m_transformBufferYLineStart == 0U);
   m_filterViewport = viewport;
-}
-
-inline auto ZoomFilterBufferStriper::GetTransformBufferYLineStart() const noexcept -> uint32_t
-{
-  return m_transformBufferYLineStart;
 }
 
 inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noexcept

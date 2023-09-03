@@ -36,16 +36,17 @@ public:
                        const NormalizedCoordsConverter& normalizedCoordsConverter,
                        std::unique_ptr<IZoomVector> zoomVector) noexcept;
 
-  auto Start() noexcept -> void;
-
   auto SetFilterEffectsSettings(const FilterEffectsSettings& filterEffectsSettings) noexcept
       -> void;
 
-  auto UpdateTransformBuffer() noexcept -> void;
+  auto Start() noexcept -> void;
+
   [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
+
+  auto UpdateTransformBuffer() noexcept -> void;
 
   [[nodiscard]] auto GetNameValueParams(const std::string& paramGroup) const noexcept
       -> UTILS::NameValuePairs;

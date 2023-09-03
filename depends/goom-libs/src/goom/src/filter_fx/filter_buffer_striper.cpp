@@ -45,11 +45,7 @@ auto ZoomFilterBufferStriper::Start() noexcept -> void
 
 auto ZoomFilterBufferStriper::ResetTransformBufferToStart() noexcept -> void
 {
-  m_transformBufferYLineStart = 0;
-}
-
-auto ZoomFilterBufferStriper::ResetTransformBufferIsReadyFlag() noexcept -> void
-{
+  m_transformBufferYLineStart   = 0;
   m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
 }
 
