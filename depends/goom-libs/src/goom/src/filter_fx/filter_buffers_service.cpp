@@ -44,7 +44,6 @@ auto FilterBuffersService::SetFilterEffectsSettings(
 {
   m_nextFilterEffectsSettings    = filterEffectsSettings;
   m_pendingFilterEffectsSettings = true;
-  ++m_numFilterEffectsSettingsChanges;
 }
 
 auto FilterBuffersService::Start() noexcept -> void
@@ -53,7 +52,7 @@ auto FilterBuffersService::Start() noexcept -> void
   Expects(m_nextFilterEffectsSettings.zoomAdjustmentEffect != nullptr);
 
   UpdateAllPendingSettings();
-  m_numFilterEffectsSettingsChanges = 0U;
+  m_numPendingFilterEffectsChanges = 0U;
 
   m_filterBuffers.Start();
 }
@@ -70,6 +69,7 @@ auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
   m_filterBuffers.SetTransformBufferMidpoint(m_nextFilterEffectsSettings.zoomMidpoint);
   m_filterBuffers.SetFilterViewport(m_nextFilterEffectsSettings.filterViewport);
   m_pendingFilterEffectsSettings = false;
+  ++m_numPendingFilterEffectsChanges;
 }
 
 auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
@@ -82,7 +82,7 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
     UpdateAllPendingSettings();
     Ensures(not m_pendingFilterEffectsSettings);
 
-    m_filterBuffers.StartTransformBufferStriping();
+    m_filterBuffers.StartTransformBufferUpdates();
   }
 
   m_filterBuffers.UpdateTransformBuffer();
@@ -94,8 +94,7 @@ auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) con
   static constexpr auto* PARAM_GROUP = "Buffer Service";
 
   auto nameValuePairs = UTILS::NameValuePairs{
-      GetPair(PARAM_GROUP, "pending settings", m_pendingFilterEffectsSettings),
-      GetPair(PARAM_GROUP, "settings changes", m_numFilterEffectsSettingsChanges),
+      GetPair(PARAM_GROUP, "pending changes", m_numPendingFilterEffectsChanges),
   };
   MoveNameValuePairs(m_zoomVector->GetNameValueParams(paramGroup), nameValuePairs);
 

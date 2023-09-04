@@ -13,7 +13,6 @@
 #endif
 
 #include "control/goom_sound_events.h"
-#include "filter_fx/filter_buffer_striper.h"
 #include "filter_fx/filter_buffers.h"
 #include "filter_fx/filter_zoom_vector.h"
 #include "filter_fx/normalized_coords.h"
@@ -48,25 +47,23 @@ using FILTER_FX::FilterZoomVector;
 using FILTER_FX::NormalizedCoords;
 using FILTER_FX::NormalizedCoordsConverter;
 using FILTER_FX::ZoomFilterBuffers;
-using FILTER_FX::ZoomFilterBufferStriper;
 using UTILS::Parallel;
 using UTILS::MATH::GoomRand;
 
 class TestFilterBuffers : public ZoomFilterBuffers
 {
 public:
-  explicit TestFilterBuffers(
-      Parallel& parallel,
-      const PluginInfo& goomInfo,
-      const NormalizedCoordsConverter& normalizedCoordsConverter,
-      const ZoomFilterBufferStriper::ZoomPointFunc& getZoomPointFunc) noexcept
+  explicit TestFilterBuffers(Parallel& parallel,
+                             const PluginInfo& goomInfo,
+                             const NormalizedCoordsConverter& normalizedCoordsConverter,
+                             const ZoomFilterBuffers::ZoomPointFunc& getZoomPointFunc) noexcept
     : ZoomFilterBuffers{parallel, goomInfo, normalizedCoordsConverter, getZoomPointFunc}
   {
   }
 
   [[nodiscard]] auto GetBufferBuffMidpoint() const noexcept -> Point2dInt
   {
-    return ZoomFilterBuffers::GetTransformBufferBuffMidpoint();
+    return ZoomFilterBuffers::GetTransformBufferMidpoint();
   }
 };
 
@@ -157,7 +154,7 @@ auto FullyUpdateDestBuffer(TestFilterBuffers& filterBuffers) noexcept -> void
   while (true)
   {
     filterBuffers.UpdateTransformBuffer();
-    if (ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus())
+    if (ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus())
     {
       break;
     }
@@ -264,7 +261,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
   // Make sure dest buffer is completely copied to srce buffer at end of update.
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
   FullyUpdateDestBuffer(filterBuffers);
-  REQUIRE(ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus());
 
   REQUIRE(CONST_ZOOM_VECTOR_COORDS_2 == constantZoomVector.GetConstCoords());
   REQUIRE(MID_PT == filterBuffers.GetBufferBuffMidpoint());
@@ -299,7 +296,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
 
   filterBuffers.ResetTransformBufferToStart();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_START == filterBuffers.GetUpdateStatus());
-  filterBuffers.StartTransformBufferStriping();
+  filterBuffers.StartTransformBufferUpdates();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 }
 
@@ -332,7 +329,7 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
     // Because we are using a zoomed in ZoomVectorFunc, tranPoint should be zoomed in.
     REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
     FullyUpdateDestBuffer(filterBuffers);
-    REQUIRE(ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus());
+    REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus());
 
     //    const auto expectedTranPoint = ZoomCoordTransforms::ScreenToTranPoint(TEST_SRCE_POINT);
     //    const auto expectedZoomedInTranPoint = Point2dInt{

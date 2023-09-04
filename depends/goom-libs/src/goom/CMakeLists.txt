@@ -116,8 +116,7 @@ add_library(goom
             src/filter_fx/filter_utils/image_displacement.cpp
             src/filter_fx/filter_utils/image_displacement_list.cpp
             src/filter_fx/filter_consts.h
-            src/filter_fx/filter_buffer_striper.cpp
-            src/filter_fx/filter_buffers.h
+            src/filter_fx/filter_buffers.cpp
             src/filter_fx/filter_buffers_service.cpp
             src/filter_fx/filter_settings_service.cpp
             src/filter_fx/filter_speed.h

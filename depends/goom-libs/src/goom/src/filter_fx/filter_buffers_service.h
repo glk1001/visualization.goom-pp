@@ -1,6 +1,5 @@
 #pragma once
 
-#include "filter_buffer_striper.h"
 #include "filter_buffers.h"
 #include "filter_settings.h"
 #include "goom/point2d.h"
@@ -56,15 +55,15 @@ private:
   ZoomFilterBuffers m_filterBuffers;
 
   FilterEffectsSettings m_nextFilterEffectsSettings{};
-  bool m_pendingFilterEffectsSettings = false;
-  uint64_t m_numFilterEffectsSettingsChanges = 0U;
+  bool m_pendingFilterEffectsSettings       = false;
+  uint64_t m_numPendingFilterEffectsChanges = 0U;
 
   auto UpdateAllPendingSettings() noexcept -> void;
 };
 
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
 {
-  return ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == m_filterBuffers.GetUpdateStatus();
+  return ZoomFilterBuffers::UpdateStatus::AT_END == m_filterBuffers.GetUpdateStatus();
 }
 
 inline auto FilterBuffersService::GetPreviousTransformBuffer() const noexcept
