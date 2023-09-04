@@ -67,10 +67,12 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 {
   if (m_pendingFilterEffectsSettings and m_filterBuffers.HasTransformBufferBeenCopied())
   {
+    m_filterBuffers.ResetTransformBufferToStart();
+
     UpdateAllPendingSettings();
     Ensures(not m_pendingFilterEffectsSettings);
 
-    m_filterBuffers.StartFreshTranBuffer();
+    m_filterBuffers.StartTransformBufferStriping();
     Ensures(not m_filterBuffers.HasTransformBufferBeenCopied());
   }
 

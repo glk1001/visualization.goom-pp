@@ -32,8 +32,9 @@ public:
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto StartFreshTranBuffer() noexcept -> void;
 
+  auto ResetTransformBufferToStart() noexcept -> void;
+  auto StartTransformBufferStriping() noexcept -> void;
   auto UpdateTransformBuffer() noexcept -> void;
 
 protected:
@@ -121,12 +122,23 @@ inline auto ZoomFilterBuffers::UpdateTransformBuffer() noexcept -> void
            ZoomFilterBufferStriper::TransformBufferUpdateStatus::READY_TO_COPY));
 }
 
-inline auto ZoomFilterBuffers::StartFreshTranBuffer() noexcept -> void
+inline auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void
 {
   Expects(m_filterStriper.GetTransformBufferUpdateStatus() ==
           ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED);
 
   m_filterStriper.ResetTransformBufferToStart();
+
+  Ensures(m_filterStriper.GetTransformBufferUpdateStatus() ==
+          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+}
+
+inline auto ZoomFilterBuffers::StartTransformBufferStriping() noexcept -> void
+{
+  Expects(m_filterStriper.GetTransformBufferUpdateStatus() ==
+          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+
+  m_filterStriper.StartTransformBufferStriping();
 
   Ensures(m_filterStriper.GetTransformBufferUpdateStatus() ==
           ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);

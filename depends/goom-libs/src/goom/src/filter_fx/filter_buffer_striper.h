@@ -51,8 +51,9 @@ public:
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-  auto ResetTransformBufferToStart() noexcept -> void;
 
+  auto ResetTransformBufferToStart() noexcept -> void;
+  auto StartTransformBufferStriping() noexcept -> void;
   auto UpdateNextTransformBufferStripe() noexcept -> void;
 
   // For testing only.
@@ -67,6 +68,14 @@ private:
   Point2dInt m_midpoint                 = {0, 0};
   NormalizedCoords m_normalizedMidpoint = {0.0F, 0.0F};
   Viewport m_filterViewport             = Viewport{};
+
+  enum class UpdateStatus
+  {
+    AT_START,
+    IN_PROGRESS,
+    AT_END,
+  };
+  UpdateStatus m_updateStatus = UpdateStatus::AT_START;
 
   // 'NUM_STRIPE_GROUPS' controls how many updates before all stripes, and therefore,
   // all of the tran buffer, is filled. We use stripes to spread the buffer update load
@@ -91,14 +100,18 @@ inline auto ZoomFilterBufferStriper::GetTransformBufferMidpoint() const noexcept
 inline auto ZoomFilterBufferStriper::SetTransformBufferMidpoint(const Point2dInt& midpoint) noexcept
     -> void
 {
-  Expects(m_transformBufferYLineStart == 0U);
+  Expects(0U == m_transformBufferYLineStart);
+  Expects(UpdateStatus::AT_START == m_updateStatus);
+
   m_midpoint           = midpoint;
   m_normalizedMidpoint = m_normalizedCoordsConverter->OtherToNormalizedCoords(m_midpoint);
 }
 
 inline auto ZoomFilterBufferStriper::SetFilterViewport(const Viewport& viewport) noexcept -> void
 {
-  Expects(m_transformBufferYLineStart == 0U);
+  Expects(0U == m_transformBufferYLineStart);
+  Expects(UpdateStatus::AT_START == m_updateStatus);
+
   m_filterViewport = viewport;
 }
 
@@ -106,6 +119,13 @@ inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noex
     -> TransformBufferUpdateStatus
 {
   return m_transformBufferUpdateStatus;
+}
+
+inline auto ZoomFilterBufferStriper::StartTransformBufferStriping() noexcept -> void
+{
+  Expects(UpdateStatus::AT_START == m_updateStatus);
+
+  m_updateStatus = UpdateStatus::IN_PROGRESS;
 }
 
 inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept -> void
@@ -116,7 +136,9 @@ inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept 
 inline auto ZoomFilterBufferStriper::GetPreviousTransformBuffer() const noexcept
     -> const std::vector<Point2dFlt>&
 {
+  Expects(UpdateStatus::AT_END == m_updateStatus);
   Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
+
   return m_previousTransformBuffer;
 }
 

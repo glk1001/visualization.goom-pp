@@ -299,7 +299,8 @@ TEST_CASE("ZoomFilterBuffers Stripes")
     REQUIRE(destVal.y == NML_UNCENTERED_ZOOM_VECTOR_COORDS_2.GetY());
   }
 
-  filterBuffers.StartFreshTranBuffer();
+  filterBuffers.ResetTransformBufferToStart();
+  filterBuffers.StartTransformBufferStriping();
   REQUIRE(filterBuffers.IsTransformBufferInProgress());
 }
 
