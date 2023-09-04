@@ -2,7 +2,6 @@
 
 #include "filter_buffers_service.h"
 
-#include "filter_buffer_striper.h"
 #include "filter_settings.h"
 #include "goom/goom_config.h"
 #include "goom_plugin_info.h"
@@ -28,13 +27,13 @@ FilterBuffersService::FilterBuffersService(
     const NormalizedCoordsConverter& normalizedCoordsConverter,
     std::unique_ptr<IZoomVector> zoomVector) noexcept
   : m_zoomVector{std::move(zoomVector)},
-    m_filterBuffers{std::make_unique<ZoomFilterBufferStriper>(
+    m_filterBuffers{
         parallel,
         goomInfo,
         normalizedCoordsConverter,
         [this](const NormalizedCoords& normalizedCoords,
                const NormalizedCoords& normalizedFilterViewportCoords)
-        { return m_zoomVector->GetZoomPoint(normalizedCoords, normalizedFilterViewportCoords); })}
+        { return m_zoomVector->GetZoomPoint(normalizedCoords, normalizedFilterViewportCoords); }}
 {
 }
 

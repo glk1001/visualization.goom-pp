@@ -26,8 +26,6 @@
 #include "utils/math/goom_rand.h"
 #include "utils/parallel_utils.h"
 
-#include <memory>
-#include <utility>
 #include <vector>
 
 #if __clang_major__ >= 16 // NOLINT: Can't include header for this.
@@ -54,17 +52,21 @@ using FILTER_FX::ZoomFilterBufferStriper;
 using UTILS::Parallel;
 using UTILS::MATH::GoomRand;
 
-class TestFilterBuffers : public ZoomFilterBuffers<ZoomFilterBufferStriper>
+class TestFilterBuffers : public ZoomFilterBuffers
 {
 public:
-  explicit TestFilterBuffers(std::unique_ptr<ZoomFilterBufferStriper> filterStriper) noexcept
-    : ZoomFilterBuffers<ZoomFilterBufferStriper>(std::move(filterStriper))
+  explicit TestFilterBuffers(
+      Parallel& parallel,
+      const PluginInfo& goomInfo,
+      const NormalizedCoordsConverter& normalizedCoordsConverter,
+      const ZoomFilterBufferStriper::ZoomPointFunc& getZoomPointFunc) noexcept
+    : ZoomFilterBuffers{parallel, goomInfo, normalizedCoordsConverter, getZoomPointFunc}
   {
   }
 
   [[nodiscard]] auto GetBufferBuffMidpoint() const noexcept -> Point2dInt
   {
-    return ZoomFilterBuffers<ZoomFilterBufferStriper>::GetTransformBufferBuffMidpoint();
+    return ZoomFilterBuffers::GetTransformBufferBuffMidpoint();
   }
 };
 
@@ -165,15 +167,12 @@ auto FullyUpdateDestBuffer(TestFilterBuffers& filterBuffers) noexcept -> void
 [[nodiscard]] auto GetFilterBuffers(Parallel& parallel, const TestZoomVector& zoomVector) noexcept
     -> TestFilterBuffers
 {
-  auto filterBufferStriper = std::make_unique<ZoomFilterBufferStriper>(
-      parallel,
-      GOOM_INFO,
-      NORMALIZED_COORDS_CONVERTER,
-      [&zoomVector](const NormalizedCoords& normalizedCoords,
-                    const NormalizedCoords& viewportCoords)
-      { return zoomVector.GetZoomPoint(normalizedCoords, viewportCoords); });
-
-  return TestFilterBuffers{std::move(filterBufferStriper)};
+  return TestFilterBuffers{parallel,
+                           GOOM_INFO,
+                           NORMALIZED_COORDS_CONVERTER,
+                           [&zoomVector](const NormalizedCoords& normalizedCoords,
+                                         const NormalizedCoords& viewportCoords)
+                           { return zoomVector.GetZoomPoint(normalizedCoords, viewportCoords); }};
 }
 
 constexpr auto TEST_X          = 10;

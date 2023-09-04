@@ -28,8 +28,6 @@ namespace GOOM::FILTER_FX
 
 class FilterBuffersService
 {
-  using FilterBuffers = ZoomFilterBuffers<ZoomFilterBufferStriper>;
-
 public:
   FilterBuffersService(UTILS::Parallel& parallel,
                        const PluginInfo& goomInfo,
@@ -53,7 +51,7 @@ public:
 
 private:
   std::unique_ptr<IZoomVector> m_zoomVector;
-  FilterBuffers m_filterBuffers;
+  ZoomFilterBuffers m_filterBuffers;
 
   FilterEffectsSettings m_nextFilterEffectsSettings{};
   bool m_pendingFilterEffectsSettings = false;
