@@ -38,6 +38,7 @@ public:
   auto SetFilterViewport(const Viewport& viewport) noexcept -> void;
 
   auto Start() noexcept -> void;
+  auto Finish() noexcept -> void;
 
   auto ResetTransformBufferToStart() noexcept -> void;
   auto StartTransformBufferStriping() noexcept -> void;

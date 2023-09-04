@@ -30,6 +30,7 @@ public:
                     const ZoomFilterBufferStriper::ZoomPointFunc& getZoomPointFunc) noexcept;
 
   auto Start() noexcept -> void;
+  auto Finish() noexcept -> void;
 
   auto SetTransformBufferMidpoint(const Point2dInt& val) noexcept -> void;
   auto SetFilterViewport(const Viewport& val) noexcept -> void;
@@ -89,6 +90,12 @@ inline auto ZoomFilterBuffers::Start() noexcept -> void
 {
   m_filterStriper.Start();
   m_updateStatus = UpdateStatus::IN_PROGRESS;
+}
+
+inline auto ZoomFilterBuffers::Finish() noexcept -> void
+{
+  m_updateStatus = UpdateStatus::AT_START;
+  m_filterStriper.Finish();
 }
 
 inline auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void

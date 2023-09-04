@@ -39,6 +39,7 @@ public:
       -> void;
 
   auto Start() noexcept -> void;
+  auto Finish() noexcept -> void;
 
   [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;

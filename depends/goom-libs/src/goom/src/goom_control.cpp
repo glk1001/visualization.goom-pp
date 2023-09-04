@@ -468,6 +468,7 @@ inline auto GoomControl::GoomControlImpl::Finish() -> void
 #endif
 
   m_visualFx.Finish();
+  m_filterBuffersService.Finish();
 
   m_goomLogger->StopGoomControl();
 }

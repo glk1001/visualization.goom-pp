@@ -58,6 +58,11 @@ auto FilterBuffersService::Start() noexcept -> void
   m_filterBuffers.Start();
 }
 
+auto FilterBuffersService::Finish() noexcept -> void
+{
+  m_filterBuffers.Finish();
+}
+
 auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
 {
   m_nextFilterEffectsSettings.afterEffectsSettings.rotationAdjustments.Reset();
