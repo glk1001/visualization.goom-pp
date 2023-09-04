@@ -16,6 +16,14 @@ namespace GOOM::FILTER_FX
 class ZoomFilterBuffers
 {
 public:
+  enum class UpdateStatus : UnderlyingEnumType
+  {
+    AT_START,
+    IN_PROGRESS,
+    READY_TO_COPY,
+    HAS_BEEN_COPIED,
+  };
+
   ZoomFilterBuffers(UTILS::Parallel& parallel,
                     const PluginInfo& goomInfo,
                     const NormalizedCoordsConverter& normalizedCoordsConverter,
@@ -26,16 +34,14 @@ public:
   auto SetTransformBufferMidpoint(const Point2dInt& val) noexcept -> void;
   auto SetFilterViewport(const Viewport& val) noexcept -> void;
 
-  [[nodiscard]] auto IsTransformBufferInProgress() const noexcept -> bool;
-  [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
-  [[nodiscard]] auto HasTransformBufferBeenCopied() const noexcept -> bool;
-  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
-  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
-  auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-
+  [[nodiscard]] auto GetUpdateStatus() const noexcept -> UpdateStatus;
   auto ResetTransformBufferToStart() noexcept -> void;
   auto StartTransformBufferStriping() noexcept -> void;
   auto UpdateTransformBuffer() noexcept -> void;
+
+  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
+  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
+  auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
 
 protected:
   // For testing only.
@@ -43,8 +49,7 @@ protected:
 
 private:
   ZoomFilterBufferStriper m_filterStriper;
-
-  auto UpdateNextTransformBufferStripe() noexcept -> void;
+  UpdateStatus m_updateStatus = UpdateStatus::AT_START;
 };
 
 inline ZoomFilterBuffers::ZoomFilterBuffers(
@@ -56,29 +61,9 @@ inline ZoomFilterBuffers::ZoomFilterBuffers(
 {
 }
 
-inline auto ZoomFilterBuffers::IsTransformBufferInProgress() const noexcept -> bool
+inline auto ZoomFilterBuffers::GetUpdateStatus() const noexcept -> UpdateStatus
 {
-  return m_filterStriper.GetTransformBufferUpdateStatus() ==
-         ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS;
-}
-
-inline auto ZoomFilterBuffers::IsTransformBufferReadyToCopy() const noexcept -> bool
-{
-  return m_filterStriper.GetTransformBufferUpdateStatus() ==
-         ZoomFilterBufferStriper::TransformBufferUpdateStatus::READY_TO_COPY;
-}
-
-inline auto ZoomFilterBuffers::HasTransformBufferBeenCopied() const noexcept -> bool
-{
-  return m_filterStriper.GetTransformBufferUpdateStatus() ==
-         ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED;
-}
-
-// NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
-inline auto ZoomFilterBuffers::CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept
-    -> void
-{
-  m_filterStriper.CopyTransformBuffer(destBuff);
+  return m_updateStatus;
 }
 
 inline auto ZoomFilterBuffers::GetTransformBufferBuffMidpoint() const noexcept -> Point2dInt
@@ -88,72 +73,77 @@ inline auto ZoomFilterBuffers::GetTransformBufferBuffMidpoint() const noexcept -
 
 inline auto ZoomFilterBuffers::SetTransformBufferMidpoint(const Point2dInt& val) noexcept -> void
 {
+  Expects(UpdateStatus::AT_START == m_updateStatus);
+
   m_filterStriper.SetTransformBufferMidpoint(val);
 }
 
 inline auto ZoomFilterBuffers::SetFilterViewport(const Viewport& val) noexcept -> void
 {
+  Expects(UpdateStatus::AT_START == m_updateStatus);
+
   m_filterStriper.SetFilterViewport(val);
 }
 
 inline auto ZoomFilterBuffers::Start() noexcept -> void
 {
   m_filterStriper.Start();
-  Ensures(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
-}
-
-inline auto ZoomFilterBuffers::UpdateTransformBuffer() noexcept -> void
-{
-  if (m_filterStriper.GetTransformBufferUpdateStatus() ==
-      ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED)
-  {
-    return;
-  }
-
-  Expects(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
-
-  UpdateNextTransformBufferStripe();
-
-  Ensures((m_filterStriper.GetTransformBufferUpdateStatus() ==
-           ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS) or
-          (m_filterStriper.GetTransformBufferUpdateStatus() ==
-           ZoomFilterBufferStriper::TransformBufferUpdateStatus::READY_TO_COPY));
+  m_updateStatus = UpdateStatus::IN_PROGRESS;
 }
 
 inline auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void
 {
-  Expects(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::HAS_BEEN_COPIED);
+  Expects(UpdateStatus::HAS_BEEN_COPIED == m_updateStatus);
 
   m_filterStriper.ResetTransformBufferToStart();
-
-  Ensures(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+  m_updateStatus = UpdateStatus::AT_START;
 }
 
 inline auto ZoomFilterBuffers::StartTransformBufferStriping() noexcept -> void
 {
-  Expects(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+  Expects(UpdateStatus::AT_START == m_updateStatus);
 
   m_filterStriper.StartTransformBufferStriping();
-
-  Ensures(m_filterStriper.GetTransformBufferUpdateStatus() ==
-          ZoomFilterBufferStriper::TransformBufferUpdateStatus::IN_PROGRESS);
+  m_updateStatus = UpdateStatus::IN_PROGRESS;
 }
 
-inline auto ZoomFilterBuffers::UpdateNextTransformBufferStripe() noexcept -> void
+inline auto ZoomFilterBuffers::UpdateTransformBuffer() noexcept -> void
 {
+  if (UpdateStatus::HAS_BEEN_COPIED == m_updateStatus)
+  {
+    return;
+  }
+
+  Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
+
   m_filterStriper.UpdateNextTransformBufferStripe();
+
+  if (m_filterStriper.HasFinishedTransformBuffer())
+  {
+    m_updateStatus = UpdateStatus::READY_TO_COPY;
+  }
+  else
+  {
+    Ensures(UpdateStatus::IN_PROGRESS == m_updateStatus);
+  }
 }
 
 inline auto ZoomFilterBuffers::GetPreviousTransformBuffer() const noexcept
     -> const std::vector<Point2dFlt>&
 {
-  Expects(IsTransformBufferReadyToCopy());
+  Expects(UpdateStatus::READY_TO_COPY == m_updateStatus);
+
   return m_filterStriper.GetPreviousTransformBuffer();
+}
+
+// NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
+inline auto ZoomFilterBuffers::CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept
+    -> void
+{
+  Expects(UpdateStatus::READY_TO_COPY == m_updateStatus);
+
+  m_filterStriper.CopyTransformBuffer(destBuff);
+  m_updateStatus = UpdateStatus::HAS_BEEN_COPIED;
 }
 
 } // namespace GOOM::FILTER_FX

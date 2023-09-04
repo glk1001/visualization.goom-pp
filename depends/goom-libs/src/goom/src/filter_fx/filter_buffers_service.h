@@ -8,6 +8,7 @@
 #include "utils/name_value_pairs.h"
 #include "zoom_vector.h"
 
+#include <cstdint>
 #include <memory>
 #include <span> // NOLINT: Waiting to use C++20.
 #include <string>
@@ -55,13 +56,14 @@ private:
 
   FilterEffectsSettings m_nextFilterEffectsSettings{};
   bool m_pendingFilterEffectsSettings = false;
+  uint64_t m_numFilterEffectsSettingsChanges = 0U;
 
   auto UpdateAllPendingSettings() noexcept -> void;
 };
 
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
 {
-  return m_filterBuffers.IsTransformBufferReadyToCopy();
+  return ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == m_filterBuffers.GetUpdateStatus();
 }
 
 inline auto FilterBuffersService::GetPreviousTransformBuffer() const noexcept

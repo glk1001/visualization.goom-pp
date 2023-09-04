@@ -2,6 +2,7 @@
 
 #include "filter_buffers_service.h"
 
+#include "filter_buffers.h"
 #include "filter_settings.h"
 #include "goom/goom_config.h"
 #include "goom_plugin_info.h"
@@ -17,6 +18,7 @@
 namespace GOOM::FILTER_FX
 {
 
+using UTILS::GetPair;
 using UTILS::MoveNameValuePairs;
 using UTILS::NameValuePairs;
 using UTILS::Parallel;
@@ -42,6 +44,7 @@ auto FilterBuffersService::SetFilterEffectsSettings(
 {
   m_nextFilterEffectsSettings    = filterEffectsSettings;
   m_pendingFilterEffectsSettings = true;
+  ++m_numFilterEffectsSettingsChanges;
 }
 
 auto FilterBuffersService::Start() noexcept -> void
@@ -50,6 +53,7 @@ auto FilterBuffersService::Start() noexcept -> void
   Expects(m_nextFilterEffectsSettings.zoomAdjustmentEffect != nullptr);
 
   UpdateAllPendingSettings();
+  m_numFilterEffectsSettingsChanges = 0U;
 
   m_filterBuffers.Start();
 }
@@ -65,7 +69,8 @@ auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
 
 auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 {
-  if (m_pendingFilterEffectsSettings and m_filterBuffers.HasTransformBufferBeenCopied())
+  if (m_pendingFilterEffectsSettings and
+      (ZoomFilterBuffers::UpdateStatus::HAS_BEEN_COPIED == m_filterBuffers.GetUpdateStatus()))
   {
     m_filterBuffers.ResetTransformBufferToStart();
 
@@ -73,7 +78,6 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
     Ensures(not m_pendingFilterEffectsSettings);
 
     m_filterBuffers.StartTransformBufferStriping();
-    Ensures(not m_filterBuffers.HasTransformBufferBeenCopied());
   }
 
   m_filterBuffers.UpdateTransformBuffer();
@@ -82,8 +86,12 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) const noexcept
     -> NameValuePairs
 {
-  auto nameValuePairs = NameValuePairs{};
+  static constexpr auto* PARAM_GROUP = "Buffer Service";
 
+  auto nameValuePairs = UTILS::NameValuePairs{
+      GetPair(PARAM_GROUP, "pending settings", m_pendingFilterEffectsSettings),
+      GetPair(PARAM_GROUP, "settings changes", m_numFilterEffectsSettingsChanges),
+  };
   MoveNameValuePairs(m_zoomVector->GetNameValueParams(paramGroup), nameValuePairs);
 
   return nameValuePairs;

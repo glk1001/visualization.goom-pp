@@ -157,7 +157,7 @@ auto FullyUpdateDestBuffer(TestFilterBuffers& filterBuffers) noexcept -> void
   while (true)
   {
     filterBuffers.UpdateTransformBuffer();
-    if (filterBuffers.IsTransformBufferReadyToCopy())
+    if (ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus())
     {
       break;
     }
@@ -196,9 +196,7 @@ TEST_CASE("ZoomFilterBuffers Basic")
 
   SECTION("Correct Starting TranBuffersState")
   {
-    REQUIRE(filterBuffers.IsTransformBufferInProgress());
-    REQUIRE(not filterBuffers.IsTransformBufferReadyToCopy());
-    REQUIRE(not filterBuffers.HasTransformBufferBeenCopied());
+    REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
   }
   SECTION("Correct Starting BuffMidpoint()")
   {
@@ -212,7 +210,7 @@ TEST_CASE("ZoomFilterBuffers Calculations - Correct Dest ZoomBufferTranPoint")
   auto filterBuffers = GetFilterBuffers(parallel, CONSTANT_ZOOM_VECTOR);
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 
   static constexpr auto NML_CONST_ZOOM_VECTOR_COORDS_1 =
       NORMALIZED_COORDS_CONVERTER.OtherToNormalizedCoords(CONST_ZOOM_VECTOR_COORDS_1);
@@ -256,7 +254,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
   auto filterBuffers = GetFilterBuffers(parallel, constantZoomVector);
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 
   TestCorrectStripesBasicValues(filterBuffers);
 
@@ -264,9 +262,9 @@ TEST_CASE("ZoomFilterBuffers Stripes")
   REQUIRE(CONST_ZOOM_VECTOR_COORDS_2 == constantZoomVector.GetConstCoords());
 
   // Make sure dest buffer is completely copied to srce buffer at end of update.
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
   FullyUpdateDestBuffer(filterBuffers);
-  REQUIRE(filterBuffers.IsTransformBufferReadyToCopy());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus());
 
   REQUIRE(CONST_ZOOM_VECTOR_COORDS_2 == constantZoomVector.GetConstCoords());
   REQUIRE(MID_PT == filterBuffers.GetBufferBuffMidpoint());
@@ -275,7 +273,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   const std_spn::span<Point2dFlt> destBuff{destBuffVec};
   filterBuffers.CopyTransformBuffer(destBuff);
-  REQUIRE(filterBuffers.HasTransformBufferBeenCopied());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::HAS_BEEN_COPIED == filterBuffers.GetUpdateStatus());
 
   static constexpr auto NML_CONST_ZOOM_VECTOR_COORDS_2 =
       NORMALIZED_COORDS_CONVERTER.OtherToNormalizedCoords(CONST_ZOOM_VECTOR_COORDS_2);
@@ -300,8 +298,9 @@ TEST_CASE("ZoomFilterBuffers Stripes")
   }
 
   filterBuffers.ResetTransformBufferToStart();
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_START == filterBuffers.GetUpdateStatus());
   filterBuffers.StartTransformBufferStriping();
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 }
 
 TEST_CASE("ZoomFilterBuffers Adjustment")
@@ -316,7 +315,7 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
 
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 
   SECTION("Correct Zoomed In Dest ZoomBufferTranPoint")
   {
@@ -331,9 +330,9 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
 
     // GetSourcePoint uses tranPoint which comes solely from the dest Zoom buffer.
     // Because we are using a zoomed in ZoomVectorFunc, tranPoint should be zoomed in.
-    REQUIRE(filterBuffers.IsTransformBufferInProgress());
+    REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
     FullyUpdateDestBuffer(filterBuffers);
-    REQUIRE(filterBuffers.IsTransformBufferReadyToCopy());
+    REQUIRE(ZoomFilterBuffers::UpdateStatus::READY_TO_COPY == filterBuffers.GetUpdateStatus());
 
     //    const auto expectedTranPoint = ZoomCoordTransforms::ScreenToTranPoint(TEST_SRCE_POINT);
     //    const auto expectedZoomedInTranPoint = Point2dInt{
@@ -364,7 +363,7 @@ TEST_CASE("ZoomFilterBuffers Clipping")
   auto filterBuffers = GetFilterBuffers(parallel, CONSTANT_ZOOM_VECTOR);
   filterBuffers.SetTransformBufferMidpoint({0, 0});
   filterBuffers.Start();
-  REQUIRE(filterBuffers.IsTransformBufferInProgress());
+  REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
 
   static constexpr auto NML_CONST_ZOOM_VECTOR_COORDS1 =
       NORMALIZED_COORDS_CONVERTER.OtherToNormalizedCoords(CONST_ZOOM_VECTOR_COORDS_1);

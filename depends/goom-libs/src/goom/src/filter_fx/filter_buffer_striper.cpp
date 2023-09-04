@@ -39,21 +39,18 @@ auto ZoomFilterBufferStriper::Start() noexcept -> void
   DoNextStripe(m_dimensions.GetHeight());
 
   Expects(UpdateStatus::AT_END == m_updateStatus);
-  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
   std::swap(m_previousTransformBuffer, m_transformBuffer);
 
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
   ResetTransformBufferToStart();
   StartTransformBufferStriping();
-  Ensures(UpdateStatus::IN_PROGRESS == m_updateStatus);
   Ensures(0 == m_transformBufferYLineStart);
+  Ensures(UpdateStatus::IN_PROGRESS == m_updateStatus);
 }
 
 auto ZoomFilterBufferStriper::ResetTransformBufferToStart() noexcept -> void
 {
-  m_transformBufferYLineStart   = 0;
-  m_updateStatus                = UpdateStatus::AT_START;
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::IN_PROGRESS;
+  m_transformBufferYLineStart = 0;
+  m_updateStatus              = UpdateStatus::AT_START;
 }
 
 auto ZoomFilterBufferStriper::CopyTransformBuffer(
@@ -61,10 +58,8 @@ auto ZoomFilterBufferStriper::CopyTransformBuffer(
     std_spn::span<Point2dFlt> destBuff) noexcept -> void
 {
   Expects(UpdateStatus::AT_END == m_updateStatus);
-  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
 
   std::copy(m_transformBuffer.cbegin(), m_transformBuffer.cend(), destBuff.begin());
-  m_transformBufferUpdateStatus = TransformBufferUpdateStatus::HAS_BEEN_COPIED;
 }
 
 /*
@@ -78,8 +73,8 @@ auto ZoomFilterBufferStriper::DoNextStripe(const uint32_t transformBufferStripeH
     -> void
 {
   Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
-  Expects(TransformBufferUpdateStatus::IN_PROGRESS == m_transformBufferUpdateStatus);
   Expects(m_transformBuffer.size() == m_dimensions.GetSize());
+  Expects(m_transformBufferYLineStart < m_dimensions.GetHeight());
 
   const auto screenWidth                  = m_dimensions.GetWidth();
   const auto screenSpan                   = static_cast<float>(screenWidth - 1);
@@ -121,8 +116,7 @@ auto ZoomFilterBufferStriper::DoNextStripe(const uint32_t transformBufferStripeH
   m_transformBufferYLineStart += transformBufferStripeHeight;
   if (tranBuffYLineEnd >= m_dimensions.GetHeight())
   {
-    m_updateStatus                = UpdateStatus::AT_END;
-    m_transformBufferUpdateStatus = TransformBufferUpdateStatus::READY_TO_COPY;
+    m_updateStatus = UpdateStatus::AT_END;
   }
 }
 

@@ -13,12 +13,11 @@
 namespace GOOM
 {
 class PluginInfo;
-
-namespace UTILS
+}
+namespace GOOM::UTILS
 {
 class Parallel;
 }
-} // namespace GOOM
 
 namespace GOOM::FILTER_FX
 {
@@ -30,13 +29,6 @@ public:
       std::function<NormalizedCoords(const NormalizedCoords& normalizedCoords,
                                      const NormalizedCoords& normalizedFilterViewportCoords)>;
 
-  enum class TransformBufferUpdateStatus
-  {
-    IN_PROGRESS,
-    READY_TO_COPY,
-    HAS_BEEN_COPIED,
-  };
-
   ZoomFilterBufferStriper(UTILS::Parallel& parallel,
                           const PluginInfo& goomInfo,
                           const NormalizedCoordsConverter& normalizedCoordsConverter,
@@ -47,14 +39,14 @@ public:
 
   auto Start() noexcept -> void;
 
-  [[nodiscard]] auto GetTransformBufferUpdateStatus() const noexcept -> TransformBufferUpdateStatus;
-  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
-  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
-  auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
-
   auto ResetTransformBufferToStart() noexcept -> void;
   auto StartTransformBufferStriping() noexcept -> void;
   auto UpdateNextTransformBufferStripe() noexcept -> void;
+  [[nodiscard]] auto HasFinishedTransformBuffer() const noexcept -> bool;
+
+  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
+  // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
+  auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
 
   // For testing only.
   [[nodiscard]] auto GetTransformBufferMidpoint() const noexcept -> Point2dInt;
@@ -86,8 +78,6 @@ private:
   uint32_t m_transformBufferStripeHeight  = m_dimensions.GetHeight() / NUM_STRIPE_GROUPS;
   std::vector<Point2dFlt> m_transformBuffer;
   std::vector<Point2dFlt> m_previousTransformBuffer;
-  TransformBufferUpdateStatus m_transformBufferUpdateStatus =
-      TransformBufferUpdateStatus::IN_PROGRESS;
 
   auto DoNextStripe(uint32_t transformBufferStripeHeight) noexcept -> void;
 };
@@ -115,12 +105,6 @@ inline auto ZoomFilterBufferStriper::SetFilterViewport(const Viewport& viewport)
   m_filterViewport = viewport;
 }
 
-inline auto ZoomFilterBufferStriper::GetTransformBufferUpdateStatus() const noexcept
-    -> TransformBufferUpdateStatus
-{
-  return m_transformBufferUpdateStatus;
-}
-
 inline auto ZoomFilterBufferStriper::StartTransformBufferStriping() noexcept -> void
 {
   Expects(UpdateStatus::AT_START == m_updateStatus);
@@ -133,11 +117,15 @@ inline auto ZoomFilterBufferStriper::UpdateNextTransformBufferStripe() noexcept 
   DoNextStripe(m_transformBufferStripeHeight);
 }
 
+inline auto ZoomFilterBufferStriper::HasFinishedTransformBuffer() const noexcept -> bool
+{
+  return UpdateStatus::AT_END == m_updateStatus;
+}
+
 inline auto ZoomFilterBufferStriper::GetPreviousTransformBuffer() const noexcept
     -> const std::vector<Point2dFlt>&
 {
   Expects(UpdateStatus::AT_END == m_updateStatus);
-  Expects(TransformBufferUpdateStatus::READY_TO_COPY == m_transformBufferUpdateStatus);
 
   return m_previousTransformBuffer;
 }
