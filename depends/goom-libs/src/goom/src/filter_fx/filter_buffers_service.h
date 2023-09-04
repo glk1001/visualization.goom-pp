@@ -12,16 +12,12 @@
 #include <memory>
 #include <span> // NOLINT: Waiting to use C++20.
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace GOOM
 {
 class PluginInfo;
-
-namespace UTILS
-{
-class Parallel;
-}
 } // namespace GOOM
 
 namespace GOOM::FILTER_FX
@@ -30,8 +26,7 @@ namespace GOOM::FILTER_FX
 class FilterBuffersService
 {
 public:
-  FilterBuffersService(UTILS::Parallel& parallel,
-                       const PluginInfo& goomInfo,
+  FilterBuffersService(const PluginInfo& goomInfo,
                        const NormalizedCoordsConverter& normalizedCoordsConverter,
                        std::unique_ptr<IZoomVector> zoomVector) noexcept;
 
@@ -69,6 +64,8 @@ private:
   bool m_pendingFilterEffectsSettings       = false;
   uint64_t m_numPendingFilterEffectsChanges = 0U;
 
+  std::thread m_bufferProducerThread{};
+  auto StartTransformBufferThread() noexcept -> void;
   auto UpdateAllPendingSettings() noexcept -> void;
 };
 

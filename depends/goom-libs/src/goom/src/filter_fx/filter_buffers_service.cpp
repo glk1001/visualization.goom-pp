@@ -9,13 +9,13 @@
 #include "goom_plugin_info.h"
 #include "normalized_coords.h"
 #include "utils/name_value_pairs.h"
-#include "utils/parallel_utils.h"
 #include "zoom_vector.h"
 
 #include <cmath>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 
 namespace GOOM::FILTER_FX
@@ -24,17 +24,14 @@ namespace GOOM::FILTER_FX
 using UTILS::GetPair;
 using UTILS::MoveNameValuePairs;
 using UTILS::NameValuePairs;
-using UTILS::Parallel;
 
 FilterBuffersService::FilterBuffersService(
-    Parallel& parallel,
     const PluginInfo& goomInfo,
     const NormalizedCoordsConverter& normalizedCoordsConverter,
     std::unique_ptr<IZoomVector> zoomVector) noexcept
   : m_goomTime{&goomInfo.GetTime()},
     m_zoomVector{std::move(zoomVector)},
     m_filterBuffers{
-        parallel,
         goomInfo,
         normalizedCoordsConverter,
         [this](const NormalizedCoords& normalizedCoords,
@@ -64,11 +61,19 @@ auto FilterBuffersService::Start() noexcept -> void
   m_numTransformBufferResets         = 0U;
 
   m_filterBuffers.Start();
+
+  StartTransformBufferThread();
 }
 
 auto FilterBuffersService::Finish() noexcept -> void
 {
   m_filterBuffers.Finish();
+  m_bufferProducerThread.join();
+}
+
+auto FilterBuffersService::StartTransformBufferThread() noexcept -> void
+{
+  m_bufferProducerThread = std::thread{&ZoomFilterBuffers::TransformBufferThread, &m_filterBuffers};
 }
 
 auto FilterBuffersService::UpdateAllPendingSettings() noexcept -> void
@@ -108,8 +113,6 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
     m_goomTimeAtStartOfTransformBuffer = m_goomTime->GetCurrentTime();
     m_goomTimeAtBufferReset            = m_goomTime->GetCurrentTime();
   }
-
-  m_filterBuffers.UpdateTransformBuffer();
 }
 
 auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) const noexcept

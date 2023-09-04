@@ -9,19 +9,16 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <mutex>
 
 namespace GOOM::FILTER_FX
 {
 
-using UTILS::Parallel;
-
-ZoomFilterBuffers::ZoomFilterBuffers(Parallel& parallel,
-                                     const PluginInfo& goomInfo,
+ZoomFilterBuffers::ZoomFilterBuffers(const PluginInfo& goomInfo,
                                      const NormalizedCoordsConverter& normalizedCoordsConverter,
                                      const ZoomPointFunc& getZoomPointFunc) noexcept
   : m_dimensions{goomInfo.GetDimensions()},
     m_normalizedCoordsConverter{&normalizedCoordsConverter},
-    m_parallel{&parallel},
     m_getZoomPoint{getZoomPointFunc},
     m_transformBuffer(m_dimensions.GetSize()),
     m_previousTransformBuffer(m_dimensions.GetSize())
@@ -39,36 +36,67 @@ auto ZoomFilterBuffers::Start() noexcept -> void
   StartTransformBufferUpdates();
 
   Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
-  DoNextStripe(m_dimensions.GetHeight());
-  Expects(UpdateStatus::AT_END == m_updateStatus);
+  DoNextTransformBuffer();
 
   std::swap(m_previousTransformBuffer, m_transformBuffer);
 
   ResetTransformBufferToStart();
   StartTransformBufferUpdates();
   Ensures(UpdateStatus::IN_PROGRESS == m_updateStatus);
+
+  m_shutdown = false;
 }
 
 auto ZoomFilterBuffers::Finish() noexcept -> void
 {
   ResetTransformBufferToStart();
+
+  m_shutdown = true;
+  m_bufferProducer_cv.notify_all();
 }
 
 auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void
 {
-  m_transformBufferYLineStart = 0;
-  m_updateStatus              = UpdateStatus::AT_START;
+  const auto lock = std::scoped_lock<std::mutex>{m_mutex};
+
+  m_updateStatus = UpdateStatus::AT_START;
+  m_bufferProducer_cv.notify_all();
 }
 
 auto ZoomFilterBuffers::StartTransformBufferUpdates() noexcept -> void
 {
+  const auto lock = std::scoped_lock<std::mutex>{m_mutex};
+
   Expects(UpdateStatus::AT_START == m_updateStatus);
 
   m_updateStatus = UpdateStatus::IN_PROGRESS;
+
+  m_bufferProducer_cv.notify_all();
+}
+
+auto ZoomFilterBuffers::TransformBufferThread() noexcept -> void
+{
+  while (not m_shutdown)
+  {
+    UpdateTransformBuffer();
+
+    auto lock = std::unique_lock<std::mutex>{m_mutex};
+    if (m_shutdown)
+    {
+      break;
+    }
+    if (UpdateStatus::IN_PROGRESS != m_updateStatus)
+    {
+      m_bufferProducer_cv.wait(
+          lock, [this] { return m_shutdown or (UpdateStatus::IN_PROGRESS == m_updateStatus); });
+    }
+  }
 }
 
 auto ZoomFilterBuffers::UpdateTransformBuffer() noexcept -> void
 {
+  auto lock = std::unique_lock<std::mutex>{m_mutex};
+
   if (UpdateStatus::HAS_BEEN_COPIED == m_updateStatus)
   {
     return;
@@ -76,23 +104,24 @@ auto ZoomFilterBuffers::UpdateTransformBuffer() noexcept -> void
 
   Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
 
-  DoNextStripe(m_transformBufferStripeHeight);
+  lock.unlock();
 
-  Ensures((UpdateStatus::IN_PROGRESS == m_updateStatus) or
-          (UpdateStatus::AT_END == m_updateStatus));
+  DoNextTransformBuffer();
+
+  lock.lock();
+
+  m_updateStatus = UpdateStatus::AT_END;
 }
 
 /*
- * Makes a stripe of a transform buffer
+ * Makes a transform buffer
  *
  * The transform is (in order) :
  * Translation (-data->middleX, -data->middleY)
  * Homothetie (Center : 0,0   Coeff : 2/data->screenWidth)
  */
-auto ZoomFilterBuffers::DoNextStripe(const uint32_t transformBufferStripeHeight) noexcept -> void
+auto ZoomFilterBuffers::DoNextTransformBuffer() noexcept -> void
 {
-  Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
-
   const auto screenWidth                  = m_dimensions.GetWidth();
   const auto screenSpan                   = static_cast<float>(screenWidth - 1);
   const auto sourceCoordsStepSize         = NormalizedCoords::COORD_WIDTH / screenSpan;
@@ -102,7 +131,7 @@ auto ZoomFilterBuffers::DoNextStripe(const uint32_t transformBufferStripeHeight)
       [this, &screenWidth, &sourceCoordsStepSize, &sourceViewportCoordsStepSize](const size_t y)
   {
     // Y-position of the first stripe pixel to compute in screen coordinates.
-    const auto yScreenCoord = static_cast<uint32_t>(y) + m_transformBufferYLineStart;
+    const auto yScreenCoord = static_cast<uint32_t>(y);
     auto tranBufferPos      = yScreenCoord * screenWidth;
 
     auto centredSourceCoords =
@@ -123,18 +152,7 @@ auto ZoomFilterBuffers::DoNextStripe(const uint32_t transformBufferStripeHeight)
     }
   };
 
-  // Where (vertically) to stop generating the buffer stripe.
-  const auto tranBuffYLineEnd =
-      std::min(m_dimensions.GetHeight(), m_transformBufferYLineStart + transformBufferStripeHeight);
-  const auto numStripes = static_cast<size_t>(tranBuffYLineEnd - m_transformBufferYLineStart);
-
-  m_parallel->ForLoop(numStripes, doTransformBufferRow);
-
-  m_transformBufferYLineStart += transformBufferStripeHeight;
-  if (tranBuffYLineEnd >= m_dimensions.GetHeight())
-  {
-    m_updateStatus = UpdateStatus::AT_END;
-  }
+  m_parallel.ForLoop(m_dimensions.GetHeight(), doTransformBufferRow);
 }
 
 } // namespace GOOM::FILTER_FX

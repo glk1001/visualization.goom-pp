@@ -23,7 +23,6 @@
 #include "goom/sound_info.h"
 #include "goom_plugin_info.h"
 #include "utils/math/goom_rand.h"
-#include "utils/parallel_utils.h"
 
 #include <vector>
 
@@ -47,17 +46,15 @@ using FILTER_FX::FilterZoomVector;
 using FILTER_FX::NormalizedCoords;
 using FILTER_FX::NormalizedCoordsConverter;
 using FILTER_FX::ZoomFilterBuffers;
-using UTILS::Parallel;
 using UTILS::MATH::GoomRand;
 
 class TestFilterBuffers : public ZoomFilterBuffers
 {
 public:
-  explicit TestFilterBuffers(Parallel& parallel,
-                             const PluginInfo& goomInfo,
-                             const NormalizedCoordsConverter& normalizedCoordsConverter,
-                             const ZoomFilterBuffers::ZoomPointFunc& getZoomPointFunc) noexcept
-    : ZoomFilterBuffers{parallel, goomInfo, normalizedCoordsConverter, getZoomPointFunc}
+  TestFilterBuffers(const PluginInfo& goomInfo,
+                    const NormalizedCoordsConverter& normalizedCoordsConverter,
+                    const ZoomFilterBuffers::ZoomPointFunc& getZoomPointFunc) noexcept
+    : ZoomFilterBuffers{goomInfo, normalizedCoordsConverter, getZoomPointFunc}
   {
   }
 
@@ -65,6 +62,8 @@ public:
   {
     return ZoomFilterBuffers::GetTransformBufferMidpoint();
   }
+
+  auto UpdateTransBuffer() noexcept -> void { ZoomFilterBuffers::UpdateTransformBuffer(); }
 };
 
 namespace
@@ -146,26 +145,9 @@ auto TestZoomVector::GetZoomPoint(const NormalizedCoords& coords,
 const auto IDENTITY_ZOOM_VECTOR = TestZoomVector{false};
 const auto CONSTANT_ZOOM_VECTOR = TestZoomVector{true};
 
-auto FullyUpdateDestBuffer(TestFilterBuffers& filterBuffers) noexcept -> void
+[[nodiscard]] auto GetFilterBuffers(const TestZoomVector& zoomVector) noexcept -> TestFilterBuffers
 {
-  filterBuffers.UpdateTransformBuffer();
-
-  filterBuffers.UpdateTransformBuffer();
-  while (true)
-  {
-    filterBuffers.UpdateTransformBuffer();
-    if (ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus())
-    {
-      break;
-    }
-  }
-}
-
-[[nodiscard]] auto GetFilterBuffers(Parallel& parallel, const TestZoomVector& zoomVector) noexcept
-    -> TestFilterBuffers
-{
-  return TestFilterBuffers{parallel,
-                           GOOM_INFO,
+  return TestFilterBuffers{GOOM_INFO,
                            NORMALIZED_COORDS_CONVERTER,
                            [&zoomVector](const NormalizedCoords& normalizedCoords,
                                          const NormalizedCoords& viewportCoords)
@@ -185,8 +167,7 @@ constexpr auto DUMMY_NML_COORDS = NORMALIZED_COORDS_CONVERTER.OtherToNormalizedC
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 TEST_CASE("ZoomFilterBuffers Basic")
 {
-  auto parallel      = Parallel{-1};
-  auto filterBuffers = GetFilterBuffers(parallel, IDENTITY_ZOOM_VECTOR);
+  auto filterBuffers = GetFilterBuffers(IDENTITY_ZOOM_VECTOR);
 
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
@@ -203,8 +184,7 @@ TEST_CASE("ZoomFilterBuffers Basic")
 
 TEST_CASE("ZoomFilterBuffers Calculations - Correct Dest ZoomBufferTranPoint")
 {
-  auto parallel      = Parallel{-1};
-  auto filterBuffers = GetFilterBuffers(parallel, CONSTANT_ZOOM_VECTOR);
+  auto filterBuffers = GetFilterBuffers(CONSTANT_ZOOM_VECTOR);
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
@@ -247,8 +227,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
 {
   auto constantZoomVector = TestZoomVector{true};
 
-  auto parallel      = Parallel{-1};
-  auto filterBuffers = GetFilterBuffers(parallel, constantZoomVector);
+  auto filterBuffers = GetFilterBuffers(constantZoomVector);
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
@@ -260,7 +239,7 @@ TEST_CASE("ZoomFilterBuffers Stripes")
 
   // Make sure dest buffer is completely copied to srce buffer at end of update.
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
-  FullyUpdateDestBuffer(filterBuffers);
+  filterBuffers.UpdateTransBuffer();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus());
 
   REQUIRE(CONST_ZOOM_VECTOR_COORDS_2 == constantZoomVector.GetConstCoords());
@@ -307,8 +286,7 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
 
   auto zoomVector = TestZoomVector{false};
 
-  auto parallel      = Parallel{-1};
-  auto filterBuffers = GetFilterBuffers(parallel, zoomVector);
+  auto filterBuffers = GetFilterBuffers(zoomVector);
 
   filterBuffers.SetTransformBufferMidpoint(MID_PT);
   filterBuffers.Start();
@@ -328,7 +306,7 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
     // GetSourcePoint uses tranPoint which comes solely from the dest Zoom buffer.
     // Because we are using a zoomed in ZoomVectorFunc, tranPoint should be zoomed in.
     REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
-    FullyUpdateDestBuffer(filterBuffers);
+    filterBuffers.UpdateTransBuffer();
     REQUIRE(ZoomFilterBuffers::UpdateStatus::AT_END == filterBuffers.GetUpdateStatus());
 
     //    const auto expectedTranPoint = ZoomCoordTransforms::ScreenToTranPoint(TEST_SRCE_POINT);
@@ -356,8 +334,7 @@ TEST_CASE("ZoomFilterBuffers Adjustment")
 
 TEST_CASE("ZoomFilterBuffers Clipping")
 {
-  auto parallel      = Parallel{-1};
-  auto filterBuffers = GetFilterBuffers(parallel, CONSTANT_ZOOM_VECTOR);
+  auto filterBuffers = GetFilterBuffers(CONSTANT_ZOOM_VECTOR);
   filterBuffers.SetTransformBufferMidpoint({0, 0});
   filterBuffers.Start();
   REQUIRE(ZoomFilterBuffers::UpdateStatus::IN_PROGRESS == filterBuffers.GetUpdateStatus());
