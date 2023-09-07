@@ -55,9 +55,9 @@ auto FilterBuffersService::Start() noexcept -> void
   UpdateAllPendingSettings();
 
   m_numPendingFilterEffectsChanges   = 0U;
-  m_totalGoomTimeOfTransformBuffers  = 0U;
+  m_totalGoomTimeOfBufferProcessing  = 0U;
   m_totalGoomTimeBetweenBufferResets = 0U;
-  m_numCompletedTransformBuffers     = 0U;
+  m_numTransformBuffersCompleted     = 0U;
   m_numTransformBufferResets         = 0U;
 
   m_filterBuffers.Start();
@@ -89,30 +89,44 @@ auto FilterBuffersService::UpdateTransformBuffer() noexcept -> void
 {
   if (ZoomFilterBuffers::UpdateStatus::HAS_BEEN_COPIED == m_filterBuffers.GetUpdateStatus())
   {
-    if (m_goomTimeAtStartOfTransformBuffer > 0U)
-    {
-      ++m_numCompletedTransformBuffers;
-      m_totalGoomTimeOfTransformBuffers +=
-          m_goomTime->GetElapsedTimeSince(m_goomTimeAtStartOfTransformBuffer);
-      m_goomTimeAtStartOfTransformBuffer = 0U;
-    }
+    UpdateCompletedTransformBufferStats();
   }
 
   if (m_pendingFilterEffectsSettings and
       (ZoomFilterBuffers::UpdateStatus::HAS_BEEN_COPIED == m_filterBuffers.GetUpdateStatus()))
   {
-    m_filterBuffers.ResetTransformBufferToStart();
-    ++m_numTransformBufferResets;
-    m_totalGoomTimeBetweenBufferResets += m_goomTime->GetElapsedTimeSince(m_goomTimeAtBufferReset);
-
-    UpdateAllPendingSettings();
-    Ensures(not m_pendingFilterEffectsSettings);
-    ++m_numPendingFilterEffectsChanges;
-
-    m_filterBuffers.StartTransformBufferUpdates();
-    m_goomTimeAtStartOfTransformBuffer = m_goomTime->GetCurrentTime();
-    m_goomTimeAtBufferReset            = m_goomTime->GetCurrentTime();
+    CompletePendingSettings();
   }
+}
+
+auto FilterBuffersService::CompletePendingSettings() noexcept -> void
+{
+  m_filterBuffers.ResetTransformBufferToStart();
+  ++m_numTransformBufferResets;
+  m_totalGoomTimeBetweenBufferResets +=
+      m_goomTime->GetElapsedTimeSince(m_goomTimeAtTransformBufferReset);
+
+  UpdateAllPendingSettings();
+  Ensures(not m_pendingFilterEffectsSettings);
+  ++m_numPendingFilterEffectsChanges;
+
+  m_filterBuffers.StartTransformBufferUpdates();
+  m_goomTimeAtTransformBufferStart = m_goomTime->GetCurrentTime();
+  m_goomTimeAtTransformBufferReset = m_goomTime->GetCurrentTime();
+}
+
+auto FilterBuffersService::UpdateCompletedTransformBufferStats() noexcept -> void
+{
+  if (m_goomTimeAtTransformBufferStart == 0U)
+  {
+    return;
+  }
+
+  m_totalGoomTimeOfBufferProcessing +=
+      m_goomTime->GetElapsedTimeSince(m_goomTimeAtTransformBufferStart);
+  ++m_numTransformBuffersCompleted;
+
+  m_goomTimeAtTransformBufferStart = 0U;
 }
 
 auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) const noexcept
@@ -121,31 +135,30 @@ auto FilterBuffersService::GetNameValueParams(const std::string& paramGroup) con
   static constexpr auto* PARAM_GROUP = "Buffer Service";
 
   auto nameValuePairs = UTILS::NameValuePairs{
-      GetPair(PARAM_GROUP, "pending changes", m_numPendingFilterEffectsChanges),
-      GetPair(PARAM_GROUP, "num compl buffs", m_numCompletedTransformBuffers),
-      GetPair(PARAM_GROUP, "av buff time", GetAverageGoomTimeOfTransformBuffers()),
-      GetPair(PARAM_GROUP, "num resets", m_numCompletedTransformBuffers),
-      GetPair(PARAM_GROUP, "av betw resets", GetAverageGoomTimeBetweenBufferResets()),
+      GetPair(PARAM_GROUP, "num pending changes", m_numPendingFilterEffectsChanges),
+      GetPair(PARAM_GROUP, "num completed buffs", m_numTransformBuffersCompleted),
+      GetPair(PARAM_GROUP, "av time to do buff", GetAverageGoomTimeOfBufferProcessing()),
+      GetPair(PARAM_GROUP, "av time betw resets", GetAverageGoomTimeBetweenBufferResets()),
   };
   MoveNameValuePairs(m_zoomVector->GetNameValueParams(paramGroup), nameValuePairs);
 
   return nameValuePairs;
 }
 
-auto FilterBuffersService::GetAverageGoomTimeOfTransformBuffers() const noexcept -> uint32_t
+auto FilterBuffersService::GetAverageGoomTimeOfBufferProcessing() const noexcept -> uint32_t
 {
-  if (m_numCompletedTransformBuffers == 0)
+  if (m_numTransformBuffersCompleted == 0)
   {
     return 0U;
   }
 
-  return static_cast<uint32_t>(std::round(static_cast<float>(m_totalGoomTimeOfTransformBuffers) /
-                                          static_cast<float>(m_numCompletedTransformBuffers)));
+  return static_cast<uint32_t>(std::round(static_cast<float>(m_totalGoomTimeOfBufferProcessing) /
+                                          static_cast<float>(m_numTransformBuffersCompleted)));
 }
 
 auto FilterBuffersService::GetAverageGoomTimeBetweenBufferResets() const noexcept -> uint32_t
 {
-  if (m_numCompletedTransformBuffers == 0)
+  if (m_numTransformBuffersCompleted == 0)
   {
     return 0U;
   }

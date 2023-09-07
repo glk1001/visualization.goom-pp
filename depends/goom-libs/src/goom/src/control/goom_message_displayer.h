@@ -31,7 +31,7 @@ private:
   DRAW::IGoomDraw* m_draw;
   std::string m_updateMessagesFontFile;
 
-  static constexpr int32_t MSG_FONT_SIZE         = 10;
+  static constexpr int32_t MSG_FONT_SIZE         = 9;
   static constexpr size_t DEFAULT_NUM_DISPLAYERS = 1;
   std::vector<DRAW::SHAPE_DRAWERS::TextDrawer> m_updateMessagesDisplayers{
       GetUpdateMessagesDisplayers(DEFAULT_NUM_DISPLAYERS, *m_draw, m_updateMessagesFontFile)};

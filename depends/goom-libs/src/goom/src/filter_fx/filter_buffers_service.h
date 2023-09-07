@@ -51,22 +51,24 @@ private:
   std::unique_ptr<IZoomVector> m_zoomVector;
   ZoomFilterBuffers m_filterBuffers;
 
-  uint64_t m_goomTimeAtStartOfTransformBuffer = 0U;
-  uint64_t m_goomTimeAtBufferReset            = 0U;
-  uint64_t m_totalGoomTimeOfTransformBuffers  = 0U;
-  uint64_t m_totalGoomTimeBetweenBufferResets = 0U;
-  uint32_t m_numCompletedTransformBuffers     = 0U;
-  uint32_t m_numTransformBufferResets         = 0U;
-  [[nodiscard]] auto GetAverageGoomTimeOfTransformBuffers() const noexcept -> uint32_t;
-  [[nodiscard]] auto GetAverageGoomTimeBetweenBufferResets() const noexcept -> uint32_t;
-
   FilterEffectsSettings m_nextFilterEffectsSettings{};
   bool m_pendingFilterEffectsSettings       = false;
   uint64_t m_numPendingFilterEffectsChanges = 0U;
 
   std::thread m_bufferProducerThread{};
   auto StartTransformBufferThread() noexcept -> void;
+  auto UpdateCompletedTransformBufferStats() noexcept -> void;
+  auto CompletePendingSettings() noexcept -> void;
   auto UpdateAllPendingSettings() noexcept -> void;
+
+  uint64_t m_goomTimeAtTransformBufferStart   = 0U;
+  uint64_t m_goomTimeAtTransformBufferReset   = 0U;
+  uint64_t m_totalGoomTimeOfBufferProcessing  = 0U;
+  uint64_t m_totalGoomTimeBetweenBufferResets = 0U;
+  uint32_t m_numTransformBuffersCompleted     = 0U;
+  uint32_t m_numTransformBufferResets         = 0U;
+  [[nodiscard]] auto GetAverageGoomTimeOfBufferProcessing() const noexcept -> uint32_t;
+  [[nodiscard]] auto GetAverageGoomTimeBetweenBufferResets() const noexcept -> uint32_t;
 };
 
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
