@@ -2,6 +2,7 @@
 
 #include "filter_buffers.h"
 #include "filter_settings.h"
+#include "goom/goom_time.h"
 #include "goom/point2d.h"
 #include "normalized_coords.h"
 #include "utils/name_value_pairs.h"
@@ -51,8 +52,18 @@ public:
       -> UTILS::NameValuePairs;
 
 private:
+  const GoomTime* m_goomTime;
   std::unique_ptr<IZoomVector> m_zoomVector;
   ZoomFilterBuffers m_filterBuffers;
+
+  uint64_t m_goomTimeAtStartOfTransformBuffer = 0U;
+  uint64_t m_goomTimeAtBufferReset            = 0U;
+  uint64_t m_totalGoomTimeOfTransformBuffers  = 0U;
+  uint64_t m_totalGoomTimeBetweenBufferResets = 0U;
+  uint32_t m_numCompletedTransformBuffers     = 0U;
+  uint32_t m_numTransformBufferResets         = 0U;
+  [[nodiscard]] auto GetAverageGoomTimeOfTransformBuffers() const noexcept -> uint32_t;
+  [[nodiscard]] auto GetAverageGoomTimeBetweenBufferResets() const noexcept -> uint32_t;
 
   FilterEffectsSettings m_nextFilterEffectsSettings{};
   bool m_pendingFilterEffectsSettings       = false;

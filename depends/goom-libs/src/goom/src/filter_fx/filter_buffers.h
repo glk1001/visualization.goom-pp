@@ -1,6 +1,7 @@
 #pragma once
 
 #include "goom/goom_config.h"
+#include "goom/goom_time.h"
 #include "goom/goom_types.h"
 #include "goom/point2d.h"
 #include "normalized_coords.h"
