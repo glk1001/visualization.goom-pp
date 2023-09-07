@@ -104,8 +104,8 @@ public:
   auto MultiplyRotation(float factor) -> void;
   auto ToggleRotationDirection() -> void;
 
-  static constexpr auto DEFAULT_TRAN_LERP_INCREMENT = 127.0F / 65536.0F;
-  static constexpr auto DEFAULT_SWITCH_MULT         = 1.0F - (29.0F / 30.0F);
+  static constexpr auto DEFAULT_TRAN_LERP_INCREMENT = 0.002F;
+  static constexpr auto DEFAULT_SWITCH_MULT         = 0.03F;
   auto SetTransformBufferLerpIncrement(float value) -> void;
   auto SetDefaultTransformBufferLerpIncrement() -> void;
   auto MultiplyTransformBufferLerpIncrement(float factor) -> void;

@@ -347,8 +347,9 @@ inline auto GoomMusicSettingsReactor::UpdateFilterSettings() -> void
 
 inline auto GoomMusicSettingsReactor::UpdateTransformBufferLerpData() -> void
 {
-  if (static constexpr auto NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE = 2U;
-      (m_goomInfo->GetSoundEvents().GetTimeSinceLastGoom() > 0U) or
+  static constexpr auto MIN_TIME_SINCE_LAST_GOOM            = 10U;
+  static constexpr auto NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE = 2U;
+  if ((m_goomInfo->GetSoundEvents().GetTimeSinceLastGoom() > MIN_TIME_SINCE_LAST_GOOM) or
       (m_goomInfo->GetSoundEvents().GetTotalGoomsInCurrentCycle() >=
        NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE))
   {
