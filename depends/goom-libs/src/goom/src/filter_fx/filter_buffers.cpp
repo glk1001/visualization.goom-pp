@@ -28,6 +28,7 @@ ZoomFilterBuffers::ZoomFilterBuffers(const PluginInfo& goomInfo,
 auto ZoomFilterBuffers::Start() noexcept -> void
 {
   Expects(m_transformBuffer.size() == m_dimensions.GetSize());
+  Expects(UpdateStatus::AT_START == m_updateStatus);
 
   // Make sure the previous transform buffer is filled and valid and
   // the current buffer is ready to be updated.
@@ -37,8 +38,7 @@ auto ZoomFilterBuffers::Start() noexcept -> void
 
   Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
   DoNextTransformBuffer();
-
-  std::swap(m_previousTransformBuffer, m_transformBuffer);
+  m_updateStatus = UpdateStatus::HAS_BEEN_COPIED;
 
   ResetTransformBufferToStart();
   StartTransformBufferUpdates();
@@ -49,18 +49,22 @@ auto ZoomFilterBuffers::Start() noexcept -> void
 
 auto ZoomFilterBuffers::Finish() noexcept -> void
 {
-  ResetTransformBufferToStart();
-
   m_shutdown = true;
   m_bufferProducer_cv.notify_all();
+
+  ResetTransformBufferToStart();
 }
 
 auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void
 {
-  const auto lock = std::scoped_lock<std::mutex>{m_mutex};
+  Expects(m_shutdown or (UpdateStatus::IN_PROGRESS != m_updateStatus));
+
+  if (UpdateStatus::HAS_BEEN_COPIED == m_updateStatus)
+  {
+    std::swap(m_previousTransformBuffer, m_transformBuffer);
+  }
 
   m_updateStatus = UpdateStatus::AT_START;
-  m_bufferProducer_cv.notify_all();
 }
 
 auto ZoomFilterBuffers::StartTransformBufferUpdates() noexcept -> void
