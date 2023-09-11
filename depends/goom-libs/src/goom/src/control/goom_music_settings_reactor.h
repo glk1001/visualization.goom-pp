@@ -30,8 +30,6 @@ public:
   auto Start() -> void;
   auto NewCycle() -> void;
 
-  auto ResetTransformBufferLerpData() -> void;
-
   auto ChangeFilterSettings() -> void;
   auto ChangeFilterModeIfMusicChanges() -> void;
 

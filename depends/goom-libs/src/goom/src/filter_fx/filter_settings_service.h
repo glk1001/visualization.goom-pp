@@ -92,7 +92,6 @@ public:
   [[nodiscard]] auto GetPreviousFilterModeName() const -> const std::string_view&;
 
   [[nodiscard]] auto GetFilterSettings() const -> const FilterSettings&;
-  [[nodiscard]] auto GetFilterSettings() -> FilterSettings&;
   [[nodiscard]] auto GetROVitesse() const -> const Vitesse&;
   [[nodiscard]] auto GetRWVitesse() -> Vitesse&;
 
@@ -106,15 +105,14 @@ public:
 
   static constexpr auto DEFAULT_TRAN_LERP_INCREMENT = 0.002F;
   static constexpr auto DEFAULT_SWITCH_MULT         = 0.03F;
+  auto ResetTransformBufferLerpData() -> void;
   auto SetTransformBufferLerpIncrement(float value) -> void;
   auto SetDefaultTransformBufferLerpIncrement() -> void;
   auto MultiplyTransformBufferLerpIncrement(float factor) -> void;
   auto SetTransformBufferLerpToMaxLerp(float value) -> void;
-  auto SetDefaultTransformBufferLerpToMaxLerp() -> void;
-  [[nodiscard]] auto GetNextTransformBufferLerpFactor(float currentLerpFactor) const noexcept
-      -> float;
 
 protected:
+  [[nodiscard]] auto GetFilterSettings() -> FilterSettings&;
   void SetFilterMode(ZoomFilterMode filterMode);
   [[nodiscard]] auto GetPluginInfo() const -> const PluginInfo&;
   [[nodiscard]] auto GetGoomRand() const -> const UTILS::MATH::IGoomRand&;
@@ -336,10 +334,16 @@ inline auto FilterSettingsService::ToggleRotationDirection() -> void
       AFTER_EFFECTS::RotationAdjustments::AdjustmentType::INSTEAD_OF_RANDOM);
 }
 
+inline auto FilterSettingsService::ResetTransformBufferLerpData() -> void
+{
+  m_filterSettings.transformBufferLerpData.Reset();
+  m_filterSettings.transformBufferLerpData.SetLerpToOneFactor(DEFAULT_SWITCH_MULT);
+}
+
 inline auto FilterSettingsService::SetTransformBufferLerpIncrement(const float value) -> void
 {
   Expects(value >= 0.0F);
-  m_filterSettings.transformBufferLerpData.lerpIncrement = value;
+  m_filterSettings.transformBufferLerpData.SetLerpFactor(value);
 }
 
 inline auto FilterSettingsService::SetDefaultTransformBufferLerpIncrement() -> void
@@ -349,19 +353,13 @@ inline auto FilterSettingsService::SetDefaultTransformBufferLerpIncrement() -> v
 
 inline auto FilterSettingsService::MultiplyTransformBufferLerpIncrement(const float factor) -> void
 {
-  m_filterSettings.transformBufferLerpData.lerpIncrement *= factor;
+  m_filterSettings.transformBufferLerpData.SetIncrement(
+      m_filterSettings.transformBufferLerpData.GetIncrement() * factor);
 }
 
 inline auto FilterSettingsService::SetTransformBufferLerpToMaxLerp(const float value) -> void
 {
-  Expects(value >= 0.0F);
-  Expects(value <= 1.0F);
-  m_filterSettings.transformBufferLerpData.lerpToMaxLerp = value;
-}
-
-inline auto FilterSettingsService::SetDefaultTransformBufferLerpToMaxLerp() -> void
-{
-  SetTransformBufferLerpToMaxLerp(DEFAULT_SWITCH_MULT);
+  m_filterSettings.transformBufferLerpData.SetLerpToOneFactor(value);
 }
 
 } // namespace GOOM::FILTER_FX

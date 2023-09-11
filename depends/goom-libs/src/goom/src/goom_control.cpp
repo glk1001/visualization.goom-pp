@@ -40,7 +40,6 @@
 #include "utils/debugging_logger.h"
 #include "utils/graphics/small_image_bitmaps.h"
 #include "utils/math/goom_rand.h"
-#include "utils/name_value_pairs.h"
 #include "utils/parallel_utils.h"
 #include "utils/stopwatch.h"
 #include "utils/strutils.h"
@@ -81,8 +80,6 @@ using FILTER_FX::NormalizedCoordsConverter;
 using FILTER_FX::FILTER_EFFECTS::CreateZoomAdjustmentEffect;
 using UTILS::GetNameValuesString;
 using UTILS::GetNumAvailablePoolThreads;
-using UTILS::GetPair;
-using UTILS::NameValuePairs;
 using UTILS::Parallel;
 using UTILS::Stopwatch;
 using UTILS::StringSplit;
@@ -145,8 +142,7 @@ private:
   GoomDrawToTwoBuffers m_multiBufferDraw{m_goomInfo.GetDimensions(), *m_goomLogger};
   FxHelper m_fxHelper;
 
-  FrameData* m_frameData            = nullptr;
-  float m_transformBufferLerpFactor = 0.0F;
+  FrameData* m_frameData = nullptr;
   auto UpdateFrameData() -> void;
   auto UpdateFrameDataFilterSrcePosBuffer() const noexcept -> void;
   auto UpdateFrameDataFilterDestPosBuffer() noexcept -> void;
@@ -202,7 +198,6 @@ private:
   auto DisplayTitleAndMessages(const std::string& message) -> void;
   auto DisplayCurrentTitle() -> void;
   auto UpdateMessages(const std::string& messages) -> void;
-  auto GetNameValueParams() const -> NameValuePairs;
 
 #ifdef DO_GOOM_STATE_DUMP
   std::unique_ptr<GoomStateDump> m_goomStateDump{};
@@ -358,23 +353,27 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
 
   if (not m_filterBuffersService.IsTransformBufferReadyToCopy())
   {
+    const auto lerpFactor = std::as_const(m_filterSettingsService)
+                                .GetFilterSettings()
+                                .transformBufferLerpData.GetLerpFactor();
     m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = false;
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = false;
-    m_frameData->miscData.lerpFactor                        = m_transformBufferLerpFactor;
+    m_frameData->miscData.filterPosBuffersLerpFactor        = lerpFactor;
   }
   else
   {
     UpdateFrameDataFilterSrcePosBuffer();
     UpdateFrameDataFilterDestPosBuffer();
-    m_frameData->miscData.lerpFactor = 0.0F;
+    m_frameData->miscData.filterPosBuffersLerpFactor = 0.0F;
 
-    m_transformBufferLerpFactor = 0.0F;
-    m_musicSettingsReactor.ResetTransformBufferLerpData();
+    m_filterSettingsService.ResetTransformBufferLerpData();
   }
 }
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataFilterSrcePosBuffer() const noexcept -> void
 {
+  const auto lerpFactor =
+      m_filterSettingsService.GetFilterSettings().transformBufferLerpData.GetLerpFactor();
   auto srceFilterPosBuffer        = m_frameData->filterPosArrays.filterSrcePos;
   const auto& destFilterPosBuffer = m_filterBuffersService.GetPreviousTransformBuffer();
 
@@ -382,8 +381,8 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterSrcePosBuffer() const no
                  destFilterPosBuffer.end(),
                  srceFilterPosBuffer.begin(),
                  srceFilterPosBuffer.begin(),
-                 [this](const Point2dFlt& destPos, const Point2dFlt& srcePos)
-                 { return lerp(srcePos, destPos, m_transformBufferLerpFactor); });
+                 [&lerpFactor](const Point2dFlt& destPos, const Point2dFlt& srcePos)
+                 { return lerp(srcePos, destPos, lerpFactor); });
 
   m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = true;
 }
@@ -656,9 +655,6 @@ inline auto GoomControl::GoomControlImpl::UpdateFilterSettings() -> void
 {
   const auto& newFilterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
 
-  m_transformBufferLerpFactor =
-      m_filterSettingsService.GetNextTransformBufferLerpFactor(m_transformBufferLerpFactor);
-
   m_visualFx.SetZoomMidpoint(newFilterSettings.filterEffectsSettings.zoomMidpoint);
 
   if (newFilterSettings.filterEffectsSettingsHaveChanged)
@@ -761,17 +757,8 @@ auto GoomControl::GoomControlImpl::DisplayGoomState() -> void
     return;
   }
 
-  const std::string message = GetGoomTimeInfo() + "\n" + GetNameValuesString(GetNameValueParams()) +
-                              "\n" + m_goomStateMonitor.GetCurrentState();
+  const std::string message = GetGoomTimeInfo() + "\n" + m_goomStateMonitor.GetCurrentState();
   UpdateMessages(message);
-}
-
-auto GoomControl::GoomControlImpl::GetNameValueParams() const -> NameValuePairs
-{
-  static constexpr auto* PARAM_GROUP = "Control Settings";
-  return {
-      GetPair(PARAM_GROUP, "lerp", m_transformBufferLerpFactor),
-  };
 }
 
 inline auto GoomControl::GoomControlImpl::GetGoomTimeInfo() -> std::string

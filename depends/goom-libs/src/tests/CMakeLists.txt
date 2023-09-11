@@ -16,6 +16,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_BINARY_DIR}/_deps/catch2-src
 
 add_executable(${GOOM_LIB_TESTS_NAME}
                src/test_main.cpp
+               src/test_lerp_data.cpp
                src/test_pixels.cpp
                src/color/test_color_maps_grids.cpp
                src/color/test_color_utils.cpp

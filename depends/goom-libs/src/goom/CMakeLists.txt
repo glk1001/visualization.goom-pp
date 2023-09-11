@@ -47,6 +47,7 @@ add_library(goom
             include/goom/circular_buffer.h
             include/goom/frame_data.h
             include/goom/goom_config.h
+            include/goom/goom_lerp_data.h
             include/goom/goom_time.h
             include/goom/goom_types.h
             include/goom/math20.h

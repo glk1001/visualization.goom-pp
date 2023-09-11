@@ -27,11 +27,11 @@ struct ImageArrays
 struct MiscData
 {
   // TODO(glk) - blending params, contrast, other command/effects
-  float lerpFactor          = 0.0F;
-  float brightness          = 1.0F;
-  float hueShift            = 0.0F;
-  float chromaFactor        = 1.0F;
-  float baseColorMultiplier = 1.0F;
+  float filterPosBuffersLerpFactor = 0.0F;
+  float brightness                 = 1.0F;
+  float hueShift                   = 0.0F;
+  float chromaFactor               = 1.0F;
+  float baseColorMultiplier        = 1.0F;
 };
 struct FrameData
 {

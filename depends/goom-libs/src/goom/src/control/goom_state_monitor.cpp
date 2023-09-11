@@ -95,8 +95,9 @@ inline auto GoomStateMonitor::GetFilterBufferValueParams() const -> UTILS::NameV
   const auto& transformBufferLerpData =
       m_filterSettingsService->GetFilterSettings().transformBufferLerpData;
   return {
-      GetPair(PARAM_GROUP, "LerpIncrement", transformBufferLerpData.lerpIncrement),
-      GetPair(PARAM_GROUP, "LerpToMaxLerp", transformBufferLerpData.lerpToMaxLerp),
+      GetPair(PARAM_GROUP, "LerpFactor", transformBufferLerpData.GetLerpFactor()),
+      GetPair(PARAM_GROUP, "LerpIncrement", transformBufferLerpData.GetIncrement()),
+      GetPair(PARAM_GROUP, "LerpToMaxLerp", transformBufferLerpData.GetLerpFactor()),
   };
 }
 

@@ -638,7 +638,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
                RotationAdjustments{},
             }
         },
-        {DEFAULT_TRAN_LERP_INCREMENT, DEFAULT_SWITCH_MULT},
+        {0.0F, DEFAULT_TRAN_LERP_INCREMENT, DEFAULT_SWITCH_MULT},
     },
     m_weightedFilterEvents{GetWeightedFilterEvents(goomRand)},
     m_zoomMidpointWeights{
@@ -692,30 +692,10 @@ inline auto FilterSettingsService::GetZoomAdjustmentEffect()
   return m_filterModeData[m_filterMode].zoomAdjustmentEffect;
 }
 
-auto FilterSettingsService::GetNextTransformBufferLerpFactor(
-    const float currentLerpFactor) const noexcept -> float
-{
-  const auto& transformBufferLerpData = m_filterSettings.transformBufferLerpData;
-  float nextTransformBufferLerpFactor = currentLerpFactor;
-
-  if (transformBufferLerpData.lerpIncrement > 0.0F)
-  {
-    nextTransformBufferLerpFactor =
-        std::min(nextTransformBufferLerpFactor + transformBufferLerpData.lerpIncrement, 1.0F);
-  }
-
-  if (transformBufferLerpData.lerpToMaxLerp > 0.0F)
-  {
-    nextTransformBufferLerpFactor =
-        STD20::lerp(nextTransformBufferLerpFactor, 1.0F, transformBufferLerpData.lerpToMaxLerp);
-  }
-
-  return nextTransformBufferLerpFactor;
-}
-
 auto FilterSettingsService::NewCycle() -> void
 {
   m_filterModeAtLastUpdate = m_filterMode;
+  m_filterSettings.transformBufferLerpData.Update();
 }
 
 auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() -> void

@@ -151,10 +151,10 @@ auto DisplacementFilter::InitFrameDataArray() noexcept -> void
 
 auto DisplacementFilter::InitMiscData(GOOM::MiscData& miscData) noexcept -> void
 {
-  miscData.lerpFactor          = 0.0F;
-  miscData.brightness          = 1.0F;
-  miscData.chromaFactor        = 1.0F;
-  miscData.baseColorMultiplier = 1.0F;
+  miscData.filterPosBuffersLerpFactor = 0.0F;
+  miscData.brightness                 = 1.0F;
+  miscData.chromaFactor               = 1.0F;
+  miscData.baseColorMultiplier        = 1.0F;
 }
 
 auto DisplacementFilter::InitImageArrays(GOOM::ImageArrays& imageArrays) noexcept -> void
@@ -588,7 +588,7 @@ auto DisplacementFilter::InitFrameDataArrayPointers(std::vector<FrameData>& fram
 auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept -> void
 {
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_LERP_FACTOR, m_frameDataArray.at(pboIndex).miscData.lerpFactor);
+      UNIFORM_LERP_FACTOR, m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_BASE_COLOR_MULTIPLIER, m_frameDataArray.at(pboIndex).miscData.baseColorMultiplier);
 }

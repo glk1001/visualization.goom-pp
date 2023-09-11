@@ -359,15 +359,9 @@ inline auto GoomMusicSettingsReactor::UpdateTransformBufferLerpData() -> void
   else
   {
     //    LogInfo(UTILS::GetGoomLogger(), "Resetting lerp.");
-    ResetTransformBufferLerpData();
+    m_filterSettingsService->ResetTransformBufferLerpData();
     ChangeRotation();
   }
-}
-
-auto GoomMusicSettingsReactor::ResetTransformBufferLerpData() -> void
-{
-  m_filterSettingsService->SetTransformBufferLerpIncrement(0.0F);
-  m_filterSettingsService->SetDefaultTransformBufferLerpToMaxLerp();
 }
 
 inline auto GoomMusicSettingsReactor::SetNewTransformBufferLerpDataBasedOnSpeed() -> void
