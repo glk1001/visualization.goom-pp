@@ -116,7 +116,7 @@ TEST_CASE("Normalized Coords Values")
 }
 // NOLINTEND(readability-function-cognitive-complexity)
 
-TEST_CASE("Normalized Coords Increment")
+TEST_CASE("Normalized Coords Update")
 {
   SECTION("IncX")
   {

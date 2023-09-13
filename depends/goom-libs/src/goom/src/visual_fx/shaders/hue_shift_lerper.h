@@ -47,7 +47,7 @@ private:
   auto SetNewDestHue() noexcept -> void;
   auto StopLerpAndSetHueShiftOff() noexcept -> void;
 
-  UTILS::Timer m_lerpOffTimer{m_lerpData.minLerpOffTime, false};
+  UTILS::Timer m_lerpOffTimer{m_goomInfo->GetTime(), m_lerpData.minLerpOffTime, false};
 
   [[nodiscard]] auto CanRestartLerp() const noexcept -> bool;
 };

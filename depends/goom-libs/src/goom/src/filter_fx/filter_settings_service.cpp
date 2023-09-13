@@ -607,7 +607,8 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
     m_screenCentre{goomInfo.GetDimensions().GetCentrePoint()},
     m_resourcesDirectory{resourcesDirectory},
     m_randomizedAfterEffects{
-        std::make_unique<AfterEffectsStates>(goomRand,
+        std::make_unique<AfterEffectsStates>(goomInfo.GetTime(),
+                                             goomRand,
                                              GetRepeatAfterEffectsProbability(),
                                              GetAfterEffectsOffTime())},
     m_filterModeData{GetFilterModeData(goomRand,
@@ -714,7 +715,6 @@ auto FilterSettingsService::GetNextTransformBufferLerpFactor(
 
 auto FilterSettingsService::NewCycle() -> void
 {
-  m_randomizedAfterEffects->UpdateTimers();
   m_filterModeAtLastUpdate = m_filterMode;
 }
 

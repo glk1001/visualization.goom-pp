@@ -95,8 +95,7 @@ private:
   auto UpdatePixelBlender() noexcept -> void;
 
   static constexpr uint32_t MAX_TIME_FOR_DOMINANT_COLOR = 100;
-  Timer m_timeWithThisDominantColor{MAX_TIME_FOR_DOMINANT_COLOR};
-  auto UpdateTimers() -> void;
+  Timer m_timeWithThisDominantColor{m_fxHelper->goomInfo->GetTime(), MAX_TIME_FOR_DOMINANT_COLOR};
 
   auto RefreshTentacles() -> void;
   auto DoTentaclesUpdate() -> void;
@@ -332,7 +331,6 @@ inline auto TentaclesFx::TentaclesImpl::ChangeDominantColor() -> void
 inline auto TentaclesFx::TentaclesImpl::ApplyToImageBuffers() -> void
 {
   UpdatePixelBlender();
-  UpdateTimers();
   DoTentaclesUpdate();
 }
 
@@ -340,11 +338,6 @@ inline auto TentaclesFx::TentaclesImpl::UpdatePixelBlender() noexcept -> void
 {
   m_fxHelper->draw->SetPixelBlendFunc(m_pixelBlender.GetCurrentPixelBlendFunc());
   m_pixelBlender.Update();
-}
-
-inline auto TentaclesFx::TentaclesImpl::UpdateTimers() -> void
-{
-  m_timeWithThisDominantColor.Increment();
 }
 
 inline auto TentaclesFx::TentaclesImpl::DoTentaclesUpdate() -> void

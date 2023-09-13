@@ -10,6 +10,7 @@
 
 namespace GOOM
 {
+class GoomTime;
 
 namespace UTILS::MATH
 {
@@ -42,6 +43,7 @@ struct TubeData
   TubeDrawFuncs drawFuncs{};
   uint32_t screenWidth{};
   uint32_t screenHeight{};
+  const GoomTime* goomTime{};
   const UTILS::MATH::IGoomRand* goomRand{};
   COLOR::WeightedRandomColorMaps mainColorMaps{};
   COLOR::WeightedRandomColorMaps lowColorMaps{};

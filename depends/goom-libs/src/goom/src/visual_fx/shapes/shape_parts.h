@@ -139,10 +139,10 @@ private:
   static constexpr uint32_t MEGA_COLOR_CHANGE_OFF_TIME        = 1000;
   static constexpr uint32_t MEGA_COLOR_CHANGE_OFF_FAILED_TIME = 20;
   UTILS::OnOffTimer m_megaColorChangeOnOffTimer{
-      {
-       MEGA_COLOR_CHANGE_ON_TIME, MEGA_COLOR_CHANGE_ON_FAILED_TIME,
-       MEGA_COLOR_CHANGE_OFF_TIME, MEGA_COLOR_CHANGE_OFF_FAILED_TIME,
-       }
+      m_goomInfo->GetTime(),
+      {MEGA_COLOR_CHANGE_ON_TIME,
+                   MEGA_COLOR_CHANGE_ON_FAILED_TIME, MEGA_COLOR_CHANGE_OFF_TIME,
+                   MEGA_COLOR_CHANGE_OFF_FAILED_TIME}
   };
   auto StartMegaColorChangeOnOffTimer() noexcept -> void;
   [[nodiscard]] auto SetMegaColorChangeOn() noexcept -> bool;

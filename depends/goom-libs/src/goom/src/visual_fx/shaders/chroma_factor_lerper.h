@@ -45,7 +45,7 @@ private:
   static constexpr uint32_t MIN_LERP_CONST_TIME     = 50U;
   static constexpr uint32_t MAX_LERP_CONST_TIME     = 100U;
   static constexpr uint32_t DEFAULT_LERP_CONST_TIME = MIN_LERP_CONST_TIME;
-  UTILS::Timer m_lerpConstTimer{DEFAULT_LERP_CONST_TIME, false};
+  UTILS::Timer m_lerpConstTimer{m_goomInfo->GetTime(), DEFAULT_LERP_CONST_TIME, false};
 };
 
 inline auto ChromaFactorLerper::GetChromaFactor() const noexcept -> float

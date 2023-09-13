@@ -102,7 +102,8 @@ LSystem::LSystem(DRAW::IGoomDraw& draw,
                  const std::string& lSystemDirectory,
                  const LSystemFile& lSystemFile,
                  const PixelChannelType defaultAlpha) noexcept
-  : m_goomRand{&goomRand},
+  : m_goomTime{&goomInfo.GetTime()},
+    m_goomRand{&goomRand},
     m_lineDrawerManager{draw, goomRand},
     m_lSysModelSet{GetLSysModelSet(goomInfo, lSystemDirectory, lSystemFile)},
     m_lSysColors{*m_goomRand, defaultAlpha},
@@ -177,9 +178,8 @@ inline auto LSystem::IncrementTs() noexcept -> void
 {
   m_lSysGeometry.IncrementTs();
   m_defaultInterpreterParams.Increment();
-  m_timeForThisLSysInterpreter.Increment();
   m_lSysPath.IncrementPositionT();
-  m_brightnessOnOffTimer.Increment();
+  m_brightnessOnOffTimer.Update();
 }
 
 auto LSystem::GetLSysModelSet(const PluginInfo& goomInfo,

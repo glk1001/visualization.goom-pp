@@ -59,8 +59,6 @@ void HighContrast::ChangeHighContrast()
 void HighContrast::UpdateHighContrast()
 {
   m_highContrastT.Increment();
-  m_highContrastOnTimer.Increment();
-  m_highContrastOffTimer.Increment();
 
   if (!m_highContrastOffTimer.Finished())
   {

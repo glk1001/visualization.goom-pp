@@ -26,7 +26,6 @@ ChromaFactorLerper::ChromaFactorLerper(const PluginInfo& goomInfo,
 
 auto ChromaFactorLerper::Update() noexcept -> void
 {
-  m_lerpConstTimer.Increment();
   if (not m_lerpConstTimer.Finished())
   {
     return;

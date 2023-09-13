@@ -196,8 +196,9 @@ private:
       {TValue::StepType::SINGLE_CYCLE, MIDDLE_POS_NUM_STEPS, TValue::MAX_T_VALUE}
   };
   [[nodiscard]] auto GetMiddlePos() const -> Point2dInt;
-  Timer m_allStayInCentreTimer{1};
-  Timer m_allStayAwayFromCentreTimer{MAX_STAY_AWAY_FROM_CENTRE_TIME};
+  Timer m_allStayInCentreTimer{m_fxHelper->goomInfo->GetTime(), 1};
+  Timer m_allStayAwayFromCentreTimer{m_fxHelper->goomInfo->GetTime(),
+                                     MAX_STAY_AWAY_FROM_CENTRE_TIME};
   auto IncrementAllJoinCentreT() -> void;
   [[nodiscard]] auto GetTransformedCentreVector(uint32_t tubeId, const Point2dInt& centre) const
       -> Vec2dInt;
@@ -211,9 +212,10 @@ private:
   };
 
   Timer m_colorMapTimer{
+      m_fxHelper->goomInfo->GetTime(),
       m_fxHelper->goomRand->GetRandInRange(MIN_COLORMAP_TIME, MAX_COLORMAP_TIME + 1)};
-  Timer m_changedSpeedTimer{1};
-  Timer m_jitterTimer{1};
+  Timer m_changedSpeedTimer{m_fxHelper->goomInfo->GetTime(), 1};
+  Timer m_jitterTimer{m_fxHelper->goomInfo->GetTime(), 1};
   auto InitTubes() -> void;
   auto InitPaths() -> void;
   auto ResetTubes() -> void;
@@ -431,6 +433,7 @@ auto TubesFx::TubeFxImpl::InitTubes() -> void
                                      drawToManyFuncs,
                                      m_fxHelper->draw->GetDimensions().GetWidth(),
                                      m_fxHelper->draw->GetDimensions().GetHeight(),
+                                     &m_fxHelper->goomInfo->GetTime(),
                                      m_fxHelper->goomRand,
                                      m_mainColorMaps,
                                      m_lowColorMaps,
@@ -444,6 +447,7 @@ auto TubesFx::TubeFxImpl::InitTubes() -> void
                                    drawToOneFuncs,
                                    m_fxHelper->draw->GetDimensions().GetWidth(),
                                    m_fxHelper->draw->GetDimensions().GetHeight(),
+                                   &m_fxHelper->goomInfo->GetTime(),
                                    m_fxHelper->goomRand,
                                    m_mainColorMaps,
                                    m_lowColorMaps,
@@ -573,9 +577,6 @@ inline auto TubesFx::TubeFxImpl::UpdatePixelBlender() noexcept -> void
 
 auto TubesFx::TubeFxImpl::DoUpdates() -> void
 {
-  m_colorMapTimer.Increment();
-  m_changedSpeedTimer.Increment();
-  m_jitterTimer.Increment();
   m_middlePosT.Increment();
 
   UpdatePixelBlender();
@@ -763,7 +764,7 @@ auto TubesFx::TubeFxImpl::UpdatePreviousShapesSettings() -> void
 auto TubesFx::TubeFxImpl::GetTransformedCentreVector(const uint32_t tubeId,
                                                      const Point2dInt& centre) const -> Vec2dInt
 {
-  if ((!m_allowMovingAwayFromCentre) || TUBE_SETTINGS.at(tubeId).noMoveFromCentre)
+  if ((!m_allowMovingAwayFromCentre) or TUBE_SETTINGS.at(tubeId).noMoveFromCentre)
   {
     return ToVec2dInt(GetMiddlePos());
   }
@@ -772,13 +773,11 @@ auto TubesFx::TubeFxImpl::GetTransformedCentreVector(const uint32_t tubeId,
 
 auto TubesFx::TubeFxImpl::IncrementAllJoinCentreT() -> void
 {
-  m_allStayInCentreTimer.Increment();
-  if (!m_allStayInCentreTimer.Finished())
+  if (not m_allStayInCentreTimer.Finished())
   {
     return;
   }
-  m_allStayAwayFromCentreTimer.Increment();
-  if (!m_allStayAwayFromCentreTimer.Finished())
+  if (not m_allStayAwayFromCentreTimer.Finished())
   {
     return;
   }

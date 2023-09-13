@@ -481,7 +481,7 @@ inline auto ShapePart::IncrementTs() noexcept -> void
   std::for_each(begin(m_shapePaths), end(m_shapePaths), [](ShapePath& path) { path.IncrementT(); });
 
   m_dotRadiusT.Increment();
-  m_megaColorChangeOnOffTimer.Increment();
+  m_megaColorChangeOnOffTimer.Update();
 }
 
 auto ShapePart::Draw(const DrawParams& drawParams) noexcept -> void

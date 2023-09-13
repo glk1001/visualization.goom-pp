@@ -82,8 +82,10 @@ private:
   std::vector<LSystem*> m_activeLSystems{m_lSystems.at(0).get()};
   static constexpr auto MIN_TIME_TO_KEEP_ACTIVE_LSYS = 200U;
   static constexpr auto MAX_TIME_TO_KEEP_ACTIVE_LSYS = 1000U;
-  Timer m_timeForTheseActiveLSys{m_fxHelper->goomRand->GetRandInRange(
-      MIN_TIME_TO_KEEP_ACTIVE_LSYS, MAX_TIME_TO_KEEP_ACTIVE_LSYS + 1U)};
+  Timer m_timeForTheseActiveLSys{
+      m_fxHelper->goomInfo->GetTime(),
+      m_fxHelper->goomRand->GetRandInRange(MIN_TIME_TO_KEEP_ACTIVE_LSYS,
+                                           MAX_TIME_TO_KEEP_ACTIVE_LSYS + 1U)};
 
   static constexpr auto MIN_NUM_ROTATE_DEGREES_STEPS = 50U;
   static constexpr auto MAX_NUM_ROTATE_DEGREES_STEPS = 500U;
@@ -386,7 +388,6 @@ inline auto LSystemFx::LSystemFxImpl::Update() noexcept -> void
     ChangeColors();
   }
 
-  m_timeForTheseActiveLSys.Increment();
   if (m_timeForTheseActiveLSys.Finished())
   {
     //LogInfo("Active l-system time finished.");

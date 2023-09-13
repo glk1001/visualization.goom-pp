@@ -79,7 +79,8 @@ private:
       -> std::array<Point2dInt, NUM_SHAPES>;
 
   static constexpr uint32_t TIME_BEFORE_SYNCHRONISED_CHANGE = 5000;
-  Timer m_synchronisedShapeChangesTimer{TIME_BEFORE_SYNCHRONISED_CHANGE};
+  Timer m_synchronisedShapeChangesTimer{m_fxHelper->goomInfo->GetTime(),
+                                        TIME_BEFORE_SYNCHRONISED_CHANGE};
 
   static constexpr uint32_t MIN_INCREMENTS_PER_UPDATE = 1;
   static constexpr uint32_t MAX_INCREMENTS_PER_UPDATE = 10;
@@ -348,7 +349,6 @@ inline auto ShapesFx::ShapesFxImpl::UpdatePixelBlender() noexcept -> void
 
 inline auto ShapesFx::ShapesFxImpl::UpdateShapeSpeeds() noexcept -> void
 {
-  m_synchronisedShapeChangesTimer.Increment();
   if (m_synchronisedShapeChangesTimer.Finished())
   {
     SetShapeSpeeds();

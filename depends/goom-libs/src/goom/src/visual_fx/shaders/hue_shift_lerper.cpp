@@ -25,7 +25,6 @@ HueShiftLerper::HueShiftLerper(const PluginInfo& goomInfo,
 
 auto HueShiftLerper::Update() noexcept -> void
 {
-  m_lerpOffTimer.Increment();
   if (not m_lerpOffTimer.Finished())
   {
     if (not CanRestartLerp())
@@ -78,7 +77,7 @@ inline auto HueShiftLerper::StopLerpAndSetHueShiftOff() noexcept -> void
 {
   m_lerpOffTimer.SetTimeLimit(
       m_goomRand->GetRandInRange(m_lerpData.minLerpOffTime, m_lerpData.maxLerpOffTime + 1));
-  LogInfo("LerpT = {}. Set off timer {}", m_lerpT(), m_lerpOffTimer.GetTimeLimit());
+  LogInfo("LerpT = {}. Set off timer {}", m_lerpT(), m_lerpOffTimer.GetTimeLeft());
 
   m_srceHueShift = GetHueShift();
   m_destHueShift = m_srceHueShift;

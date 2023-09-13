@@ -88,13 +88,13 @@ private:
   static constexpr uint32_t MAX_BLANK_AT_TARGET_TIME = 5;
   uint32_t m_blankAtTargetTime =
       m_fxHelper->goomRand->GetRandInRange(MIN_BLANK_AT_TARGET_TIME, MAX_BLANK_AT_TARGET_TIME + 1);
-  Timer m_blankAtTargetTimer{m_blankAtTargetTime, true};
+  Timer m_blankAtTargetTimer{m_fxHelper->goomInfo->GetTime(), m_blankAtTargetTime, true};
 
   static constexpr uint32_t MIN_PAUSE_AT_START_TIME = 0;
   static constexpr uint32_t MAX_PAUSE_AT_START_TIME = 0;
   uint32_t m_pauseAtStartTime =
       m_fxHelper->goomRand->GetRandInRange(MIN_PAUSE_AT_START_TIME, MAX_PAUSE_AT_START_TIME + 1);
-  Timer m_pauseAtStartTimer{m_pauseAtStartTime, true};
+  Timer m_pauseAtStartTimer{m_fxHelper->goomInfo->GetTime(), m_pauseAtStartTime, true};
 };
 
 CirclesFx::CirclesFx(const FxHelper& fxHelper, const SmallImageBitmaps& smallBitmaps) noexcept
@@ -281,7 +281,6 @@ inline auto CirclesFx::CirclesFxImpl::ApplyToImageBuffers() noexcept -> void
 
 inline auto CirclesFx::CirclesFxImpl::DrawCircles() noexcept -> void
 {
-  m_blankAtTargetTimer.Increment();
   if (not m_blankAtTargetTimer.Finished())
   {
     return;
@@ -298,7 +297,6 @@ inline auto CirclesFx::CirclesFxImpl::DrawCircles() noexcept -> void
 
 inline auto CirclesFx::CirclesFxImpl::IncrementTs() noexcept -> void
 {
-  m_pauseAtStartTimer.Increment();
   if (not m_pauseAtStartTimer.Finished())
   {
     return;

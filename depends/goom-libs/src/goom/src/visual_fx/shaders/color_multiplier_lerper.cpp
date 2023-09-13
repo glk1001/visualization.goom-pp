@@ -26,7 +26,6 @@ ColorMultiplierLerper::ColorMultiplierLerper(const PluginInfo& goomInfo,
 
 auto ColorMultiplierLerper::Update() noexcept -> void
 {
-  m_lerpConstTimer.Increment();
   if (not m_lerpConstTimer.Finished())
   {
     return;

@@ -2,6 +2,7 @@
 
 #include "after_effects_types.h"
 #include "filter_fx/filter_consts.h"
+#include "goom/goom_time.h"
 #include "utils/math/goom_rand_base.h"
 #include "utils/timer.h"
 
@@ -31,11 +32,11 @@ public:
     uint32_t effectOffTime;
   };
 
-  AfterEffectState(const IGoomRand& goomRand,
+  AfterEffectState(const GoomTime& goomTime,
+                   const IGoomRand& goomRand,
                    bool turnedOn,
                    const AfterEffectProperties& effectProperties) noexcept;
 
-  void UpdateTimer();
   void UpdateState(float effectProbability);
   void SetState(bool value);
   void CheckPendingOffTimerReset();
@@ -50,41 +51,49 @@ private:
   bool m_pendingOffTimerReset = false;
 };
 
-AfterEffectsStates::AfterEffectsStates(const IGoomRand& goomRand,
+AfterEffectsStates::AfterEffectsStates(const GoomTime& goomTime,
+                                       const IGoomRand& goomRand,
                                        const AfterEffectsProbabilityMap& repeatProbabilities,
                                        const AfterEffectsOffTimeMap& offTimes) noexcept
   : m_hypercosOverlayEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_HYPERCOS_OVERLAY_EFFECT,
         AfterEffectState::AfterEffectProperties{repeatProbabilities[AfterEffectsTypes::HYPERCOS],
                                                 offTimes[AfterEffectsTypes::HYPERCOS]})},
     m_imageVelocityEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_IMAGE_VELOCITY_EFFECT,
         AfterEffectState::AfterEffectProperties{
             repeatProbabilities[AfterEffectsTypes::IMAGE_VELOCITY],
             offTimes[AfterEffectsTypes::IMAGE_VELOCITY]})},
     m_noiseEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_NOISE_EFFECT,
         AfterEffectState::AfterEffectProperties{repeatProbabilities[AfterEffectsTypes::NOISE],
                                                 offTimes[AfterEffectsTypes::NOISE]})},
     m_planeEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_PLANE_EFFECT,
         AfterEffectState::AfterEffectProperties{repeatProbabilities[AfterEffectsTypes::PLANES],
                                                 offTimes[AfterEffectsTypes::PLANES]})},
     m_rotationEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_ROTATION_EFFECT,
         AfterEffectState::AfterEffectProperties{repeatProbabilities[AfterEffectsTypes::ROTATION],
                                                 offTimes[AfterEffectsTypes::ROTATION]})},
     m_tanEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_TAN_EFFECT,
         AfterEffectState::AfterEffectProperties{repeatProbabilities[AfterEffectsTypes::TAN_EFFECT],
                                                 offTimes[AfterEffectsTypes::TAN_EFFECT]})},
     m_xyLerpEffect{std::make_unique<AfterEffectState>(
+        goomTime,
         goomRand,
         DEFAULT_XY_LERP_EFFECT,
         AfterEffectState::AfterEffectProperties{
@@ -124,22 +133,6 @@ auto AfterEffectsStates::TurnPlaneEffectOn() -> void
 auto AfterEffectsStates::SetDefaults() -> void
 {
   m_hypercosOverlayMode = HypercosOverlayMode::NONE;
-}
-
-auto AfterEffectsStates::UpdateTimers() -> void
-{
-  if constexpr (ALL_AFTER_EFFECTS_TURNED_OFF)
-  {
-    return;
-  }
-
-  m_hypercosOverlayEffect->UpdateTimer();
-  m_imageVelocityEffect->UpdateTimer();
-  m_noiseEffect->UpdateTimer();
-  m_planeEffect->UpdateTimer();
-  m_rotationEffect->UpdateTimer();
-  m_tanEffect->UpdateTimer();
-  m_xyLerpEffect->UpdateTimer();
 }
 
 auto AfterEffectsStates::ResetAllStates(const AfterEffectsProbabilities& effectsProbabilities)
@@ -202,19 +195,15 @@ auto AfterEffectsStates::CheckForPendingOffTimers() -> void
 }
 
 inline AfterEffectsStates::AfterEffectState::AfterEffectState(
+    const GoomTime& goomTime,
     const UTILS::MATH::IGoomRand& goomRand,
     const bool turnedOn,
     const AfterEffectProperties& effectProperties) noexcept
   : m_goomRand{&goomRand},
     m_probabilityOfEffectRepeated{effectProperties.probabilityOfEffectRepeated},
     m_turnedOn{turnedOn},
-    m_offTimer{effectProperties.effectOffTime, true}
+    m_offTimer{goomTime, effectProperties.effectOffTime, true}
 {
-}
-
-inline auto AfterEffectsStates::AfterEffectState::UpdateTimer() -> void
-{
-  m_offTimer.Increment();
 }
 
 inline auto AfterEffectsStates::AfterEffectState::UpdateState(const float effectProbability) -> void

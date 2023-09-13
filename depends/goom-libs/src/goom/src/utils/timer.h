@@ -1,8 +1,10 @@
 #pragma once
 
 #include "goom/goom_config.h"
+#include "goom/goom_time.h"
 #include "goom/goom_types.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <functional>
 
@@ -12,22 +14,23 @@ namespace GOOM::UTILS
 class Timer
 {
 public:
-  Timer() noexcept = default;
-  explicit Timer(uint32_t timeLimit, bool setToFinished = false) noexcept;
+  Timer(const GoomTime& goomTime, uint64_t timeLimit, bool setToFinished = false) noexcept;
 
-  [[nodiscard]] auto GetTimeLimit() const noexcept -> uint32_t;
-  auto SetTimeLimit(uint32_t timeLimit, bool setToFinished = false) noexcept -> void;
+  [[nodiscard]] auto GetTimeLeft() const noexcept -> uint64_t;
+  auto SetTimeLimit(uint64_t timeLimit, bool setToFinished = false) noexcept -> void;
   auto ResetToZero() noexcept -> void;
   auto SetToFinished() noexcept -> void;
 
-  auto Increment() noexcept -> void;
   [[nodiscard]] auto JustFinished() const noexcept -> bool;
   [[nodiscard]] auto Finished() const noexcept -> bool;
-  [[nodiscard]] auto GetCurrentCount() const noexcept -> uint64_t;
+  [[nodiscard]] auto GetTimeElapsed() const noexcept -> uint64_t;
 
 private:
-  uint32_t m_timeLimit = 0U;
-  uint64_t m_count     = 0U;
+  const GoomTime* m_goomTime;
+  uint64_t m_startTime;
+  uint64_t m_timeLimit;
+  uint64_t m_targetTime;
+  bool m_finished;
 };
 
 class OnOffTimer
@@ -40,9 +43,10 @@ public:
     uint32_t numOffCount;
     uint32_t numOffCountAfterFailedOn;
   };
-  explicit OnOffTimer(const TimerCounts& timerCounts) noexcept;
+  OnOffTimer(const GoomTime& goomTime, const TimerCounts& timerCounts) noexcept;
 
   auto Reset() noexcept -> void;
+  auto SetTimerCounts(const TimerCounts& timerCounts) noexcept;
 
   using Action = std::function<bool()>; // return true if action succeeded.
   struct OnAndOffActions
@@ -57,13 +61,13 @@ public:
 
   auto Stop() noexcept -> void;
 
-  auto Increment() noexcept -> void;
+  auto Update() noexcept -> void;
   auto TryToChangeState() noexcept -> void;
 
 private:
   TimerCounts m_timerCounts;
-  Timer m_onTimer{m_timerCounts.numOnCount, true};
-  Timer m_offTimer{m_timerCounts.numOffCount, true};
+  Timer m_onTimer;
+  Timer m_offTimer;
   Action m_onAction  = nullptr;
   Action m_offAction = nullptr;
   enum class TimerState : UnderlyingEnumType
@@ -77,61 +81,65 @@ private:
   auto ChangeStateToOn() -> void;
 };
 
-inline Timer::Timer(const uint32_t timeLimit, const bool setToFinished) noexcept
-  : m_timeLimit{timeLimit}, m_count(setToFinished ? m_timeLimit : 0)
+inline Timer::Timer(const GoomTime& goomTime,
+                    const uint64_t timeLimit,
+                    const bool setToFinished) noexcept
+  : m_goomTime{&goomTime},
+    m_startTime{m_goomTime->GetCurrentTime()},
+    m_timeLimit{timeLimit},
+    m_targetTime{m_startTime + timeLimit},
+    m_finished{setToFinished}
 {
 }
 
-inline auto Timer::GetCurrentCount() const noexcept -> uint64_t
+inline auto Timer::GetTimeElapsed() const noexcept -> uint64_t
 {
-  return m_count;
+  return std::min(m_timeLimit, m_goomTime->GetElapsedTimeSince(m_startTime));
 }
 
-inline auto Timer::GetTimeLimit() const noexcept -> uint32_t
+inline auto Timer::GetTimeLeft() const noexcept -> uint64_t
 {
-  return m_timeLimit;
-}
-
-inline auto Timer::SetTimeLimit(const uint32_t timeLimit, const bool setToFinished) noexcept -> void
-{
-  m_timeLimit = timeLimit;
-
-  if (setToFinished)
+  if (m_finished or (m_goomTime->GetCurrentTime() >= m_targetTime))
   {
-    SetToFinished();
+    return 0U;
   }
-  else
-  {
-    ResetToZero();
-  }
-}
-
-inline auto Timer::JustFinished() const noexcept -> bool
-{
-  return m_count == m_timeLimit;
-}
-
-inline auto Timer::Finished() const noexcept -> bool
-{
-  return m_count >= m_timeLimit;
+  return m_targetTime - m_goomTime->GetCurrentTime();
 }
 
 inline auto Timer::ResetToZero() noexcept -> void
 {
-  m_count = 0;
+  m_startTime  = m_goomTime->GetCurrentTime();
+  m_targetTime = m_startTime + m_timeLimit;
+  m_finished   = false;
 }
 
 inline auto Timer::SetToFinished() noexcept -> void
 {
-  m_count = m_timeLimit;
+  m_finished = true;
 }
 
-inline auto Timer::Increment() noexcept -> void
+inline auto Timer::SetTimeLimit(const uint64_t timeLimit, const bool setToFinished) noexcept -> void
 {
-  ++m_count;
+  m_startTime  = m_goomTime->GetCurrentTime();
+  m_timeLimit  = timeLimit;
+  m_targetTime = m_startTime + timeLimit;
+  m_finished   = setToFinished;
 }
 
-inline OnOffTimer::OnOffTimer(const TimerCounts& timerCounts) noexcept : m_timerCounts{timerCounts}
+inline auto Timer::JustFinished() const noexcept -> bool
+{
+  return m_goomTime->GetCurrentTime() == m_targetTime;
+}
+
+inline auto Timer::Finished() const noexcept -> bool
+{
+  return m_finished or (m_goomTime->GetCurrentTime() >= m_targetTime);
+}
+
+inline OnOffTimer::OnOffTimer(const GoomTime& goomTime, const TimerCounts& timerCounts) noexcept
+  : m_timerCounts{timerCounts},
+    m_onTimer{goomTime, m_timerCounts.numOnCount, true},
+    m_offTimer{goomTime, m_timerCounts.numOffCount, true}
 {
 }
 
@@ -142,6 +150,13 @@ inline auto OnOffTimer::Reset() noexcept -> void
   m_onTimer.SetToFinished();
   m_offTimer.SetToFinished();
   m_timerState = TimerState::NO_TIMERS_ACTIVE;
+}
+
+inline auto OnOffTimer::SetTimerCounts(const TimerCounts& timerCounts) noexcept
+{
+  m_timerCounts = timerCounts;
+  m_onTimer.SetTimeLimit(m_timerCounts.numOnCount, true);
+  m_offTimer.SetTimeLimit(m_timerCounts.numOffCount, true);
 }
 
 inline auto OnOffTimer::SetActions(const OnAndOffActions& onAndOffActions) noexcept -> void
@@ -213,12 +228,11 @@ inline auto OnOffTimer::TryToChangeState() noexcept -> void
   }
 }
 
-inline auto OnOffTimer::Increment() noexcept -> void
+inline auto OnOffTimer::Update() noexcept -> void
 {
   if (TimerState::ON_TIMER_ACTIVE == m_timerState)
   {
     Expects(m_offTimer.Finished());
-    m_onTimer.Increment();
     if (m_onTimer.Finished())
     {
       ChangeStateToOff();
@@ -227,7 +241,6 @@ inline auto OnOffTimer::Increment() noexcept -> void
   else if (TimerState::OFF_TIMER_ACTIVE == m_timerState)
   {
     Expects(m_onTimer.Finished());
-    m_offTimer.Increment();
     if (m_offTimer.Finished())
     {
       ChangeStateToOn();

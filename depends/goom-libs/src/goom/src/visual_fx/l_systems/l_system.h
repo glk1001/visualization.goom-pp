@@ -3,6 +3,7 @@
 #include "../goom_visual_fx.h"
 #include "draw/goom_draw.h"
 #include "goom/goom_graphic.h"
+#include "goom/goom_time.h"
 #include "goom/point2d.h"
 #include "goom_plugin_info.h"
 #include "line_drawer_manager.h"
@@ -88,6 +89,7 @@ public:
   auto DrawLSystem() noexcept -> void;
 
 private:
+  const GoomTime* m_goomTime;
   const UTILS::MATH::IGoomRand* m_goomRand;
   LineDrawerManager m_lineDrawerManager;
   auto SwitchLineDrawers() -> void;
@@ -143,9 +145,10 @@ private:
   static constexpr auto ON_BRIGHTNESS              = 2.0F;
   static constexpr auto OFF_BRIGHTNESS             = 1.0F;
   UTILS::OnOffTimer m_brightnessOnOffTimer{
+      *m_goomTime,
       {BRIGHTNESS_ON_TIME,
-       BRIGHTNESS_FAILED_ON_TIME, BRIGHTNESS_OFF_TIME,
-       BRIGHTNESS_FAILED_OFF_TIME}
+                  BRIGHTNESS_FAILED_ON_TIME, BRIGHTNESS_OFF_TIME,
+                  BRIGHTNESS_FAILED_OFF_TIME}
   };
   auto StartBrightnessTimer() noexcept -> void;
 
@@ -156,7 +159,7 @@ private:
 
   uint32_t m_maxGen                              = 1U;
   static constexpr auto TIME_TO_KEEP_INTERPRETER = 500U;
-  UTILS::Timer m_timeForThisLSysInterpreter{TIME_TO_KEEP_INTERPRETER};
+  UTILS::Timer m_timeForThisLSysInterpreter{*m_goomTime, TIME_TO_KEEP_INTERPRETER};
   auto UpdateLSysModel() noexcept -> void;
   auto InitNextLSysInterpreter() -> void;
   static constexpr auto DEFAULT_NUM_INTERPRETER_PARAMS_STEPS = 100U;

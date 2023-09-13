@@ -202,16 +202,17 @@ private:
       -> std::vector<Shape>;
 
   Timer m_circleGroupTimer{
-      m_data.goomRand->GetRandInRange(MIN_NUM_CIRCLES_IN_GROUP, MAX_NUM_CIRCLES_IN_GROUP)};
-  Timer m_interiorShapeTimer{MAX_INTERIOR_SHAPES_TIME};
-  Timer m_noBoundaryShapeTimer{MAX_NO_BOUNDARY_SHAPES_TIME};
-  Timer m_hexDotShapeTimer{MAX_HEX_DOT_SHAPES_TIME, true};
+      *m_data.goomTime,
+      m_data.goomRand->GetRandInRange(MIN_NUM_CIRCLES_IN_GROUP, MAX_NUM_CIRCLES_IN_GROUP + 1)};
+  Timer m_interiorShapeTimer{*m_data.goomTime, MAX_INTERIOR_SHAPES_TIME};
+  Timer m_noBoundaryShapeTimer{*m_data.goomTime, MAX_NO_BOUNDARY_SHAPES_TIME};
+  Timer m_hexDotShapeTimer{*m_data.goomTime, MAX_HEX_DOT_SHAPES_TIME, true};
   float m_hexLen = MIN_HEX_SIZE;
   [[nodiscard]] auto GetHexLen() const noexcept -> float;
   uint32_t m_interiorShapeSize{GetInteriorShapeSize(m_hexLen)};
   [[nodiscard]] auto GetInteriorShapeSize(float hexLen) const noexcept -> uint32_t;
 
-  Timer m_lowColorTypeTimer{MAX_LOW_COLOR_TYPE_TIME};
+  Timer m_lowColorTypeTimer{*m_data.goomTime, MAX_LOW_COLOR_TYPE_TIME};
   LowColorTypes m_currentLowColorType = LowColorTypes::TRUE_LOW_COLOR;
   Weights<LowColorTypes> m_lowColorTypes;
 
@@ -454,6 +455,7 @@ Tube::TubeImpl::TubeImpl(
         }
     }
 {
+  Ensures(m_shapes.size() > 0);
 }
 
 auto Tube::TubeImpl::GetInitialShapes(const TubeData& data,
@@ -466,6 +468,7 @@ auto Tube::TubeImpl::GetInitialShapes(const TubeData& data,
                       data.radiusEdgeOffset;
   static constexpr auto ANGLE_STEP = TWO_PI / static_cast<float>(NUM_SHAPES_PER_TUBE);
 
+  static_assert(NUM_SHAPES_PER_TUBE > 0);
   auto shapes = std::vector<Shape>(NUM_SHAPES_PER_TUBE);
 
   auto angle    = 0.0F;
@@ -518,7 +521,7 @@ auto Tube::TubeImpl::ResetColorMaps() noexcept -> void
 {
   m_colorizer->ResetColorMaps();
   m_circleGroupTimer.SetTimeLimit(
-      m_data.goomRand->GetRandInRange(MIN_NUM_CIRCLES_IN_GROUP, MAX_NUM_CIRCLES_IN_GROUP));
+      m_data.goomRand->GetRandInRange(MIN_NUM_CIRCLES_IN_GROUP, MAX_NUM_CIRCLES_IN_GROUP + 1));
 }
 
 inline auto Tube::TubeImpl::RotateShapeColorMaps() noexcept -> void
@@ -675,31 +678,26 @@ inline auto Tube::TubeImpl::UpdateTValues() noexcept -> void
 
 inline auto Tube::TubeImpl::UpdateTimers() noexcept -> void
 {
-  m_circleGroupTimer.Increment();
   if (m_circleGroupTimer.Finished())
   {
     m_circleGroupTimer.ResetToZero();
   }
 
-  m_interiorShapeTimer.Increment();
-  if (m_interiorShapeTimer.Finished() && m_data.goomRand->ProbabilityOf(PROB_INTERIOR_SHAPE))
+  if (m_interiorShapeTimer.Finished() and m_data.goomRand->ProbabilityOf(PROB_INTERIOR_SHAPE))
   {
     m_interiorShapeTimer.ResetToZero();
   }
 
-  m_noBoundaryShapeTimer.Increment();
-  if (m_noBoundaryShapeTimer.Finished() && m_data.goomRand->ProbabilityOf(PROB_NO_BOUNDARY_SHAPES))
+  if (m_noBoundaryShapeTimer.Finished() and m_data.goomRand->ProbabilityOf(PROB_NO_BOUNDARY_SHAPES))
   {
     m_noBoundaryShapeTimer.ResetToZero();
   }
 
-  m_hexDotShapeTimer.Increment();
-  if (m_hexDotShapeTimer.Finished() && m_data.goomRand->ProbabilityOf(PROB_HEX_DOT_SHAPE))
+  if (m_hexDotShapeTimer.Finished() and m_data.goomRand->ProbabilityOf(PROB_HEX_DOT_SHAPE))
   {
     m_hexDotShapeTimer.ResetToZero();
   }
 
-  m_lowColorTypeTimer.Increment();
   if (m_lowColorTypeTimer.Finished())
   {
     m_currentLowColorType = m_lowColorTypes.GetRandomWeighted();
@@ -726,7 +724,7 @@ auto Tube::TubeImpl::DrawShape(const Shape& shape, const Vec2dInt& centreOffset)
 
   const auto allColors =
       m_colorizer->GetColors(m_currentLowColorType,
-                             static_cast<uint32_t>(m_circleGroupTimer.GetCurrentCount()),
+                             static_cast<uint32_t>(m_circleGroupTimer.GetTimeElapsed()),
                              shape,
                              shapeCentrePos);
 
@@ -829,6 +827,8 @@ ShapeColorizer::ShapeColorizer(const uint32_t numShapes,
     },
     m_brightnessAttenuation{{m_data.screenWidth, m_data.screenHeight, CUTOFF_BRIGHTNESS}}
 {
+  Expects(numShapes > 0);
+  Expects(numCircles > 0);
   InitColorMaps();
   ResetColorMaps();
 }
@@ -1104,7 +1104,7 @@ inline auto ShapeColorizer::GetInnerLowMixedColor(const LowColorTypes colorType,
 
 inline auto ShapeColorizer::GetShapeNumToUse(const uint32_t shapeNum) const noexcept -> uint32_t
 {
-  return (m_colorMapMixMode == ColorMapMixMode::STRIPED_SHAPES_ONLY) ||
+  return (m_colorMapMixMode == ColorMapMixMode::STRIPED_SHAPES_ONLY) or
                  (m_colorMapMixMode == ColorMapMixMode::STRIPED_SHAPES_AND_CIRCLES)
              ? (shapeNum / m_stripeWidth)
              : shapeNum;
@@ -1114,14 +1114,16 @@ inline auto ShapeColorizer::GetShapeColors(const uint32_t shapeNum,
                                            const float brightness) const noexcept -> ShapeColors
 {
   return GetColors(
-      m_shapeColorMaps[shapeNum], m_shapeColorsT, m_oldShapeColors[shapeNum], brightness);
+      m_shapeColorMaps.at(shapeNum), m_shapeColorsT, m_oldShapeColors.at(shapeNum), brightness);
 }
 
 inline auto ShapeColorizer::GetCircleColors(const uint32_t circleNum,
                                             const float brightness) const noexcept -> ShapeColors
 {
-  return GetColors(
-      m_circleColorMaps[circleNum], m_circleColorsT, m_oldCircleColors[circleNum], brightness);
+  return GetColors(m_circleColorMaps.at(circleNum),
+                   m_circleColorsT,
+                   m_oldCircleColors.at(circleNum),
+                   brightness);
 }
 
 auto ShapeColorizer::GetColors(const ShapeColorMaps& shapeColorMaps,

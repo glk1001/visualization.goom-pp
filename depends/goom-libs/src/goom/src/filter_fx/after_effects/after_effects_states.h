@@ -1,6 +1,7 @@
 #pragma once
 
 #include "after_effects_types.h"
+#include "goom/goom_time.h"
 #include "goom/goom_types.h"
 #include "the_effects/rotation.h"
 #include "utils/enum_utils.h"
@@ -8,11 +9,6 @@
 
 #include <cstdint>
 #include <memory>
-
-namespace GOOM::UTILS::MATH
-{
-class IGoomRand;
-}
 
 namespace GOOM::FILTER_FX::AFTER_EFFECTS
 {
@@ -33,7 +29,8 @@ public:
   using AfterEffectsOffTimeMap     = UTILS::EnumMap<AfterEffectsTypes, uint32_t>;
   using AfterEffectsProbabilityMap = UTILS::EnumMap<AfterEffectsTypes, float>;
 
-  AfterEffectsStates(const UTILS::MATH::IGoomRand& goomRand,
+  AfterEffectsStates(const GoomTime& goomTime,
+                     const UTILS::MATH::IGoomRand& goomRand,
                      const AfterEffectsProbabilityMap& repeatProbabilities,
                      const AfterEffectsOffTimeMap& offTimes) noexcept;
   AfterEffectsStates(const AfterEffectsStates&) noexcept = delete;
@@ -43,7 +40,6 @@ public:
   auto operator=(AfterEffectsStates&&) -> AfterEffectsStates&      = delete;
 
   auto SetDefaults() -> void;
-  auto UpdateTimers() -> void;
   auto CheckForPendingOffTimers() -> void;
 
   struct AfterEffectsProbabilities
