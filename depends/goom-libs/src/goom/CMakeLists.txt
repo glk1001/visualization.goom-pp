@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Goom LANGUAGES CXX)
 
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g -O2 -Wno-disabled-optimization")
+
 if (NOT GLM_INCLUDE_DIR)
     message(FATAL_ERROR "\"GLM_INCLUDE_DIR\" must be defined.")
 endif ()

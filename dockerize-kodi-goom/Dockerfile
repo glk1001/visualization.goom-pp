@@ -37,7 +37,9 @@ RUN if [ "${END_OF_LIFE}" = "yes" ] ; then                                   \
     apt-get update                                                        && \
     apt-get install -y gpg-agent                                          && \
     apt-get install -y --no-install-recommends software-properties-common && \
-    add-apt-repository -y ${KODI_PPA}                                     && \
+    if [ "${KODI_PPA}" != "" ] ; then                                        \
+      add-apt-repository -y ${KODI_PPA} ;                                    \
+    fi                                                                    && \
     apt-get install -y --no-install-recommends ${KODI_PACKAGES}           && \
                                                                              \
     apt-get -y purge openssl software-properties-common                   && \

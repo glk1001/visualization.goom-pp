@@ -49,6 +49,6 @@ RUN if [ -n "${CLANG_VER}" ] ; then bash llvm.sh ${CLANG_VER} && apt-get install
 
 RUN apt-get clean -y
 
-ARG UID=1000
+ARG UID=1001
 RUN useradd -m -u ${UID} -s /bin/bash builder
 USER builder

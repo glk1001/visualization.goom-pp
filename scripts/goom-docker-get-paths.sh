@@ -2,7 +2,7 @@ source "${GOOM_MAIN_ROOT_DIR}/dockerize-kodi-goom/goom-image-funcs.sh"
 
 
 declare KODI_IMAGE_OS_TYPE="ubuntu"
-declare KODI_IMAGE_OS_TAG="kinetic"
+declare KODI_IMAGE_OS_TAG="23.04"
 declare GOOM_DOCKER_PATHS_CMD_LINE=""
 declare EXTRA_ARGS=""
 

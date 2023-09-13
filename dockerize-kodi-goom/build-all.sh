@@ -116,7 +116,8 @@ declare -r KODI_GOOM_IMAGE="$(get_kodi_goom_image_name ${KODI_IMAGE_OS_TYPE} ${K
 declare -r CONTAINER_GOOM_ADDON_DIR="${KODI_CONTAINER_HOME_DIR}/.kodi/addons/visualization.goom-pp"
 
 if [[ "${KODI_VERSION}" == "nexus" ]]; then
-  declare -r KODI_PPA="ppa:team-xbmc/ppa"
+  # declare -r KODI_PPA="ppa:team-xbmc/ppa"
+  declare -r KODI_PPA=""
 elif [[ "${KODI_VERSION}" == "nightly" ]]; then
   declare -r KODI_PPA="ppa:team-xbmc/xbmc-nightly"
 else

@@ -3,15 +3,12 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
   <component name="CidrRootsConfiguration">
     <excludeRoots>
-      <file path="$PROJECT_DIR$/build-clion-clang-16-Debug-nexus" />
-      <file path="$PROJECT_DIR$/build-clion-clang-16-RelWithDebInfo-nexus" />
+      <file path="$PROJECT_DIR$/build-clion-clang-17-Debug-nexus" />
       <file path="$PROJECT_DIR$/build-clion-clang-17-RelWithDebInfo-nexus" />
-      <file path="$PROJECT_DIR$/build-clion-docker-clang-16-RelWithDebInfo-nexus" />
-      <file path="$PROJECT_DIR$/build-clion-docker-clang-17-RelWithDebInfo-nexus" />
       <file path="$PROJECT_DIR$/build-clion-docker-clang-18-RelWithDebInfo-nexus" />
       <file path="$PROJECT_DIR$/build-clion-docker-clang-18-Release-nexus" />
-      <file path="$PROJECT_DIR$/build-clion-docker-gcc-13-RelWithDebInfo-nexus" />
       <file path="$PROJECT_DIR$/build-clion-gcc-12-RelWithDebInfo-nexus" />
+      <file path="$PROJECT_DIR$/build-clion-docker-gcc-13-RelWithDebInfo-nexus" />
       <file path="$PROJECT_DIR$/venv-test" />
     </excludeRoots>
   </component>
