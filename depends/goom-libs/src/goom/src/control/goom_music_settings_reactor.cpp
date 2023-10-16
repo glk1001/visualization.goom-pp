@@ -46,15 +46,40 @@ auto GoomMusicSettingsReactor::NewCycle() -> void
   m_lock.Update();
 }
 
-auto GoomMusicSettingsReactor::RegularlyLowerTheSpeed() -> void
+auto GoomMusicSettingsReactor::UpdateSettings() -> void
 {
-  static constexpr auto LOWER_SPEED_CYCLES = 73U;
+  ChangeFilterModeIfMusicChanges();
+  BigUpdateIfNotLocked();
+  BigBreakIfMusicIsCalm();
 
-  if ((0 == (m_goomInfo->GetTime().GetCurrentTime() % LOWER_SPEED_CYCLES)) and
-      (m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::FAST_SPEED)))
+  RegularlyLowerTheSpeed();
+
+  ChangeFilterSettings();
+
+  m_visualFx->RefreshAllFx();
+  m_previousZoomSpeed = m_filterSettingsService->GetROVitesse().GetVitesse();
+}
+
+auto GoomMusicSettingsReactor::ChangeFilterModeIfMusicChanges() -> void
+{
+  if ((m_numUpdatesSinceLastFilterSettingsChange <= m_maxTimeBetweenFilterSettingsChange) and
+      ((m_goomInfo->GetSoundEvents().GetTimeSinceLastGoom() > 0) or
+       (not m_goomRand->ProbabilityOf(PROB_CHANGE_FILTER_MODE))))
   {
-    m_filterSettingsService->GetRWVitesse().GoSlowerBy(1U);
+    return;
   }
+
+  ChangeFilterMode();
+}
+
+auto GoomMusicSettingsReactor::BigUpdateIfNotLocked() -> void
+{
+  if (m_lock.IsLocked())
+  {
+    return;
+  }
+
+  BigUpdate();
 }
 
 auto GoomMusicSettingsReactor::BigBreakIfMusicIsCalm() -> void
@@ -68,6 +93,30 @@ auto GoomMusicSettingsReactor::BigBreakIfMusicIsCalm() -> void
   {
     BigBreak();
   }
+}
+
+auto GoomMusicSettingsReactor::RegularlyLowerTheSpeed() -> void
+{
+  static constexpr auto LOWER_SPEED_CYCLES = 73U;
+
+  if ((0 == (m_goomInfo->GetTime().GetCurrentTime() % LOWER_SPEED_CYCLES)) and
+      (m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::FAST_SPEED)))
+  {
+    m_filterSettingsService->GetRWVitesse().GoSlowerBy(1U);
+  }
+}
+
+auto GoomMusicSettingsReactor::ChangeFilterSettings() -> void
+{
+  if ((m_numUpdatesSinceLastFilterSettingsChange <= m_maxTimeBetweenFilterSettingsChange) and
+      (not m_filterSettingsService->HasFilterModeChangedSinceLastUpdate()))
+  {
+    ++m_numUpdatesSinceLastFilterSettingsChange;
+    return;
+  }
+
+  m_numUpdatesSinceLastFilterSettingsChange = 0;
+  UpdateLerpDataOrRotationSettings();
 }
 
 inline auto GoomMusicSettingsReactor::BigBreak() -> void
@@ -97,16 +146,6 @@ inline auto GoomMusicSettingsReactor::CheckIfUpdateFilterSettingsNow() -> void
   const auto& newFilterSettings = std::as_const(*m_filterSettingsService).GetFilterSettings();
   m_visualFx->SetZoomMidpoint(newFilterSettings.filterEffectsSettings.zoomMidpoint);
   m_filterSettingsService->NotifyUpdatedFilterEffectsSettings();
-}
-
-auto GoomMusicSettingsReactor::BigUpdateIfNotLocked() -> void
-{
-  if (m_lock.IsLocked())
-  {
-    return;
-  }
-
-  BigUpdate();
 }
 
 inline auto GoomMusicSettingsReactor::BigUpdate() -> void
@@ -285,40 +324,16 @@ auto GoomMusicSettingsReactor::ChangeVitesse() -> void
 
 inline auto GoomMusicSettingsReactor::ChangeTransformBufferLerpToEnd() -> void
 {
-  if (m_lock.GetLockTime() > CHANGE_SWITCH_VALUES_LOCK_TIME)
-  {
-    m_filterSettingsService->SetDefaultTransformBufferLerpIncrement();
-    m_filterSettingsService->SetTransformBufferLerpToEnd();
-  }
-}
-
-auto GoomMusicSettingsReactor::ChangeFilterSettings() -> void
-{
-  if ((m_numUpdatesSinceLastFilterSettingsChange <= m_maxTimeBetweenFilterSettingsChange) and
-      (not m_filterSettingsService->HasFilterModeChangedSinceLastUpdate()))
-  {
-    ++m_numUpdatesSinceLastFilterSettingsChange;
-    return;
-  }
-
-  m_numUpdatesSinceLastFilterSettingsChange = 0;
-  UpdateFilterSettings();
-  m_previousZoomSpeed = m_filterSettingsService->GetROVitesse().GetVitesse();
-}
-
-auto GoomMusicSettingsReactor::ChangeFilterModeIfMusicChanges() -> void
-{
-  if ((m_numUpdatesSinceLastFilterSettingsChange <= m_maxTimeBetweenFilterSettingsChange) and
-      ((m_goomInfo->GetSoundEvents().GetTimeSinceLastGoom() > 0) or
-       (not m_goomRand->ProbabilityOf(PROB_CHANGE_FILTER_MODE))))
+  if (m_lock.GetLockTime() < CHANGE_LERP_TO_END_LOCK_TIME)
   {
     return;
   }
 
-  ChangeFilterMode();
+  m_filterSettingsService->SetDefaultTransformBufferLerpIncrement();
+  m_filterSettingsService->SetTransformBufferLerpToEnd();
 }
 
-inline auto GoomMusicSettingsReactor::UpdateFilterSettings() -> void
+inline auto GoomMusicSettingsReactor::UpdateLerpDataOrRotationSettings() -> void
 {
   if (m_filterSettingsService->HasFilterModeChangedSinceLastUpdate())
   {
@@ -328,8 +343,6 @@ inline auto GoomMusicSettingsReactor::UpdateFilterSettings() -> void
   {
     ChangeRotation();
   }
-
-  m_visualFx->RefreshAllFx();
 }
 
 inline auto GoomMusicSettingsReactor::UpdateTransformBufferLerpData() -> void

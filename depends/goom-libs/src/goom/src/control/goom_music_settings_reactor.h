@@ -30,6 +30,36 @@ public:
   auto Start() -> void;
   auto NewCycle() -> void;
 
+  auto UpdateSettings() -> void;
+
+  [[nodiscard]] auto GetNameValueParams() const -> UTILS::NameValuePairs;
+
+private:
+  const PluginInfo* m_goomInfo;
+  const UTILS::MATH::IGoomRand* m_goomRand;
+  GoomAllVisualFx* m_visualFx;
+  FILTER_FX::FilterSettingsService* m_filterSettingsService;
+
+  static constexpr uint32_t NORMAL_UPDATE_LOCK_TIME                = 50;
+  static constexpr uint32_t REVERSE_SPEED_AND_STOP_SPEED_LOCK_TIME = 75;
+  static constexpr uint32_t REVERSE_SPEED_LOCK_TIME                = 100;
+  static constexpr uint32_t MEGA_LENT_LOCK_TIME_INCREASE           = 50;
+  static constexpr uint32_t CHANGE_VITESSE_LOCK_TIME_INCREASE      = 50;
+  static constexpr uint32_t CHANGE_LERP_TO_END_LOCK_TIME           = 150;
+  GoomLock m_lock{}; // pour empecher de nouveaux changements
+
+  static constexpr auto MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE = 300;
+  static constexpr auto MAX_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE = 500;
+  int32_t m_maxTimeBetweenFilterSettingsChange      = MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE;
+  int32_t m_numUpdatesSinceLastFilterSettingsChange = 0;
+  uint32_t m_previousZoomSpeed                      = FILTER_FX::Vitesse::STOP_SPEED;
+
+  static constexpr auto MAX_NUM_STATE_SELECTIONS_BLOCKED = 3U;
+  uint32_t m_stateSelectionBlocker                       = MAX_NUM_STATE_SELECTIONS_BLOCKED;
+  uint32_t m_timeInState                                 = 0U;
+  auto ChangeState() -> void;
+  auto DoChangeState() -> void;
+
   auto ChangeFilterSettings() -> void;
   auto ChangeFilterModeIfMusicChanges() -> void;
 
@@ -45,34 +75,6 @@ public:
   // steadily lower the speed
   auto RegularlyLowerTheSpeed() -> void;
 
-  [[nodiscard]] auto GetNameValueParams() const -> UTILS::NameValuePairs;
-
-private:
-  const PluginInfo* m_goomInfo;
-  const UTILS::MATH::IGoomRand* m_goomRand;
-  GoomAllVisualFx* m_visualFx;
-  FILTER_FX::FilterSettingsService* m_filterSettingsService;
-
-  static constexpr uint32_t NORMAL_UPDATE_LOCK_TIME                = 50;
-  static constexpr uint32_t REVERSE_SPEED_AND_STOP_SPEED_LOCK_TIME = 75;
-  static constexpr uint32_t REVERSE_SPEED_LOCK_TIME                = 100;
-  static constexpr uint32_t MEGA_LENT_LOCK_TIME_INCREASE           = 50;
-  static constexpr uint32_t CHANGE_VITESSE_LOCK_TIME_INCREASE      = 50;
-  static constexpr uint32_t CHANGE_SWITCH_VALUES_LOCK_TIME         = 150;
-  GoomLock m_lock{}; // pour empecher de nouveaux changements
-
-  static constexpr auto MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE = 300;
-  static constexpr auto MAX_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE = 500;
-  int32_t m_maxTimeBetweenFilterSettingsChange      = MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE;
-  int32_t m_numUpdatesSinceLastFilterSettingsChange = 0;
-  uint32_t m_previousZoomSpeed                      = FILTER_FX::Vitesse::STOP_SPEED;
-
-  static constexpr auto MAX_NUM_STATE_SELECTIONS_BLOCKED = 3U;
-  uint32_t m_stateSelectionBlocker                       = MAX_NUM_STATE_SELECTIONS_BLOCKED;
-  uint32_t m_timeInState                                 = 0U;
-  auto ChangeState() -> void;
-  auto DoChangeState() -> void;
-
   // Changement d'effet de zoom !
   auto BigNormalUpdate() -> void;
   auto MegaLentUpdate() -> void;
@@ -81,7 +83,7 @@ private:
   auto ChangeFilterMode() -> void;
   auto CheckIfUpdateFilterSettingsNow() -> void;
   auto ChangeFilterExtraSettings() -> void;
-  auto UpdateFilterSettings() -> void;
+  auto UpdateLerpDataOrRotationSettings() -> void;
   auto UpdateTransformBufferLerpData() -> void;
   auto SetNewTransformBufferLerpDataBasedOnSpeed() -> void;
   auto ChangeTransformBufferLerpToEnd() -> void;

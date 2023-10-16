@@ -631,13 +631,7 @@ auto GoomControl::GoomControlImpl::UpdateTimeDependencies() -> void
 
 inline auto GoomControl::GoomControlImpl::UseMusicToChangeSettings() -> void
 {
-  m_musicSettingsReactor.ChangeFilterModeIfMusicChanges();
-  m_musicSettingsReactor.BigUpdateIfNotLocked();
-  m_musicSettingsReactor.BigBreakIfMusicIsCalm();
-
-  m_musicSettingsReactor.RegularlyLowerTheSpeed();
-
-  m_musicSettingsReactor.ChangeFilterSettings();
+  m_musicSettingsReactor.UpdateSettings();
 }
 
 inline auto GoomControl::GoomControlImpl::ProcessAudio(const AudioSamples& soundData) -> void
