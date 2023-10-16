@@ -60,7 +60,8 @@ private:
   auto ChangeState() -> void;
   auto DoChangeState() -> void;
 
-  auto ChangeFilterSettings() -> void;
+  auto ChangeLerpData() -> void;
+  auto ChangeRotation() -> void;
   auto ChangeFilterModeIfMusicChanges() -> void;
 
   // gros frein si la musique est calme
@@ -83,11 +84,11 @@ private:
   auto ChangeFilterMode() -> void;
   auto CheckIfUpdateFilterSettingsNow() -> void;
   auto ChangeFilterExtraSettings() -> void;
-  auto UpdateLerpDataOrRotationSettings() -> void;
   auto UpdateTransformBufferLerpData() -> void;
   auto SetNewTransformBufferLerpDataBasedOnSpeed() -> void;
   auto ChangeTransformBufferLerpToEnd() -> void;
-  auto ChangeRotation() -> void;
+  auto SetTransformBufferLerpToEnd() -> void;
+  auto DoChangeRotation() -> void;
   auto ChangeSpeedReverse() -> void;
   auto ChangeVitesse() -> void;
   auto ChangeStopSpeeds() -> void;
