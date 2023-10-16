@@ -35,7 +35,10 @@ GoomMusicSettingsReactor::GoomMusicSettingsReactor(
 
 auto GoomMusicSettingsReactor::Start() -> void
 {
-  m_timeInState = 0;
+  m_timeInState                             = 0;
+  m_numUpdatesSinceLastFilterSettingsChange = 0;
+  m_maxTimeBetweenFilterSettingsChange      = MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE;
+  m_previousZoomSpeed                       = FILTER_FX::Vitesse::STOP_SPEED;
 
   DoChangeState();
 }
@@ -161,6 +164,7 @@ inline auto GoomMusicSettingsReactor::CheckIfUpdateFilterSettingsNow() -> void
   const auto& newFilterSettings = std::as_const(*m_filterSettingsService).GetFilterSettings();
   m_visualFx->SetZoomMidpoint(newFilterSettings.filterEffectsSettings.zoomMidpoint);
   m_filterSettingsService->NotifyUpdatedFilterEffectsSettings();
+  m_numUpdatesSinceLastFilterSettingsChange = 0;
 }
 
 inline auto GoomMusicSettingsReactor::BigUpdate() -> void
