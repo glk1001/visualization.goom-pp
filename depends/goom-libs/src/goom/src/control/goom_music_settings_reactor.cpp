@@ -60,7 +60,6 @@ auto GoomMusicSettingsReactor::UpdateSettings() -> void
   ChangeLerpData();
   ChangeRotation();
 
-  m_visualFx->RefreshAllFx();
   m_previousZoomSpeed = m_filterSettingsService->GetROVitesse().GetVitesse();
 
   ++m_numUpdatesSinceLastFilterSettingsChange;
@@ -68,6 +67,7 @@ auto GoomMusicSettingsReactor::UpdateSettings() -> void
       m_filterSettingsService->HasFilterModeChangedSinceLastUpdate())
   {
     m_numUpdatesSinceLastFilterSettingsChange = 0;
+    m_visualFx->RefreshAllFx();
   }
 }
 
@@ -98,23 +98,26 @@ auto GoomMusicSettingsReactor::BigBreakIfMusicIsCalm() -> void
   static constexpr auto CALM_SOUND_SPEED = 0.3F;
   static constexpr auto CALM_CYCLES      = 16U;
 
-  if ((m_goomInfo->GetSoundEvents().GetSoundInfo().GetSpeed() < CALM_SOUND_SPEED) and
-      (m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::CALM_SPEED)) and
-      (0 == (m_goomInfo->GetTime().GetCurrentTime() % CALM_CYCLES)))
+  if ((m_goomInfo->GetSoundEvents().GetSoundInfo().GetSpeed() > CALM_SOUND_SPEED) or
+      (not m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::CALM_SPEED)) or
+      ((m_goomInfo->GetTime().GetCurrentTime() % CALM_CYCLES) != 0))
   {
-    BigBreak();
+    return;
   }
+
+  BigBreak();
 }
 
 auto GoomMusicSettingsReactor::RegularlyLowerTheSpeed() -> void
 {
-  static constexpr auto LOWER_SPEED_CYCLES = 73U;
-
-  if ((0 == (m_goomInfo->GetTime().GetCurrentTime() % LOWER_SPEED_CYCLES)) and
-      (m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::FAST_SPEED)))
+  if (static constexpr auto LOWER_SPEED_CYCLES = 73U;
+      ((m_goomInfo->GetTime().GetCurrentTime() % LOWER_SPEED_CYCLES) != 0) or
+      (not m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::FAST_SPEED)))
   {
-    m_filterSettingsService->GetRWVitesse().GoSlowerBy(1U);
+    return;
   }
+
+  m_filterSettingsService->GetRWVitesse().GoSlowerBy(1U);
 }
 
 auto GoomMusicSettingsReactor::ChangeLerpData() -> void
@@ -150,7 +153,6 @@ inline auto GoomMusicSettingsReactor::ChangeFilterMode() -> void
 {
   m_filterSettingsService->SetNewRandomFilter();
   CheckIfUpdateFilterSettingsNow();
-  m_visualFx->RefreshAllFx();
 }
 
 inline auto GoomMusicSettingsReactor::CheckIfUpdateFilterSettingsNow() -> void
