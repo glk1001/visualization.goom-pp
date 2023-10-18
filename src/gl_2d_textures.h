@@ -21,6 +21,7 @@ namespace GOOM::OPENGL
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -30,13 +31,18 @@ class Gl2DTexture
 public:
   Gl2DTexture() = default;
 
-  auto Setup(const char* textureShaderName, int32_t textureWidth, int32_t textureHeight) -> void;
+  auto Setup(uint32_t textureIndex,
+             const char* textureShaderName,
+             int32_t textureWidth,
+             int32_t textureHeight) -> void;
 
   auto DeleteBuffers() -> void;
 
   [[nodiscard]] auto GetTextureName() const noexcept -> GLuint;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   [[nodiscard]] auto GetMappedBuffer(size_t pboIndex) noexcept -> std_spn::span<CppTextureType>;
+
+  auto RotateCurrentTextureName() noexcept -> void;
 
   auto ZeroTextureData() noexcept -> void;
   auto CopyMappedBufferToTexture(size_t pboIndex) noexcept -> void;
@@ -50,6 +56,7 @@ private:
   int32_t m_textureHeight{};
   size_t m_buffSize{};
   GLuint m_textureName{};
+  uint32_t m_currentTextureIndex = 0U;
   auto AllocateBuffers() -> void;
 
   struct PboBuffers
@@ -66,6 +73,7 @@ private:
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -73,10 +81,12 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
-                 NumPbos>::Setup(const char* const textureShaderName,
+                 NumPbos>::Setup([[maybe_unused]] const uint32_t textureIndex,
+                                 const char* const textureShaderName,
                                  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
                                  const int32_t textureWidth,
                                  const int32_t textureHeight) -> void
@@ -107,6 +117,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -114,6 +125,32 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
+                 TextureFormat,
+                 TextureInternalFormat,
+                 TexturePixelType,
+                 NumPbos>::RotateCurrentTextureName() noexcept -> void
+{
+  //  ++m_currentTextureIndex;
+  //  if (m_currentTextureIndex >= m_textureNames.size())
+  //  {
+  //    m_currentTextureIndex = 0;
+  //  }
+  m_currentTextureIndex = 0;
+}
+
+template<typename CppTextureType,
+         int32_t TextureImageUint,
+         int32_t TextureLocation,
+         uint32_t NumTextures,
+         GLenum TextureFormat,
+         GLenum TextureInternalFormat,
+         GLenum TexturePixelType,
+         uint32_t NumPbos>
+auto Gl2DTexture<CppTextureType,
+                 TextureImageUint,
+                 TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
@@ -130,6 +167,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -137,6 +175,7 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
@@ -155,6 +194,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -162,12 +202,13 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
                  NumPbos>::BindTexture(GlslProgram& program) noexcept -> void
 {
-  program.SetUniform(m_textureShaderName, TextureLocation);
+  program.SetUniform(m_textureShaderName, TextureLocation + m_currentTextureIndex);
 
   GlCall(glActiveTexture(TEXTURE_UNIT));
   GlCall(glBindTexture(GL_TEXTURE_2D, m_textureName));
@@ -176,6 +217,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -183,6 +225,7 @@ template<typename CppTextureType,
 inline auto Gl2DTexture<CppTextureType,
                         TextureImageUint,
                         TextureLocation,
+                        NumTextures,
                         TextureFormat,
                         TextureInternalFormat,
                         TexturePixelType,
@@ -194,6 +237,7 @@ inline auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -201,6 +245,7 @@ template<typename CppTextureType,
 inline auto Gl2DTexture<CppTextureType,
                         TextureImageUint,
                         TextureLocation,
+                        NumTextures,
                         TextureFormat,
                         TextureInternalFormat,
                         TexturePixelType,
@@ -215,6 +260,7 @@ inline auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -222,6 +268,7 @@ template<typename CppTextureType,
 inline auto Gl2DTexture<CppTextureType,
                         TextureImageUint,
                         TextureLocation,
+                        NumTextures,
                         TextureFormat,
                         TextureInternalFormat,
                         TexturePixelType,
@@ -246,6 +293,7 @@ inline auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -253,10 +301,11 @@ template<typename CppTextureType,
 inline auto Gl2DTexture<CppTextureType,
                         TextureImageUint,
                         TextureLocation,
+                        NumTextures,
                         TextureFormat,
                         TextureInternalFormat,
                         TexturePixelType,
-                        NumPbos>::CopyMappedBufferToTexture(size_t pboIndex) noexcept -> void
+                        NumPbos>::CopyMappedBufferToTexture(const size_t pboIndex) noexcept -> void
 {
   GlCall(glBindTexture(GL_TEXTURE_2D, m_textureName));
 
@@ -282,6 +331,7 @@ inline auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -289,6 +339,7 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
@@ -323,6 +374,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -330,6 +382,7 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
@@ -347,6 +400,7 @@ auto Gl2DTexture<CppTextureType,
 template<typename CppTextureType,
          int32_t TextureImageUint,
          int32_t TextureLocation,
+         uint32_t NumTextures,
          GLenum TextureFormat,
          GLenum TextureInternalFormat,
          GLenum TexturePixelType,
@@ -354,6 +408,7 @@ template<typename CppTextureType,
 auto Gl2DTexture<CppTextureType,
                  TextureImageUint,
                  TextureLocation,
+                 NumTextures,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,

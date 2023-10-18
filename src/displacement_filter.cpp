@@ -442,6 +442,11 @@ auto DisplacementFilter::Pass1UpdateFilterBuff1AndBuff3() noexcept -> void
 #ifdef SAVE_FILTER_BUFFERS
   SaveFilterBuffersAfterPass1();
 #endif
+
+  if (m_frameDataArray.at(m_currentPboIndex).filterPosArrays.filterDestPosNeedsUpdating)
+  {
+    //    m_glFilterPosBuffers.filterDestPosTexture.RotateCurrentTextureName();
+  }
 }
 
 auto DisplacementFilter::WaitForRenderSync() noexcept -> void
@@ -688,23 +693,30 @@ auto DisplacementFilter::BindGlImageBuffers() noexcept -> void
 
 auto DisplacementFilter::SetupGlFilterBuffers() -> void
 {
-  m_glFilterBuffers.filterBuff1Texture.Setup(FILTER_BUFF1_TEX_SHADER_NAME, GetWidth(), GetHeight());
-  m_glFilterBuffers.filterBuff2Texture.Setup(FILTER_BUFF2_TEX_SHADER_NAME, GetWidth(), GetHeight());
-  m_glFilterBuffers.filterBuff3Texture.Setup(FILTER_BUFF3_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  m_glFilterBuffers.filterBuff1Texture.Setup(
+      0, FILTER_BUFF1_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  m_glFilterBuffers.filterBuff2Texture.Setup(
+      0, FILTER_BUFF2_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  m_glFilterBuffers.filterBuff3Texture.Setup(
+      0, FILTER_BUFF3_TEX_SHADER_NAME, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlFilterPosBuffers() -> void
 {
   m_glFilterPosBuffers.filterSrcePosTexture.Setup(
-      FILTER_SRCE_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
+      0, FILTER_SRCE_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
   m_glFilterPosBuffers.filterDestPosTexture.Setup(
-      FILTER_DEST_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
+      0, FILTER_DEST_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  //  m_glFilterPosBuffers.filterSrcePosTexture.Setup(
+  //      1, FILTER_SRCE_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
+  //  m_glFilterPosBuffers.filterDestPosTexture.Setup(
+  //      1, FILTER_DEST_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlImageBuffers() -> void
 {
-  m_glImageBuffers.mainImageTexture.Setup(MAIN_IMAGE_TEX_SHADER_NAME, GetWidth(), GetHeight());
-  m_glImageBuffers.lowImageTexture.Setup(LOW_IMAGE_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  m_glImageBuffers.mainImageTexture.Setup(0, MAIN_IMAGE_TEX_SHADER_NAME, GetWidth(), GetHeight());
+  m_glImageBuffers.lowImageTexture.Setup(0, LOW_IMAGE_TEX_SHADER_NAME, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlLumHistogramBuffer() noexcept -> void
