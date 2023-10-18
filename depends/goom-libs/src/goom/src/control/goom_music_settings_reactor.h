@@ -9,6 +9,7 @@
 #include "utils/name_value_pairs.h"
 
 #include <cstdint>
+#include <vector>
 
 namespace GOOM
 {
@@ -40,12 +41,46 @@ private:
   GoomAllVisualFx* m_visualFx;
   FILTER_FX::FilterSettingsService* m_filterSettingsService;
 
-  static constexpr uint32_t NORMAL_UPDATE_LOCK_TIME                = 50;
-  static constexpr uint32_t REVERSE_SPEED_AND_STOP_SPEED_LOCK_TIME = 75;
-  static constexpr uint32_t REVERSE_SPEED_LOCK_TIME                = 100;
-  static constexpr uint32_t MEGA_LENT_LOCK_TIME_INCREASE           = 50;
-  static constexpr uint32_t CHANGE_VITESSE_LOCK_TIME_INCREASE      = 50;
-  static constexpr uint32_t CHANGE_LERP_TO_END_LOCK_TIME           = 150;
+  enum class ChangeEvents : UnderlyingEnumType
+  {
+    CHANGE_FILTER_MODE,
+    BIG_UPDATE,
+    BIG_BREAK,
+    GO_SLOWER,
+    UPDATE_TRANSFORM_BUFFER_LERP_DATA,
+    CHANGE_ROTATION,
+
+    UPDATE_FILTER_SETTINGS_NOW,
+
+    MEGA_LENT_UPDATE,
+
+    BIG_NORMAL_UPDATE,
+    CHANGE_STATE,
+    SET_SPEED_REVERSE,
+    SET_SLOW_SPEED,
+    SET_STOP_SPEED,
+    TURN_OFF_ROTATION,
+    SLOWER_ROTATION,
+    FASTER_ROTATION,
+    TOGGLE_ROTATION,
+    CHANGE_FILTER_EXTRA_SETTINGS,
+    SET_SLOWER_SPEED_AND_SPEED_FORWARD,
+    SET_SLOWER_SPEED_AND_TOGGLE_REVERSE,
+    CHANGE_SPEED,
+    SET_LERP_TO_END,
+    SET_NEW_LERP_DATA_BASED_ON_SPEED,
+    RESET_LERP_DATA,
+    _num // unused, and marks the enum end
+  };
+  auto GetNextChangeEvents() noexcept -> void;
+  std::vector<ChangeEvents> m_changeEvents;
+
+  static constexpr uint32_t NORMAL_UPDATE_LOCK_TIME                  = 50;
+  static constexpr uint32_t SLOWER_SPEED_AND_SPEED_FORWARD_LOCK_TIME = 75;
+  static constexpr uint32_t REVERSE_SPEED_LOCK_TIME                  = 100;
+  static constexpr uint32_t MEGA_LENT_LOCK_TIME_INCREASE             = 50;
+  static constexpr uint32_t CHANGE_VITESSE_LOCK_TIME_INCREASE        = 50;
+  static constexpr uint32_t CHANGE_LERP_TO_END_LOCK_TIME             = 150;
   GoomLock m_lock{}; // pour empecher de nouveaux changements
 
   static constexpr auto MIN_MAX_TIME_BETWEEN_ZOOM_EFFECTS_CHANGE = 300;
@@ -60,7 +95,7 @@ private:
   auto ChangeState() -> void;
   auto DoChangeState() -> void;
 
-  auto ChangeLerpData() -> void;
+  auto ChangeTransformBufferLerpData() -> void;
   auto ChangeRotation() -> void;
   auto ChangeFilterModeIfMusicChanges() -> void;
 
@@ -77,20 +112,26 @@ private:
   auto RegularlyLowerTheSpeed() -> void;
 
   // Changement d'effet de zoom !
-  auto BigNormalUpdate() -> void;
-  auto MegaLentUpdate() -> void;
-  auto BigUpdate() -> void;
-  auto BigBreak() -> void;
-  auto ChangeFilterMode() -> void;
-  auto CheckIfUpdateFilterSettingsNow() -> void;
+  auto DoBigNormalUpdate() -> void;
+  auto DoMegaLentUpdate() -> void;
+  auto DoBigUpdate() -> void;
+  auto DoBigBreak() -> void;
+  auto DoChangeFilterMode() -> void;
+  [[nodiscard]] auto UpdateFilterSettingsNow() const noexcept -> bool;
+  auto DoUpdateFilterSettingsNow() -> void;
   auto ChangeFilterExtraSettings() -> void;
-  auto UpdateTransformBufferLerpData() -> void;
-  auto SetNewTransformBufferLerpDataBasedOnSpeed() -> void;
+  auto DoChangeFilterExtraSettings() -> void;
+  auto DoUpdateTransformBufferLerpData() -> void;
+  auto DoSetNewTransformBufferLerpDataBasedOnSpeed() -> void;
   auto ChangeTransformBufferLerpToEnd() -> void;
-  auto SetTransformBufferLerpToEnd() -> void;
+  auto DoSetTransformBufferLerpToEnd() -> void;
   auto DoChangeRotation() -> void;
   auto ChangeSpeedReverse() -> void;
+  auto DoChangeSpeedSlowAndForward() -> void;
+  auto DoChangeSpeedReverse() -> void;
   auto ChangeVitesse() -> void;
+  auto DoSetSlowerSpeedAndToggleReverse() -> void;
+  auto DoChangeSpeed(uint32_t currentVitesse, uint32_t newVitesse) -> void;
   auto ChangeStopSpeeds() -> void;
 
   static constexpr auto PROB_CHANGE_FILTER_MODE                       = 0.05F;
