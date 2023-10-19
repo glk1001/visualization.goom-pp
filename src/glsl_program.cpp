@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <glm/ext/matrix_float3x3.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -282,6 +283,11 @@ auto GlslProgram::FindUniformLocations() -> void
 #else
   // For OpenGL 4.3 and above, use glGetProgramResource
   glGetProgramInterfaceiv(m_handle, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numUniforms);
+  std_fmt::println("numUniforms = {}", numUniforms);
+
+  auto numUniformBlocks = GLint{0};
+  glGetProgramInterfaceiv(m_handle, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &numUniformBlocks);
+  std_fmt::println("numUniformBlocks = {}", numUniformBlocks);
 
   static constexpr auto NUM_PROPERTIES = 4;
   static constexpr auto PROPERTIES =
@@ -302,6 +308,7 @@ auto GlslProgram::FindUniformLocations() -> void
 
     if (results[3] != -1)
     {
+      std_fmt::println("Skipped uniform {}", i);
       continue; // Skip uniforms in blocks
     }
     auto nameBufSize = results[0] + 1;
@@ -309,6 +316,7 @@ auto GlslProgram::FindUniformLocations() -> void
     glGetProgramResourceName(
         m_handle, GL_UNIFORM, static_cast<GLuint>(i), nameBufSize, nullptr, name.data());
     m_uniformLocations[name.data()] = results[2];
+    std_fmt::println("Uniform {}, name = {}, value = {}", i, name.data(), results[2]);
   }
 #endif
 }

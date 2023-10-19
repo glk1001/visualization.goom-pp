@@ -191,11 +191,8 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
 
 auto DisplacementFilter::InitFrameDataArrayToGl() noexcept -> void
 {
-  for (auto i = 0U; i < NUM_PBOS; ++i)
-  {
-    m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(i);
-    m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(i);
-  }
+  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(0);
+  m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(0);
 }
 
 auto DisplacementFilter::Resize(const WindowDimensions& windowDimensions) noexcept -> void

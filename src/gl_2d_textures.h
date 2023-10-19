@@ -92,7 +92,7 @@ auto Gl2DTexture<CppTextureType,
                                  const int32_t textureHeight) -> void
 {
   m_currentTextureIndex = textureIndex;
-  m_currentTextureIndex = 0;
+  //m_currentTextureIndex = 0;
 
   m_textureShaderNames.at(textureIndex) = textureShaderName;
   m_textureWidth                        = textureWidth;
@@ -100,7 +100,7 @@ auto Gl2DTexture<CppTextureType,
   m_buffSize = static_cast<size_t>(m_textureWidth) * static_cast<size_t>(m_textureHeight);
 
   GlCall(glGenTextures(1, &(m_textureNames.at(textureIndex))));
-  GlCall(glActiveTexture(TEXTURE_UNIT));
+  GlCall(glActiveTexture(TEXTURE_UNIT + static_cast<GLenum>(textureIndex)));
   GlCall(glBindTexture(GL_TEXTURE_2D, m_textureNames.at(textureIndex)));
   GlCall(glTexStorage2D(GL_TEXTURE_2D, 1, TextureInternalFormat, m_textureWidth, m_textureHeight));
   GlCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
@@ -149,8 +149,8 @@ auto Gl2DTexture<CppTextureType,
   }
   if (m_textureNames.size() > 1)
   {
-    m_currentTextureIndex = 0;
-    //m_currentTextureIndex = 1;
+    //m_currentTextureIndex = 0;
+    m_currentTextureIndex = 1;
   }
 }
 
