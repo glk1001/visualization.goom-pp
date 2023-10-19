@@ -153,26 +153,33 @@ private:
 
   auto Pass5OutputToScreen() noexcept -> void;
 
+  static constexpr auto NUM_FILTER_BUFF_TEXTURES  = 1;
   static constexpr auto FILTER_BUFF1_TEX_LOCATION = 0;
-  static constexpr auto FILTER_BUFF2_TEX_LOCATION = 1;
-  static constexpr auto FILTER_BUFF3_TEX_LOCATION = 2;
+  static constexpr auto FILTER_BUFF2_TEX_LOCATION =
+      FILTER_BUFF1_TEX_LOCATION + NUM_FILTER_BUFF_TEXTURES;
+  static constexpr auto FILTER_BUFF3_TEX_LOCATION =
+      FILTER_BUFF2_TEX_LOCATION + NUM_FILTER_BUFF_TEXTURES;
 
   // FILTER_SRCE_POS and FILTER_DEST_POS have two textures each
-  static constexpr auto NUM_FILTER_POS_TEXTURES      = 2;
-  static constexpr auto FILTER_SRCE_POS_TEX_LOCATION = 3;
+  static constexpr auto NUM_FILTER_POS_TEXTURES = 2;
+  static constexpr auto FILTER_SRCE_POS_TEX_LOCATION =
+      FILTER_BUFF3_TEX_LOCATION + NUM_FILTER_BUFF_TEXTURES;
   static constexpr auto FILTER_DEST_POS_TEX_LOCATION =
       FILTER_SRCE_POS_TEX_LOCATION + NUM_FILTER_POS_TEXTURES;
 
-  static constexpr auto MAIN_IMAGE_TEX_LOCATION = 7;
-  static constexpr auto LOW_IMAGE_TEX_LOCATION  = 8;
-  static constexpr auto LUM_AVG_TEX_LOCATION    = 9;
+  static constexpr auto NUM_IMAGE_TEXTURES = 1;
+  static constexpr auto MAIN_IMAGE_TEX_LOCATION =
+      FILTER_DEST_POS_TEX_LOCATION + NUM_FILTER_POS_TEXTURES;
+  static constexpr auto LOW_IMAGE_TEX_LOCATION = MAIN_IMAGE_TEX_LOCATION + NUM_IMAGE_TEXTURES;
+
+  static constexpr auto LUM_AVG_TEX_LOCATION = LOW_IMAGE_TEX_LOCATION + NUM_IMAGE_TEXTURES;
 
   static constexpr auto FILTER_BUFF1_TEX_SHADER_NAME     = "";
   static constexpr auto FILTER_BUFF2_TEX_SHADER_NAME     = "tex_filterBuff2";
   static constexpr auto FILTER_BUFF3_TEX_SHADER_NAME     = "";
   static constexpr auto FILTER_SRCE_POS_TEX_SHADER_NAME  = "tex_filterSrcePositions";
-  static constexpr auto FILTER_DEST_POS_TEX_SHADER_NAME  = "tex_filterDestPositions";
   static constexpr auto FILTER_SRCE_POS_TEX2_SHADER_NAME = "tex_filterSrcePositions2";
+  static constexpr auto FILTER_DEST_POS_TEX_SHADER_NAME  = "tex_filterDestPositions";
   static constexpr auto FILTER_DEST_POS_TEX2_SHADER_NAME = "tex_filterDestPositions2";
   static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME       = "tex_mainImage";
   static constexpr auto LOW_IMAGE_TEX_SHADER_NAME        = "tex_lowImage";
@@ -223,7 +230,7 @@ private:
     Gl2DTexture<GOOM::PixelIntType,
                 FILTER_BUFF1_IMAGE_UNIT,
                 FILTER_BUFF1_TEX_LOCATION,
-                1,
+                NUM_FILTER_BUFF_TEXTURES,
                 FILTER_BUFF_TEX_FORMAT,
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
@@ -232,7 +239,7 @@ private:
     Gl2DTexture<GOOM::PixelIntType,
                 FILTER_BUFF2_IMAGE_UNIT,
                 FILTER_BUFF2_TEX_LOCATION,
-                1,
+                NUM_FILTER_BUFF_TEXTURES,
                 FILTER_BUFF_TEX_FORMAT,
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
@@ -257,7 +264,7 @@ private:
     Gl2DTexture<GOOM::Pixel,
                 -1,
                 MAIN_IMAGE_TEX_LOCATION,
-                1,
+                NUM_IMAGE_TEXTURES,
                 IMAGE_TEX_FORMAT,
                 IMAGE_TEX_INTERNAL_FORMAT,
                 IMAGE_TEX_PIXEL_TYPE,
@@ -266,7 +273,7 @@ private:
     Gl2DTexture<GOOM::Pixel,
                 -1,
                 LOW_IMAGE_TEX_LOCATION,
-                1,
+                NUM_IMAGE_TEXTURES,
                 IMAGE_TEX_FORMAT,
                 IMAGE_TEX_INTERNAL_FORMAT,
                 IMAGE_TEX_PIXEL_TYPE,
