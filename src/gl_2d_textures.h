@@ -92,7 +92,6 @@ auto Gl2DTexture<CppTextureType,
                                  const int32_t textureHeight) -> void
 {
   m_currentTextureIndex = textureIndex;
-  //m_currentTextureIndex = 0;
 
   m_textureShaderNames.at(textureIndex) = textureShaderName;
   m_textureWidth                        = textureWidth;
@@ -146,11 +145,6 @@ auto Gl2DTexture<CppTextureType,
   if (m_currentTextureIndex >= m_textureNames.size())
   {
     m_currentTextureIndex = 0;
-  }
-  if (m_textureNames.size() > 1)
-  {
-    //m_currentTextureIndex = 0;
-    m_currentTextureIndex = 1;
   }
 }
 
