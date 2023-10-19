@@ -445,7 +445,7 @@ auto DisplacementFilter::Pass1UpdateFilterBuff1AndBuff3() noexcept -> void
 
   if (m_frameDataArray.at(m_currentPboIndex).filterPosArrays.filterDestPosNeedsUpdating)
   {
-    //    m_glFilterPosBuffers.filterDestPosTexture.RotateCurrentTextureName();
+    m_glFilterPosBuffers.filterDestPosTexture.RotateCurrentTextureName();
   }
 }
 
@@ -707,10 +707,10 @@ auto DisplacementFilter::SetupGlFilterPosBuffers() -> void
       0, FILTER_SRCE_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
   m_glFilterPosBuffers.filterDestPosTexture.Setup(
       0, FILTER_DEST_POS_TEX_SHADER_NAME, GetWidth(), GetHeight());
-  //  m_glFilterPosBuffers.filterSrcePosTexture.Setup(
-  //      1, FILTER_SRCE_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
-  //  m_glFilterPosBuffers.filterDestPosTexture.Setup(
-  //      1, FILTER_DEST_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
+  m_glFilterPosBuffers.filterSrcePosTexture.Setup(
+      1, FILTER_SRCE_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
+  m_glFilterPosBuffers.filterDestPosTexture.Setup(
+      1, FILTER_DEST_POS_TEX2_SHADER_NAME, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlImageBuffers() -> void

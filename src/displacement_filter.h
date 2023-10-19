@@ -159,9 +159,9 @@ private:
   static constexpr auto FILTER_SRCE_POS_TEX_LOCATION = 3;
   static constexpr auto FILTER_DEST_POS_TEX_LOCATION = 4;
   // FILTER_SRCE_POS and FILTER_DEST_POS have two textures each
-  static constexpr auto MAIN_IMAGE_TEX_LOCATION = 5;
-  static constexpr auto LOW_IMAGE_TEX_LOCATION  = 6;
-  static constexpr auto LUM_AVG_TEX_LOCATION    = 7;
+  static constexpr auto MAIN_IMAGE_TEX_LOCATION = 6;
+  static constexpr auto LOW_IMAGE_TEX_LOCATION  = 7;
+  static constexpr auto LUM_AVG_TEX_LOCATION    = 8;
 
   static constexpr auto FILTER_BUFF1_TEX_SHADER_NAME     = "";
   static constexpr auto FILTER_BUFF2_TEX_SHADER_NAME     = "tex_filterBuff2";
@@ -194,6 +194,7 @@ private:
     Gl2DTexture<FilterPosBuffersXY,
                 -1,
                 FILTER_SRCE_POS_TEX_LOCATION,
+                2,
                 FILTER_POS_TEX_FORMAT,
                 FILTER_POS_TEX_INTERNAL_FORMAT,
                 FILTER_POS_TEX_PIXEL_TYPE,
@@ -202,6 +203,7 @@ private:
     Gl2DTexture<FilterPosBuffersXY,
                 -1,
                 FILTER_DEST_POS_TEX_LOCATION,
+                2,
                 FILTER_POS_TEX_FORMAT,
                 FILTER_POS_TEX_INTERNAL_FORMAT,
                 FILTER_POS_TEX_PIXEL_TYPE,
@@ -217,6 +219,7 @@ private:
     Gl2DTexture<GOOM::PixelIntType,
                 FILTER_BUFF1_IMAGE_UNIT,
                 FILTER_BUFF1_TEX_LOCATION,
+                1,
                 FILTER_BUFF_TEX_FORMAT,
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
@@ -225,6 +228,7 @@ private:
     Gl2DTexture<GOOM::PixelIntType,
                 FILTER_BUFF2_IMAGE_UNIT,
                 FILTER_BUFF2_TEX_LOCATION,
+                1,
                 FILTER_BUFF_TEX_FORMAT,
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
@@ -233,6 +237,7 @@ private:
     Gl2DTexture<GOOM::PixelIntType,
                 FILTER_BUFF3_IMAGE_UNIT,
                 FILTER_BUFF3_TEX_LOCATION,
+                1,
                 FILTER_BUFF_TEX_FORMAT,
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
@@ -248,6 +253,7 @@ private:
     Gl2DTexture<GOOM::Pixel,
                 -1,
                 MAIN_IMAGE_TEX_LOCATION,
+                1,
                 IMAGE_TEX_FORMAT,
                 IMAGE_TEX_INTERNAL_FORMAT,
                 IMAGE_TEX_PIXEL_TYPE,
@@ -256,6 +262,7 @@ private:
     Gl2DTexture<GOOM::Pixel,
                 -1,
                 LOW_IMAGE_TEX_LOCATION,
+                1,
                 IMAGE_TEX_FORMAT,
                 IMAGE_TEX_INTERNAL_FORMAT,
                 IMAGE_TEX_PIXEL_TYPE,

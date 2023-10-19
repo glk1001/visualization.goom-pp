@@ -6,9 +6,9 @@
 
 uniform sampler2D tex_filterBuff2;
 uniform sampler2D tex_filterSrcePositions;
-//uniform sampler2D tex_filterSrcePositions2;
+uniform sampler2D tex_filterSrcePositions2;
 uniform sampler2D tex_filterDestPositions;
-//uniform sampler2D tex_filterDestPositions2;
+uniform sampler2D tex_filterDestPositions2;
 uniform sampler2D tex_mainImage;
 uniform sampler2D tex_lowImage;
 
@@ -95,7 +95,7 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv)
 {
   vec2 srceNormalizedPos = texture(tex_filterSrcePositions, uv).xy;
   vec2 destNormalizedPos = texture(tex_filterDestPositions, uv).xy;
-//  vec2 destNormalizedPos2 = texture(tex_filterDestPositions2, uv).xy;
+  vec2 destNormalizedPos2 = texture(tex_filterDestPositions2, uv).xy;
 
   // u_time example use 1.
   // vec2 focusPoint = 0.5 * (1.0 + vec2(sin(0.01*u_time), cos(0.01*u_time)));
@@ -118,8 +118,8 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv)
 
   vec2 filtBuff2Pos  = vec2((lerpNormalizedPos.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
                             (lerpNormalizedPos.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
-//  vec2 filtBuff2Pos2 = vec2((destNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-//                            (destNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
+  vec2 filtBuff2Pos2 = vec2((destNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
+                            (destNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
 
 
   //  vec4 tex = texture(tex_lowImage, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
@@ -128,10 +128,15 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv)
   //  vec4 tex = texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
   //  return vec4(tex.x, tex.y, uv.x, uv.y);
 
-  return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
+//  return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
 
-//  vec4 filtBuff2Color1 = texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
-//  vec4 filtBuff2Color2 = texture(tex_filterBuff2, vec2(filtBuff2Pos2.x, 1 - (ASPECT_RATIO * filtBuff2Pos2.y)));
+  vec4 filtBuff2Color1 = texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
+  vec4 filtBuff2Color2 = texture(tex_filterBuff2, vec2(filtBuff2Pos2.x, 1 - (ASPECT_RATIO * filtBuff2Pos2.y)));
 
-//  return 0.5*filtBuff2Color1 + 0.5*filtBuff2Color2;
+  const float freq = 0.1;
+  const float t = 0.5 * (1.0 + sin(freq * u_time));
+  vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, vec3(t));
+  //vec3 color = filtBuff2Color1.rgb;
+
+  return vec4(color, filtBuff2Color1.a);
 }
