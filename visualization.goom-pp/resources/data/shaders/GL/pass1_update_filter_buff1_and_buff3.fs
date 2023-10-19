@@ -138,8 +138,10 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv)
 
   const float freq = 0.01;
   const float t = 0.5 * (1.0 + sin(freq * u_time));
-  vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, vec3(t));
-  //vec3 color = filtBuff2Color1.rgb;
+  //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, vec3(t));
+  vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color1.rgb, vec3(t));
+  //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, vec3(t));
 
-  return vec4(color, filtBuff2Color2.a);
+  return vec4(color, filtBuff2Color1.a);
+  //return vec4(color, filtBuff2Color2.a);
 }
