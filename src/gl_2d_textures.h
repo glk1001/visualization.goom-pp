@@ -146,6 +146,10 @@ auto Gl2DTexture<CppTextureType,
   {
     m_currentTextureIndex = 0;
   }
+  if (m_textureNames.size() > 1)
+  {
+    m_currentTextureIndex = 1;
+  }
 }
 
 template<typename CppTextureType,
@@ -192,20 +196,17 @@ auto Gl2DTexture<CppTextureType,
 {
   if constexpr (0 == NumPbos)
   {
-    GlCall(glDeleteTextures(1, &m_textureNames.at(0)));
-    if (m_textureNames.size() > 1)
-    {
-      GlCall(glDeleteTextures(1, &m_textureNames.at(1)));
-    }
+    std::for_each(begin(m_textureNames),
+                  end(m_textureNames),
+                  [](auto& textureName) { GlCall(glDeleteTextures(1, &textureName)); });
     return;
   }
 
   DeletePboBuffers();
-  GlCall(glDeleteTextures(1, &m_textureNames.at(0)));
-  if (m_textureNames.size() > 1)
-  {
-    GlCall(glDeleteTextures(1, &m_textureNames.at(1)));
-  }
+
+  std::for_each(begin(m_textureNames),
+                end(m_textureNames),
+                [](auto& textureName) { GlCall(glDeleteTextures(1, &textureName)); });
 }
 
 template<typename CppTextureType,
@@ -225,11 +226,13 @@ auto Gl2DTexture<CppTextureType,
                  TexturePixelType,
                  NumPbos>::BindTexture(GlslProgram& program) noexcept -> void
 {
-  program.SetUniform(m_textureShaderNames.at(m_currentTextureIndex),
-                     TextureLocation + static_cast<int32_t>(m_currentTextureIndex));
+  for (auto i = 0U; i < m_textureNames.size(); ++i)
+  {
+    program.SetUniform(m_textureShaderNames.at(i), TextureLocation + static_cast<int32_t>(i));
 
-  GlCall(glActiveTexture(TEXTURE_UNIT + static_cast<GLenum>(m_currentTextureIndex)));
-  GlCall(glBindTexture(GL_TEXTURE_2D, m_textureNames.at(m_currentTextureIndex)));
+    GlCall(glActiveTexture(TEXTURE_UNIT + static_cast<GLenum>(i)));
+    GlCall(glBindTexture(GL_TEXTURE_2D, m_textureNames.at(i)));
+  }
 }
 
 template<typename CppTextureType,
@@ -305,11 +308,11 @@ inline auto Gl2DTexture<CppTextureType,
   //                            TexturePixelType,
   //                            0,
   //                            nullptr));
-  GlCall(glClearTexImage(m_textureNames.at(0), 0, TextureFormat, TexturePixelType, nullptr));
-  if (m_textureNames.size() > 1)
-  {
-    GlCall(glClearTexImage(m_textureNames.at(1), 0, TextureFormat, TexturePixelType, nullptr));
-  }
+  std::for_each(begin(m_textureNames),
+                end(m_textureNames),
+                [](const auto textureName) {
+                  GlCall(glClearTexImage(textureName, 0, TextureFormat, TexturePixelType, nullptr));
+                });
 }
 
 template<typename CppTextureType,

@@ -168,7 +168,7 @@ private:
   static constexpr auto FILTER_BUFF3_TEX_SHADER_NAME     = "";
   static constexpr auto FILTER_SRCE_POS_TEX_SHADER_NAME  = "tex_filterSrcePositions";
   static constexpr auto FILTER_DEST_POS_TEX_SHADER_NAME  = "tex_filterDestPositions";
-  static constexpr auto FILTER_SRCE_POS_TEX2_SHADER_NAME = FILTER_SRCE_POS_TEX_SHADER_NAME;
+  static constexpr auto FILTER_SRCE_POS_TEX2_SHADER_NAME = "tex_filterSrcePositions2";
   static constexpr auto FILTER_DEST_POS_TEX2_SHADER_NAME = "tex_filterDestPositions2";
   static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME       = "tex_mainImage";
   static constexpr auto LOW_IMAGE_TEX_SHADER_NAME        = "tex_lowImage";
