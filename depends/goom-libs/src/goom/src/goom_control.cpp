@@ -365,7 +365,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
   {
     UpdateFrameDataFilterSrcePosBuffer();
     UpdateFrameDataFilterDestPosBuffer();
-    m_frameData->miscData.filterPosBuffersLerpFactor = 0.0F;
+    //    m_frameData->miscData.filterPosBuffersLerpFactor = 0.0F;
 
     m_filterSettingsService.ResetTransformBufferLerpData();
   }

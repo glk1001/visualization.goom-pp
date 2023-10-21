@@ -187,6 +187,15 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
     CopyBuffer(m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0),
                m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(i));
   }
+
+  const auto posBufferLen = static_cast<size_t>(GetWidth()) * static_cast<size_t>(GetHeight());
+  for (auto& previousFilterDestPosBuffer : m_glFilterPosBuffers.previousFilterDestPosBuffers)
+  {
+    previousFilterDestPosBuffer.resize(posBufferLen);
+    previousFilterDestPosBuffer.assign(
+        m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(0).begin(),
+        m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(0).end());
+  }
 }
 
 auto DisplacementFilter::InitFrameDataArrayToGl() noexcept -> void
@@ -626,7 +635,24 @@ auto DisplacementFilter::UpdateSrceFilterPosBufferToGl(const size_t pboIndex) no
     return;
   }
 
+  const auto lerpFactor     = m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor;
+  auto& srceFilterPosBuffer = m_frameDataArray.at(pboIndex).filterPosArrays.filterSrcePos;
+  auto& previousDestFilterPosBuffer = m_glFilterPosBuffers.previousFilterDestPosBuffers.at(
+      m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
+
+  std::transform(previousDestFilterPosBuffer.begin(),
+                 previousDestFilterPosBuffer.end(),
+                 srceFilterPosBuffer.begin(),
+                 srceFilterPosBuffer.begin(),
+                 [&lerpFactor](const Point2dFlt& destPos, const Point2dFlt& srcePos)
+                 { return lerp(srcePos, destPos, lerpFactor); });
+
   m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(pboIndex);
+
+  previousDestFilterPosBuffer.assign(
+      m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).begin(),
+      m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).end());
+  m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor = 0.0;
 }
 
 auto DisplacementFilter::UpdateDestFilterPosBufferToGl(const size_t pboIndex) noexcept -> void

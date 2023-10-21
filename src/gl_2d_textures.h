@@ -42,6 +42,7 @@ public:
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   [[nodiscard]] auto GetMappedBuffer(size_t pboIndex) noexcept -> std_spn::span<CppTextureType>;
 
+  [[nodiscard]] auto GetCurrentTextureIndex() const noexcept { return m_currentTextureIndex; }
   auto RotateCurrentTextureName() noexcept -> void;
 
   auto ZeroTextureData() noexcept -> void;
@@ -92,6 +93,7 @@ auto Gl2DTexture<CppTextureType,
                                  const int32_t textureHeight) -> void
 {
   m_currentTextureIndex = textureIndex;
+  //m_currentTextureIndex = 0;
 
   m_textureShaderNames.at(textureIndex) = textureShaderName;
   m_textureWidth                        = textureWidth;
@@ -146,6 +148,7 @@ auto Gl2DTexture<CppTextureType,
   {
     m_currentTextureIndex = 0;
   }
+  //m_currentTextureIndex = 0;
 }
 
 template<typename CppTextureType,

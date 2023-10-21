@@ -220,6 +220,8 @@ private:
                 FILTER_POS_TEX_PIXEL_TYPE,
                 NUM_PBOS>
         filterDestPosTexture{};
+    std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
+        previousFilterDestPosBuffers{};
   };
   GlFilterPosBuffers m_glFilterPosBuffers{};
   auto SetupGlFilterPosBuffers() -> void;
