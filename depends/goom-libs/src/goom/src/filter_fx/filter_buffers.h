@@ -52,7 +52,6 @@ public:
   auto ResetTransformBufferToStart() noexcept -> void;
   auto StartTransformBufferUpdates() noexcept -> void;
 
-  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
 
@@ -77,7 +76,6 @@ private:
   Viewport m_filterViewport             = Viewport{};
 
   std::vector<Point2dFlt> m_transformBuffer;
-  std::vector<Point2dFlt> m_previousTransformBuffer;
 
   auto DoNextTransformBuffer() noexcept -> void;
 };
@@ -106,14 +104,6 @@ inline auto ZoomFilterBuffers::SetFilterViewport(const Viewport& viewport) noexc
   Expects(UpdateStatus::AT_START == m_updateStatus);
 
   m_filterViewport = viewport;
-}
-
-inline auto ZoomFilterBuffers::GetPreviousTransformBuffer() const noexcept
-    -> const std::vector<Point2dFlt>&
-{
-  Expects(UpdateStatus::AT_END == m_updateStatus);
-
-  return m_previousTransformBuffer;
 }
 
 // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.

@@ -6,7 +6,6 @@
 #include "normalized_coords.h"
 #include "utils/parallel_utils.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
@@ -20,8 +19,7 @@ ZoomFilterBuffers::ZoomFilterBuffers(const PluginInfo& goomInfo,
   : m_dimensions{goomInfo.GetDimensions()},
     m_normalizedCoordsConverter{&normalizedCoordsConverter},
     m_getZoomPoint{getZoomPointFunc},
-    m_transformBuffer(m_dimensions.GetSize()),
-    m_previousTransformBuffer(m_dimensions.GetSize())
+    m_transformBuffer(m_dimensions.GetSize())
 {
 }
 
@@ -30,16 +28,7 @@ auto ZoomFilterBuffers::Start() noexcept -> void
   Expects(m_transformBuffer.size() == m_dimensions.GetSize());
   Expects(UpdateStatus::AT_START == m_updateStatus);
 
-  // Make sure the previous transform buffer is filled and valid and
-  // the current buffer is ready to be updated.
-
-  ResetTransformBufferToStart();
-  StartTransformBufferUpdates();
-
-  Expects(UpdateStatus::IN_PROGRESS == m_updateStatus);
-  DoNextTransformBuffer();
-  m_updateStatus = UpdateStatus::HAS_BEEN_COPIED;
-
+  // Make sure the current buffer is ready to be updated.
   ResetTransformBufferToStart();
   StartTransformBufferUpdates();
   Ensures(UpdateStatus::IN_PROGRESS == m_updateStatus);
@@ -58,11 +47,6 @@ auto ZoomFilterBuffers::Finish() noexcept -> void
 auto ZoomFilterBuffers::ResetTransformBufferToStart() noexcept -> void
 {
   Expects(m_shutdown or (UpdateStatus::IN_PROGRESS != m_updateStatus));
-
-  if (UpdateStatus::HAS_BEEN_COPIED == m_updateStatus)
-  {
-    std::swap(m_previousTransformBuffer, m_transformBuffer);
-  }
 
   m_updateStatus = UpdateStatus::AT_START;
 }

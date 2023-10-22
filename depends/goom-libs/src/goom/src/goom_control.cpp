@@ -33,7 +33,6 @@
 #include "goom/goom_logger.h"
 #include "goom/goom_time.h"
 #include "goom/goom_types.h"
-#include "goom/point2d.h"
 #include "goom/sound_info.h"
 #include "goom/spimpl.h"
 #include "goom_plugin_info.h"
@@ -45,7 +44,6 @@
 #include "utils/strutils.h"
 #include "visual_fx/fx_helper.h"
 
-#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <format> // NOLINT: Waiting to use C++20.
@@ -143,8 +141,6 @@ private:
 
   FrameData* m_frameData = nullptr;
   auto UpdateFrameData() -> void;
-  auto UpdateFrameDataFilterSrcePosBuffer() const noexcept -> void;
-  auto UpdateFrameDataFilterDestPosBuffer() noexcept -> void;
 
   bool m_noZooms    = false;
   PixelBuffer* m_p1 = nullptr;
@@ -352,47 +348,23 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
   m_frameData->imageArrays.mainImagePixelBufferNeedsUpdating = true;
   m_frameData->imageArrays.lowImagePixelBufferNeedsUpdating  = true;
 
+  const auto lerpFactor = std::as_const(m_filterSettingsService)
+                              .GetFilterSettings()
+                              .transformBufferLerpData.GetLerpFactor();
+  m_frameData->miscData.filterPosBuffersLerpFactor = lerpFactor;
+
   if (not m_filterBuffersService.IsTransformBufferReadyToCopy())
   {
-    const auto lerpFactor = std::as_const(m_filterSettingsService)
-                                .GetFilterSettings()
-                                .transformBufferLerpData.GetLerpFactor();
     m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = false;
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = false;
-    m_frameData->miscData.filterPosBuffersLerpFactor        = lerpFactor;
   }
   else
   {
-    UpdateFrameDataFilterSrcePosBuffer();
-    UpdateFrameDataFilterDestPosBuffer();
-    //    m_frameData->miscData.filterPosBuffersLerpFactor = 0.0F;
-
+    m_filterBuffersService.CopyTransformBuffer(m_frameData->filterPosArrays.filterDestPos);
+    m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = true;
+    m_frameData->filterPosArrays.filterDestPosNeedsUpdating = true;
     m_filterSettingsService.ResetTransformBufferLerpData();
   }
-}
-
-auto GoomControl::GoomControlImpl::UpdateFrameDataFilterSrcePosBuffer() const noexcept -> void
-{
-  const auto lerpFactor =
-      m_filterSettingsService.GetFilterSettings().transformBufferLerpData.GetLerpFactor();
-  auto& srceFilterPosBuffer       = m_frameData->filterPosArrays.filterSrcePos;
-  const auto& destFilterPosBuffer = m_filterBuffersService.GetPreviousTransformBuffer();
-
-  std::transform(destFilterPosBuffer.begin(),
-                 destFilterPosBuffer.end(),
-                 srceFilterPosBuffer.begin(),
-                 srceFilterPosBuffer.begin(),
-                 [&lerpFactor](const Point2dFlt& destPos, const Point2dFlt& srcePos)
-                 { return lerp(srcePos, destPos, lerpFactor); });
-
-  m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = true;
-}
-
-auto GoomControl::GoomControlImpl::UpdateFrameDataFilterDestPosBuffer() noexcept -> void
-{
-  m_filterBuffersService.CopyTransformBuffer(m_frameData->filterPosArrays.filterDestPos);
-
-  m_frameData->filterPosArrays.filterDestPosNeedsUpdating = true;
 }
 
 inline auto GoomControl::GoomControlImpl::SetNoZooms(const bool value) -> void

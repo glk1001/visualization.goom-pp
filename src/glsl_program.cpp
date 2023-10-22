@@ -4,7 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
-#include <format>
+//#include <format>
 #include <fstream>
 #include <glm/ext/matrix_float3x3.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -285,8 +285,8 @@ auto GlslProgram::FindUniformLocations() -> void
   glGetProgramInterfaceiv(m_handle, GL_UNIFORM, GL_ACTIVE_RESOURCES, &numUniforms);
   //std_fmt::println("numUniforms = {}", numUniforms);
 
-  auto numUniformBlocks = GLint{0};
-  glGetProgramInterfaceiv(m_handle, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &numUniformBlocks);
+  //auto numUniformBlocks = GLint{0};
+  //glGetProgramInterfaceiv(m_handle, GL_UNIFORM_BLOCK, GL_ACTIVE_RESOURCES, &numUniformBlocks);
   //std_fmt::println("numUniformBlocks = {}", numUniformBlocks);
 
   static constexpr auto NUM_PROPERTIES = 4;

@@ -13,7 +13,6 @@
 #include <span> // NOLINT: Waiting to use C++20.
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace GOOM
 {
@@ -37,7 +36,6 @@ public:
   auto Finish() noexcept -> void;
 
   [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
-  [[nodiscard]] auto GetPreviousTransformBuffer() const noexcept -> const std::vector<Point2dFlt>&;
   // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
   auto CopyTransformBuffer(std_spn::span<Point2dFlt> destBuff) noexcept -> void;
 
@@ -74,12 +72,6 @@ private:
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
 {
   return ZoomFilterBuffers::UpdateStatus::AT_END == m_filterBuffers.GetUpdateStatus();
-}
-
-inline auto FilterBuffersService::GetPreviousTransformBuffer() const noexcept
-    -> const std::vector<Point2dFlt>&
-{
-  return m_filterBuffers.GetPreviousTransformBuffer();
 }
 
 // NOLINTNEXTLINE(misc-include-cleaner): Waiting for C++20.
