@@ -355,13 +355,11 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
 
   if (not m_filterBuffersService.IsTransformBufferReadyToCopy())
   {
-    m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = false;
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = false;
   }
   else
   {
     m_filterBuffersService.CopyTransformBuffer(m_frameData->filterPosArrays.filterDestPos);
-    m_frameData->filterPosArrays.filterSrcePosNeedsUpdating = true;
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = true;
     m_filterSettingsService.ResetTransformBufferLerpData();
   }

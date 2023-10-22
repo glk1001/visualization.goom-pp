@@ -171,17 +171,11 @@ auto DisplacementFilter::InitImageArrays(GOOM::ImageArrays& imageArrays) noexcep
 auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArrays) noexcept
     -> void
 {
-  filterPosArrays.filterSrcePosNeedsUpdating = false;
   filterPosArrays.filterDestPosNeedsUpdating = false;
 
   InitFilterPosBuffer({static_cast<uint32_t>(GetWidth()), static_cast<uint32_t>(GetHeight())},
                       m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0));
 
-  for (auto i = 1U; i < NUM_PBOS; ++i)
-  {
-    CopyBuffer(m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0),
-               m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(i));
-  }
   for (auto i = 0U; i < NUM_PBOS; ++i)
   {
     CopyBuffer(m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0),
@@ -599,8 +593,6 @@ auto DisplacementFilter::InitFrameDataArrayPointers(std::vector<FrameData>& fram
 {
   for (auto i = 0U; i < NUM_PBOS; ++i)
   {
-    frameDataArray.at(i).filterPosArrays.filterSrcePos =
-        m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(i);
     frameDataArray.at(i).filterPosArrays.filterDestPos =
         m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(i);
 
@@ -637,7 +629,7 @@ auto DisplacementFilter::UpdatePass4MiscDataToGl(const size_t pboIndex) noexcept
 
 auto DisplacementFilter::UpdateSrceFilterPosBufferToGl(const size_t pboIndex) noexcept -> void
 {
-  if (not m_frameDataArray.at(pboIndex).filterPosArrays.filterSrcePosNeedsUpdating)
+  if (not m_frameDataArray.at(pboIndex).filterPosArrays.filterDestPosNeedsUpdating)
   {
     return;
   }
@@ -656,9 +648,9 @@ auto DisplacementFilter::UpdateSrceFilterPosBufferToGl(const size_t pboIndex) no
                  { return lerp(srcePos, destPos, lerpFactor); });
 
   CopyBuffer(activeFilterSrcePosBuffer,
-             m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(pboIndex));
+             m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0));
 
-  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(pboIndex);
+  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(0);
 
   m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor = 0.0;
 }

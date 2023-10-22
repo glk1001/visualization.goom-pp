@@ -8,6 +8,7 @@
 #include "goom/point2d.h"
 #include "scene.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -209,7 +210,7 @@ private:
                 FILTER_POS_TEX_FORMAT,
                 FILTER_POS_TEX_INTERNAL_FORMAT,
                 FILTER_POS_TEX_PIXEL_TYPE,
-                NUM_PBOS>
+                1>
         filterSrcePosTexture{};
     Gl2DTexture<FilterPosBuffersXY,
                 -1,
