@@ -221,7 +221,9 @@ private:
                 NUM_PBOS>
         filterDestPosTexture{};
     std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
-        previousFilterDestPosBuffers{};
+        activeFilterSrcePosBuffers{};
+    std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
+        activeFilterDestPosBuffers{};
   };
   GlFilterPosBuffers m_glFilterPosBuffers{};
   auto SetupGlFilterPosBuffers() -> void;

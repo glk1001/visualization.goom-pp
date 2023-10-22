@@ -189,7 +189,14 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
   }
 
   const auto posBufferLen = static_cast<size_t>(GetWidth()) * static_cast<size_t>(GetHeight());
-  for (auto& previousFilterDestPosBuffer : m_glFilterPosBuffers.previousFilterDestPosBuffers)
+  for (auto& previousFilterSrcePosBuffer : m_glFilterPosBuffers.activeFilterSrcePosBuffers)
+  {
+    previousFilterSrcePosBuffer.resize(posBufferLen);
+    previousFilterSrcePosBuffer.assign(
+        m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0).begin(),
+        m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0).end());
+  }
+  for (auto& previousFilterDestPosBuffer : m_glFilterPosBuffers.activeFilterDestPosBuffers)
   {
     previousFilterDestPosBuffer.resize(posBufferLen);
     previousFilterDestPosBuffer.assign(
@@ -635,17 +642,21 @@ auto DisplacementFilter::UpdateSrceFilterPosBufferToGl(const size_t pboIndex) no
     return;
   }
 
-  const auto lerpFactor     = m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor;
-  auto& srceFilterPosBuffer = m_frameDataArray.at(pboIndex).filterPosArrays.filterSrcePos;
-  auto& previousFilterDestPosBuffer = m_glFilterPosBuffers.previousFilterDestPosBuffers.at(
+  const auto lerpFactor = m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor;
+  auto& activeFilterSrcePosBuffer = m_glFilterPosBuffers.activeFilterSrcePosBuffers.at(
+      m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
+  const auto& activeFilterDestPosBuffer = m_glFilterPosBuffers.activeFilterDestPosBuffers.at(
       m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
 
-  std::transform(previousFilterDestPosBuffer.begin(),
-                 previousFilterDestPosBuffer.end(),
-                 srceFilterPosBuffer.begin(),
-                 srceFilterPosBuffer.begin(),
+  std::transform(activeFilterDestPosBuffer.cbegin(),
+                 activeFilterDestPosBuffer.cend(),
+                 activeFilterSrcePosBuffer.begin(),
+                 activeFilterSrcePosBuffer.begin(),
                  [&lerpFactor](const Point2dFlt& destPos, const Point2dFlt& srcePos)
                  { return lerp(srcePos, destPos, lerpFactor); });
+
+  CopyBuffer(activeFilterSrcePosBuffer,
+             m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(pboIndex));
 
   m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(pboIndex);
 
@@ -659,10 +670,10 @@ auto DisplacementFilter::UpdateDestFilterPosBufferToGl(const size_t pboIndex) no
     return;
   }
 
-  auto& previousFilterDestPosBuffer = m_glFilterPosBuffers.previousFilterDestPosBuffers.at(
+  auto& activeFilterDestPosBuffer = m_glFilterPosBuffers.activeFilterDestPosBuffers.at(
       m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
 
-  previousFilterDestPosBuffer.assign(
+  activeFilterDestPosBuffer.assign(
       m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).begin(),
       m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).end());
 
