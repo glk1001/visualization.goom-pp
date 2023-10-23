@@ -176,6 +176,11 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
   InitFilterPosBuffer({static_cast<uint32_t>(GetWidth()), static_cast<uint32_t>(GetHeight())},
                       m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0));
 
+  for (auto i = 1U; i < NUM_FILTER_POS_TEXTURES; ++i)
+  {
+    CopyBuffer(m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0),
+               m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(i));
+  }
   for (auto i = 0U; i < NUM_PBOS; ++i)
   {
     CopyBuffer(m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0),
@@ -183,13 +188,6 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
   }
 
   const auto posBufferLen = static_cast<size_t>(GetWidth()) * static_cast<size_t>(GetHeight());
-  for (auto& previousFilterSrcePosBuffer : m_glFilterPosBuffers.activeFilterSrcePosBuffers)
-  {
-    previousFilterSrcePosBuffer.resize(posBufferLen);
-    previousFilterSrcePosBuffer.assign(
-        m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0).begin(),
-        m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0).end());
-  }
   for (auto& previousFilterDestPosBuffer : m_glFilterPosBuffers.activeFilterDestPosBuffers)
   {
     previousFilterDestPosBuffer.resize(posBufferLen);
@@ -201,8 +199,11 @@ auto DisplacementFilter::InitFilterPosArrays(GOOM::FilterPosArrays& filterPosArr
 
 auto DisplacementFilter::InitFrameDataArrayToGl() noexcept -> void
 {
-  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(0);
-  m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(0);
+  for (auto i = 0U; i < NUM_FILTER_POS_TEXTURES; ++i)
+  {
+    m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(i, i);
+    m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(0, i);
+  }
 }
 
 auto DisplacementFilter::Resize(const WindowDimensions& windowDimensions) noexcept -> void
@@ -452,7 +453,7 @@ auto DisplacementFilter::Pass1UpdateFilterBuff1AndBuff3() noexcept -> void
 
   if (m_frameDataArray.at(m_currentPboIndex).filterPosArrays.filterDestPosNeedsUpdating)
   {
-    m_glFilterPosBuffers.filterDestPosTexture.RotateCurrentTextureName();
+    RotateCurrentFilterPosTextureIndex(m_glFilterPosBuffers);
   }
 }
 
@@ -464,14 +465,14 @@ auto DisplacementFilter::WaitForRenderSync() noexcept -> void
   }
 
   static constexpr auto TIMEOUT_NANOSECONDS = 50 * 1000 * 1000;
-  const auto result =
-      glClientWaitSync(m_renderSync, GL_SYNC_FLUSH_COMMANDS_BIT, TIMEOUT_NANOSECONDS);
 
-  if (result == GL_TIMEOUT_EXPIRED)
+  if (const auto result =
+          glClientWaitSync(m_renderSync, GL_SYNC_FLUSH_COMMANDS_BIT, TIMEOUT_NANOSECONDS);
+      GL_TIMEOUT_EXPIRED == result)
   {
     LogError(*m_goomLogger, "GL fence did not finish before timeout.");
   }
-  else if (result == GL_WAIT_FAILED)
+  else if (GL_WAIT_FAILED == result)
   {
     LogError(*m_goomLogger, "A GL fence error occurred.");
   }
@@ -635,24 +636,31 @@ auto DisplacementFilter::UpdateSrceFilterPosBufferToGl(const size_t pboIndex) no
   }
 
   const auto lerpFactor = m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor;
-  auto& activeFilterSrcePosBuffer = m_glFilterPosBuffers.activeFilterSrcePosBuffers.at(
-      m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
-  const auto& activeFilterDestPosBuffer = m_glFilterPosBuffers.activeFilterDestPosBuffers.at(
-      m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
 
-  std::transform(activeFilterDestPosBuffer.cbegin(),
-                 activeFilterDestPosBuffer.cend(),
-                 activeFilterSrcePosBuffer.begin(),
-                 activeFilterSrcePosBuffer.begin(),
+  for (auto i = 0U; i < NUM_FILTER_POS_TEXTURES; ++i)
+  {
+    UpdateSrceFilterPosBufferAndTexture(lerpFactor, i);
+  }
+
+  m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor = 0.0;
+}
+
+auto DisplacementFilter::UpdateSrceFilterPosBufferAndTexture(
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    const float lerpFactor,
+    const size_t buffIndex) noexcept -> void
+{
+  auto filterSrcePosBuffer = m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(buffIndex);
+  const auto& filterDestPosBuffer = m_glFilterPosBuffers.activeFilterDestPosBuffers.at(buffIndex);
+
+  std::transform(filterDestPosBuffer.cbegin(),
+                 filterDestPosBuffer.cend(),
+                 filterSrcePosBuffer.begin(),
+                 filterSrcePosBuffer.begin(),
                  [&lerpFactor](const Point2dFlt& destPos, const Point2dFlt& srcePos)
                  { return lerp(srcePos, destPos, lerpFactor); });
 
-  CopyBuffer(activeFilterSrcePosBuffer,
-             m_glFilterPosBuffers.filterSrcePosTexture.GetMappedBuffer(0));
-
-  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(0);
-
-  m_frameDataArray.at(pboIndex).miscData.filterPosBuffersLerpFactor = 0.0;
+  m_glFilterPosBuffers.filterSrcePosTexture.CopyMappedBufferToTexture(buffIndex, buffIndex);
 }
 
 auto DisplacementFilter::UpdateDestFilterPosBufferToGl(const size_t pboIndex) noexcept -> void
@@ -663,13 +671,14 @@ auto DisplacementFilter::UpdateDestFilterPosBufferToGl(const size_t pboIndex) no
   }
 
   auto& activeFilterDestPosBuffer = m_glFilterPosBuffers.activeFilterDestPosBuffers.at(
-      m_glFilterPosBuffers.filterDestPosTexture.GetCurrentTextureIndex());
+      m_glFilterPosBuffers.currentActiveTextureIndex);
 
   activeFilterDestPosBuffer.assign(
       m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).begin(),
       m_glFilterPosBuffers.filterDestPosTexture.GetMappedBuffer(pboIndex).end());
 
-  m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(pboIndex);
+  m_glFilterPosBuffers.filterDestPosTexture.CopyMappedBufferToTexture(
+      pboIndex, m_glFilterPosBuffers.currentActiveTextureIndex);
 }
 
 auto DisplacementFilter::CopyTextureData(const GLuint srceTextureName,
@@ -692,33 +701,35 @@ auto DisplacementFilter::CopyTextureData(const GLuint srceTextureName,
                             1));
 }
 
-auto DisplacementFilter::UpdateImageBuffersToGl(size_t pboIndex) noexcept -> void
+auto DisplacementFilter::UpdateImageBuffersToGl(const size_t pboIndex) noexcept -> void
 {
   if (m_frameDataArray.at(pboIndex).imageArrays.mainImagePixelBufferNeedsUpdating)
   {
-    m_glImageBuffers.mainImageTexture.CopyMappedBufferToTexture(pboIndex);
+    m_glImageBuffers.mainImageTexture.CopyMappedBufferToTexture(pboIndex, 0);
   }
   if (m_frameDataArray.at(pboIndex).imageArrays.lowImagePixelBufferNeedsUpdating)
   {
-    m_glImageBuffers.lowImageTexture.CopyMappedBufferToTexture(pboIndex);
+    m_glImageBuffers.lowImageTexture.CopyMappedBufferToTexture(pboIndex, 0);
   }
 }
 
 auto DisplacementFilter::BindGlFilterPosBuffers() noexcept -> void
 {
-  m_glFilterPosBuffers.filterSrcePosTexture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
-  m_glFilterPosBuffers.filterDestPosTexture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterPosBuffers.filterSrcePosTexture.BindAllTextures(
+      m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterPosBuffers.filterDestPosTexture.BindAllTextures(
+      m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 auto DisplacementFilter::BindGlFilterBuffer2() noexcept -> void
 {
-  m_glFilterBuffers.filterBuff2Texture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterBuffers.filterBuff2Texture.BindAllTextures(m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 auto DisplacementFilter::BindGlImageBuffers() noexcept -> void
 {
-  m_glImageBuffers.mainImageTexture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
-  m_glImageBuffers.lowImageTexture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glImageBuffers.mainImageTexture.BindAllTextures(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glImageBuffers.lowImageTexture.BindAllTextures(m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 auto DisplacementFilter::SetupGlFilterBuffers() -> void
@@ -778,12 +789,12 @@ auto DisplacementFilter::SetupGlLumAverageData() noexcept -> void
 
 auto DisplacementFilter::InitTextureBuffers() noexcept -> void
 {
-  m_glFilterBuffers.filterBuff1Texture.ZeroTextureData();
-  m_glFilterBuffers.filterBuff2Texture.ZeroTextureData();
-  m_glFilterBuffers.filterBuff3Texture.ZeroTextureData();
+  m_glFilterBuffers.filterBuff1Texture.ZeroAllTextures();
+  m_glFilterBuffers.filterBuff2Texture.ZeroAllTextures();
+  m_glFilterBuffers.filterBuff3Texture.ZeroAllTextures();
 
-  m_glImageBuffers.mainImageTexture.ZeroTextureData();
-  m_glImageBuffers.lowImageTexture.ZeroTextureData();
+  m_glImageBuffers.mainImageTexture.ZeroAllTextures();
+  m_glImageBuffers.lowImageTexture.ZeroAllTextures();
 
   GlCall(glMemoryBarrier(GL_TEXTURE_UPDATE_BARRIER_BIT));
 }

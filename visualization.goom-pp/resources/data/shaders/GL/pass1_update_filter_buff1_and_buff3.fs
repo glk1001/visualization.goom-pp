@@ -136,7 +136,7 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv)
   vec4 filtBuff2Color1 = texture(tex_filterBuff2, vec2(filtBuff2Pos1.x, 1 - (ASPECT_RATIO * filtBuff2Pos1.y)));
   vec4 filtBuff2Color2 = texture(tex_filterBuff2, vec2(filtBuff2Pos2.x, 1 - (ASPECT_RATIO * filtBuff2Pos2.y)));
 
-  const float freq = 0.1;
+  const float freq = 0.01;
   const float t = 0.5 * (1.0 + sin(freq * u_time));
   //const float t = 0.5;
   // const float t = step(100, u_time % 200);

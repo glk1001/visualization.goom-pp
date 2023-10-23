@@ -134,6 +134,7 @@ private:
   auto UpdatePass1MiscDataToGl(size_t pboIndex) noexcept -> void;
   auto UpdatePass4MiscDataToGl(size_t pboIndex) noexcept -> void;
   auto UpdateSrceFilterPosBufferToGl(size_t pboIndex) noexcept -> void;
+  auto UpdateSrceFilterPosBufferAndTexture(float lerpFactor, size_t buffIndex) noexcept -> void;
   auto UpdateDestFilterPosBufferToGl(size_t pboIndex) noexcept -> void;
   auto UpdateImageBuffersToGl(size_t pboIndex) noexcept -> void;
 
@@ -210,7 +211,7 @@ private:
                 FILTER_POS_TEX_FORMAT,
                 FILTER_POS_TEX_INTERNAL_FORMAT,
                 FILTER_POS_TEX_PIXEL_TYPE,
-                1>
+                NUM_FILTER_POS_TEXTURES>
         filterSrcePosTexture{};
     Gl2DTexture<FilterPosBuffersXY,
                 -1,
@@ -222,10 +223,11 @@ private:
                 NUM_PBOS>
         filterDestPosTexture{};
     std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
-        activeFilterSrcePosBuffers{};
-    std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
         activeFilterDestPosBuffers{};
+    size_t currentActiveTextureIndex = 0;
   };
+  static auto RotateCurrentFilterPosTextureIndex(GlFilterPosBuffers& filterPosBuffers) noexcept
+      -> void;
   GlFilterPosBuffers m_glFilterPosBuffers{};
   auto SetupGlFilterPosBuffers() -> void;
   auto BindGlFilterPosBuffers() noexcept -> void;
@@ -342,7 +344,17 @@ inline auto DisplacementFilter::GetCurrentFrameData() const noexcept -> const GO
 
 inline auto DisplacementFilter::BindFilterBuff3Texture() noexcept -> void
 {
-  m_glFilterBuffers.filterBuff3Texture.BindTexture(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterBuffers.filterBuff3Texture.BindAllTextures(m_programPass1UpdateFilterBuff1AndBuff3);
+}
+
+inline auto DisplacementFilter::RotateCurrentFilterPosTextureIndex(
+    GlFilterPosBuffers& filterPosBuffers) noexcept -> void
+{
+  ++filterPosBuffers.currentActiveTextureIndex;
+  if (filterPosBuffers.currentActiveTextureIndex >= NUM_FILTER_POS_TEXTURES)
+  {
+    filterPosBuffers.currentActiveTextureIndex = 0;
+  }
 }
 
 } // namespace GOOM::OPENGL
