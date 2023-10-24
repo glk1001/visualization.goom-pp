@@ -43,8 +43,8 @@ public:
 
   [[nodiscard]] auto GetTextureName(size_t textureIndex) const noexcept -> GLuint;
 
-  auto ZeroAllTextures() noexcept -> void;
-  auto BindAllTextures(GlslProgram& program) noexcept -> void;
+  auto ZeroTextures() noexcept -> void;
+  auto BindTextures(GlslProgram& program) noexcept -> void;
   auto CopyMappedBufferToTexture(size_t pboIndex, size_t textureIndex) noexcept -> void;
 
 private:
@@ -192,7 +192,7 @@ auto Gl2DTexture<CppTextureType,
                  TextureFormat,
                  TextureInternalFormat,
                  TexturePixelType,
-                 NumPbos>::BindAllTextures(GlslProgram& program) noexcept -> void
+                 NumPbos>::BindTextures(GlslProgram& program) noexcept -> void
 {
   for (auto i = 0U; i < m_textureNames.size(); ++i)
   {
@@ -261,7 +261,7 @@ inline auto Gl2DTexture<CppTextureType,
                         TextureFormat,
                         TextureInternalFormat,
                         TexturePixelType,
-                        NumPbos>::ZeroAllTextures() noexcept -> void
+                        NumPbos>::ZeroTextures() noexcept -> void
 {
   //  const auto zero = int64_t{0xFF000000};
   //  GlCall(glClearTexImage(m_textureName, 0, TextureFormat, TexturePixelType, &zero));

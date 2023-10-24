@@ -176,15 +176,15 @@ private:
 
   static constexpr auto LUM_AVG_TEX_LOCATION = LOW_IMAGE_TEX_LOCATION + NUM_IMAGE_TEXTURES;
 
-  static constexpr auto FILTER_BUFF1_TEX_SHADER_NAME     = "";
-  static constexpr auto FILTER_BUFF2_TEX_SHADER_NAME     = "tex_filterBuff2";
-  static constexpr auto FILTER_BUFF3_TEX_SHADER_NAME     = "";
-  static constexpr auto FILTER_SRCE_POS_TEX_SHADER_NAME  = "tex_filterSrcePositions";
-  static constexpr auto FILTER_SRCE_POS_TEX2_SHADER_NAME = "tex_filterSrcePositions2";
-  static constexpr auto FILTER_DEST_POS_TEX_SHADER_NAME  = "tex_filterDestPositions";
-  static constexpr auto FILTER_DEST_POS_TEX2_SHADER_NAME = "tex_filterDestPositions2";
-  static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME       = "tex_mainImage";
-  static constexpr auto LOW_IMAGE_TEX_SHADER_NAME        = "tex_lowImage";
+  static constexpr auto FILTER_BUFF1_TEX_SHADER_NAME = "";
+  static constexpr auto FILTER_BUFF2_TEX_SHADER_NAME = "tex_filterBuff2";
+  static constexpr auto FILTER_BUFF3_TEX_SHADER_NAME = "";
+  static constexpr auto FILTER_SRCE_POS_TEX_SHADER_NAMES =
+      std::array{"tex_filterSrcePositions", "tex_filterSrcePositions2"};
+  static constexpr auto FILTER_DEST_POS_TEX_SHADER_NAMES =
+      std::array{"tex_filterDestPositions", "tex_filterDestPositions2"};
+  static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME = "tex_mainImage";
+  static constexpr auto LOW_IMAGE_TEX_SHADER_NAME  = "tex_lowImage";
 
   static constexpr auto FILTER_BUFF1_IMAGE_UNIT = 0;
   static constexpr auto FILTER_BUFF2_IMAGE_UNIT = 1;
@@ -224,10 +224,11 @@ private:
         filterDestPosTexture{};
     std::array<std::vector<FilterPosBuffersXY>, NUM_FILTER_POS_TEXTURES>
         activeFilterDestPosBuffers{};
+    size_t numActiveTextures         = NUM_FILTER_POS_TEXTURES;
     size_t currentActiveTextureIndex = 0;
   };
-  static auto RotateCurrentFilterPosTextureIndex(GlFilterPosBuffers& filterPosBuffers) noexcept
-      -> void;
+  auto UpdateCurrentFilterPosTextureIndex() noexcept -> void;
+  auto RotateCurrentFilterPosTextureIndex() noexcept -> void;
   GlFilterPosBuffers m_glFilterPosBuffers{};
   auto SetupGlFilterPosBuffers() -> void;
   auto BindGlFilterPosBuffers() noexcept -> void;
@@ -344,17 +345,7 @@ inline auto DisplacementFilter::GetCurrentFrameData() const noexcept -> const GO
 
 inline auto DisplacementFilter::BindFilterBuff3Texture() noexcept -> void
 {
-  m_glFilterBuffers.filterBuff3Texture.BindAllTextures(m_programPass1UpdateFilterBuff1AndBuff3);
-}
-
-inline auto DisplacementFilter::RotateCurrentFilterPosTextureIndex(
-    GlFilterPosBuffers& filterPosBuffers) noexcept -> void
-{
-  ++filterPosBuffers.currentActiveTextureIndex;
-  if (filterPosBuffers.currentActiveTextureIndex >= NUM_FILTER_POS_TEXTURES)
-  {
-    filterPosBuffers.currentActiveTextureIndex = 0;
-  }
+  m_glFilterBuffers.filterBuff3Texture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 } // namespace GOOM::OPENGL
