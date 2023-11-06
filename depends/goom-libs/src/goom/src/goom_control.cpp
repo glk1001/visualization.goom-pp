@@ -407,6 +407,7 @@ auto GoomControl::GoomControlImpl::UpdatePos1Pos2MixFreq() noexcept -> void
   m_pos1Pos2TransitionLerpFactor.Reset(0.0F);
 
   m_previousPos1Pos2MixFreq = m_frameData->filterPosArrays.filterPos1Pos2FreqMixFreq;
+
   m_targetPos1Pos2MixFreq   = m_goomRand.GetRandInRange(FilterPosArrays::MIN_POS1_POS2_MIX_FREQ,
                                                       FilterPosArrays::MAX_POS1_POS2_MIX_FREQ);
 }
