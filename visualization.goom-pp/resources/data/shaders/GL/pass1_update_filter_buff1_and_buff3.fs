@@ -96,15 +96,70 @@ float GetBaseColorMultiplier(vec3 color)
                                       pow(color.r / BLACK_CUTOFF, 3.0));
 }
 
+float sdf_smin(float a, float b)
+{
+    const float k = 32;
+    float res = exp(-k*a) + exp(-k*b);
+    return -log(max(0.0001,res)) / k;
+}
+
+struct SrceAndDestPositions
+{
+  vec2 srcePos1;
+  vec2 destPos1;
+  vec2 srcePos2;
+  vec2 destPos2;
+};
+struct LerpedPositions
+{
+  vec2 pos1;
+  vec2 pos2;
+};
+struct TexelPositions
+{
+  vec2 uv1;
+  vec2 uv2;
+};
+
+SrceAndDestPositions GetSrceAndDestPositions(ivec2 xy)
+{
+  return SrceAndDestPositions(
+    imageLoad(img_filterSrcePosBuff1, xy).xy,
+    imageLoad(img_filterDestPosBuff1, xy).xy,
+    imageLoad(img_filterSrcePosBuff2, xy).xy,
+    imageLoad(img_filterDestPosBuff2, xy).xy
+  );
+}
+
+LerpedPositions GetLerpedPositions(ivec2 xy)
+{
+  SrceAndDestPositions normalizedPositions = GetSrceAndDestPositions(xy);
+
+  return LerpedPositions(
+    mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_lerpFactor),
+    mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_lerpFactor)
+  );
+}
+
+vec2 GetTexelPos(vec2 filterPos)
+{
+  float x = (filterPos.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+  float y = (filterPos.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+
+  return vec2(x, 1 - (ASPECT_RATIO * y));
+}
+
+TexelPositions GetTexelPositions(LerpedPositions lerpedPositions)
+{
+  return TexelPositions(
+    GetTexelPos(lerpedPositions.pos1),
+    GetTexelPos(lerpedPositions.pos2)
+  );
+}
+
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 {
   xy = ivec2(xy.x, HEIGHT - 1 - xy.y);
-
-  vec2 srceNormalizedPos1 = imageLoad(img_filterSrcePosBuff1, xy).xy;
-  vec2 destNormalizedPos1 = imageLoad(img_filterDestPosBuff1, xy).xy;
-
-  vec2 srceNormalizedPos2 = imageLoad(img_filterSrcePosBuff2, xy).xy;
-  vec2 destNormalizedPos2 = imageLoad(img_filterDestPosBuff2, xy).xy;
 
   // u_time example use 1.
   // vec2 focusPoint = 0.5 * (1.0 + vec2(sin(0.01*u_time), cos(0.01*u_time)));
@@ -117,15 +172,14 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
   // destNormalizedPos = vec2((1.0 - 0.5*0.5*(1.0 + sin(FREQ_FACTOR*u_time))) * destNormalizedPos.x,
   //                          (1.0 - 0.5*0.5*(1.0 + cos(FREQ_FACTOR*u_time))) * destNormalizedPos.y);
 
-  vec2 lerpNormalizedPos1 = mix(srceNormalizedPos1, destNormalizedPos1, u_lerpFactor);
-  vec2 lerpNormalizedPos2 = mix(srceNormalizedPos2, destNormalizedPos2, u_lerpFactor);
+  LerpedPositions lerpedPositions = GetLerpedPositions(xy);
 
   if (u_resetSrceFilterPosBuffers)
   {
     // Reset the filter srce pos buffers to the current lerped state, ready
     // for a new filter dest pos buffer.
-    imageStore(img_filterSrcePosBuff1, xy, vec4(lerpNormalizedPos1, 0, 0));
-    imageStore(img_filterSrcePosBuff2, xy, vec4(lerpNormalizedPos2, 0, 0));
+    imageStore(img_filterSrcePosBuff1, xy, vec4(lerpedPositions.pos1, 0, 0));
+    imageStore(img_filterSrcePosBuff2, xy, vec4(lerpedPositions.pos2, 0, 0));
   }
 
   // u_time example use 2.
@@ -134,10 +188,7 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
   // vec2 newMidPoint = amp * vec2(0.5*(1.0 + sin(FREQ_FACTOR*u_time)), 0.5*(1.0 + cos(FREQ_FACTOR*u_time)));
   // lerpNormalizedPos -= newMidPoint;
 
-  vec2 filtBuff2Pos1 = vec2((lerpNormalizedPos1.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                            (lerpNormalizedPos1.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
-  vec2 filtBuff2Pos2 = vec2((lerpNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                            (lerpNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
+  TexelPositions texelPositions = GetTexelPositions(lerpedPositions);
 
   /**
   const vec2 t1 = vec2(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
@@ -145,12 +196,32 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
   return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
   **/
 
-  vec4 filtBuff2Color1 = texture(tex_filterBuff2, vec2(filtBuff2Pos1.x, 1 - (ASPECT_RATIO * filtBuff2Pos1.y)));
-  vec4 filtBuff2Color2 = texture(tex_filterBuff2, vec2(filtBuff2Pos2.x, 1 - (ASPECT_RATIO * filtBuff2Pos2.y)));
+MAKE A FUNC
+  vec4 filtBuff2Color1 = texture(tex_filterBuff2, texelPositions.uv1);
+  vec4 filtBuff2Color2 = texture(tex_filterBuff2, texelPositions.uv2);
+
+  const float r = 0.25;
+  const vec2 circleCentre1 = 0.5 + vec2(r*cos(u_pos1Pos2MixFreq * u_time), r*sin(u_pos1Pos2MixFreq * u_time));
+  const vec2 circleCentre2 = 0.4 + vec2(r*cos(1+u_pos1Pos2MixFreq * u_time), r*sin(1+u_pos1Pos2MixFreq * u_time));
+  float dist1 = distance(uv, circleCentre1);
+  float dist2 = distance(uv, circleCentre2) - 0.2;
+  //vec3 t = vec3(step(0.0, sdf_smin(dist1, dist2)));
+  //vec3 t = vec3(step(0.5, uv.x));
+  //float posDist = distance(filtBuff2Pos1, filtBuff2Pos2)/5.5;
+  //float posDist = distance(vec2(0), filtBuff2Pos2)/5.5;
 
   const vec3 t = vec3(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
   //const float t = 0.5;
   // const float t = step(100, u_time % 200);
+
+  vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(t.x));
+  //float distUv = distance(uv, posUv) / sqrt(2);
+  float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
+  float brightness = mix(1.0, 1.01, distUv);
+  //brightness = 1.0;
+
+  //vec3 color = pow(mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t), vec3(brightness));
+  //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t*(1-distUv));
   vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t);
   //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color1.rgb, t);
   //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, t);
