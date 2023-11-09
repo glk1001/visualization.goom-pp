@@ -200,9 +200,10 @@ vec3 GetMixedColor(vec2 uv,
                    vec3 tMix,
                    FilterBuffColors filterBuffColors)
 {
+  const float MAX_UV = sqrt(2.0);
   //vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(tMix.x));
-  //float distUv = distance(uv, posUv) / sqrt(2);
-  float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
+  //float distUv = min(distance(uv, posUv), MAX_UV) / MAX_UV;
+  float distUv = min(distance(uv, texelPositions.uv2), MAX_UV) / MAX_UV;
   //float brightness = mix(1.0, 1.01, distUv);
 
   // return pow(mix(filterBuffColors.color1.rgb, filterBuffColors.color2.rgb, tMix), vec3(brightness));
