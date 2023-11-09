@@ -120,14 +120,19 @@ struct TexelPositions
   vec2 uv1;
   vec2 uv2;
 };
+struct FilterBuffer2Colors
+{
+  vec4 color1;
+  vec4 color2;
+};
 
 SrceAndDestPositions GetSrceAndDestPositions(ivec2 xy)
 {
   return SrceAndDestPositions(
-    imageLoad(img_filterSrcePosBuff1, xy).xy,
-    imageLoad(img_filterDestPosBuff1, xy).xy,
-    imageLoad(img_filterSrcePosBuff2, xy).xy,
-    imageLoad(img_filterDestPosBuff2, xy).xy
+             imageLoad(img_filterSrcePosBuff1, xy).xy,
+             imageLoad(img_filterDestPosBuff1, xy).xy,
+             imageLoad(img_filterSrcePosBuff2, xy).xy,
+             imageLoad(img_filterDestPosBuff2, xy).xy
   );
 }
 
@@ -136,8 +141,8 @@ LerpedPositions GetLerpedPositions(ivec2 xy)
   SrceAndDestPositions normalizedPositions = GetSrceAndDestPositions(xy);
 
   return LerpedPositions(
-    mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_lerpFactor),
-    mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_lerpFactor)
+             mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_lerpFactor),
+             mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_lerpFactor)
   );
 }
 
@@ -152,25 +157,53 @@ vec2 GetTexelPos(vec2 filterPos)
 TexelPositions GetTexelPositions(LerpedPositions lerpedPositions)
 {
   return TexelPositions(
-    GetTexelPos(lerpedPositions.pos1),
-    GetTexelPos(lerpedPositions.pos2)
+             GetTexelPos(lerpedPositions.pos1),
+             GetTexelPos(lerpedPositions.pos2)
   );
+}
+
+FilterBuffer2Colors GetFilterBuffer2Colors(TexelPositions texelPositions)
+{
+  return FilterBuffer2Colors(
+             texture(tex_filterBuff2, texelPositions.uv1),
+             texture(tex_filterBuff2, texelPositions.uv2)
+  );
+}
+
+float GetTMix()
+{
+  // const float r = 0.25;
+  // const vec2 circleCentre1 = 0.5 + vec2(r*cos(u_pos1Pos2MixFreq * u_time), r*sin(u_pos1Pos2MixFreq * u_time));
+  // const vec2 circleCentre2 = 0.4 + vec2(r*cos(1+u_pos1Pos2MixFreq * u_time), r*sin(1+u_pos1Pos2MixFreq * u_time));
+  // float dist1 = distance(uv, circleCentre1);
+  // float dist2 = distance(uv, circleCentre2) - 0.2;
+  // vec3 t = vec3(step(0.0, sdf_smin(dist1, dist2)));
+  // vec3 t = vec3(step(0.5, uv.x));
+  // float posDist = distance(filtBuff2Pos1, filtBuff2Pos2)/5.5;
+  // float posDist = distance(vec2(0), filtBuff2Pos2)/5.5;
+
+  return 0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time));
+  // return 0.5;
+  // return step(100, u_time % 200);
+}
+
+vec3 GetMixedColor(vec3 t, FilterBuffer2Colors filterBuffer2Colors)
+{
+  //vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(t.x));
+  //float distUv = distance(uv, posUv) / sqrt(2);
+  //float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
+  //float brightness = mix(1.0, 1.01, distUv);
+
+  // return pow(mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t), vec3(brightness));
+  // return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t*(1-distUv));
+  // return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color1.rgb, t);
+  // return mix(filterBuffer2Colors.color2.rgb, filterBuffer2Colors.color2.rgb, t);
+  return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t);
 }
 
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 {
   xy = ivec2(xy.x, HEIGHT - 1 - xy.y);
-
-  // u_time example use 1.
-  // vec2 focusPoint = 0.5 * (1.0 + vec2(sin(0.01*u_time), cos(0.01*u_time)));
-  // float d = length(destNormalizedPos - focusPoint);
-  // destNormalizedPos *= 1.0 - 0.5*d;
-  // float FREQ_FACTOR = (1.0 + (0.5*(1.0 + sin(0.01 * u_time))))*1.1;
-  // destNormalizedPos = vec2(fract(FREQ_FACTOR * destNormalizedPos.x),
-  //                          fract(FREQ_FACTOR * destNormalizedPos.y));
-  // const float FREQ_FACTOR = 20.1;
-  // destNormalizedPos = vec2((1.0 - 0.5*0.5*(1.0 + sin(FREQ_FACTOR*u_time))) * destNormalizedPos.x,
-  //                          (1.0 - 0.5*0.5*(1.0 + cos(FREQ_FACTOR*u_time))) * destNormalizedPos.y);
 
   LerpedPositions lerpedPositions = GetLerpedPositions(xy);
 
@@ -182,50 +215,18 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
     imageStore(img_filterSrcePosBuff2, xy, vec4(lerpedPositions.pos2, 0, 0));
   }
 
-  // u_time example use 2.
-  // const float FREQ_FACTOR = 0.01;
-  // float amp = 0.5 * 0.5*(1.0 + sin(0.1*u_time));
-  // vec2 newMidPoint = amp * vec2(0.5*(1.0 + sin(FREQ_FACTOR*u_time)), 0.5*(1.0 + cos(FREQ_FACTOR*u_time)));
-  // lerpNormalizedPos -= newMidPoint;
-
   TexelPositions texelPositions = GetTexelPositions(lerpedPositions);
 
   /**
   const vec2 t1 = vec2(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
-  vec2 filtBuff2Pos = mix(filtBuff2Pos1, filtBuff2Pos2, t1);
-  return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
+  vec2 filtBuff2Pos = mix(lerpedPositions.pos1, lerpedPositions.pos2, t1);
+  return texture(tex_filterBuff2, filtBuff2Pos);
   **/
 
-MAKE A FUNC
-  vec4 filtBuff2Color1 = texture(tex_filterBuff2, texelPositions.uv1);
-  vec4 filtBuff2Color2 = texture(tex_filterBuff2, texelPositions.uv2);
+  FilterBuffer2Colors filterBuffer2Colors = GetFilterBuffer2Colors(texelPositions);
 
-  const float r = 0.25;
-  const vec2 circleCentre1 = 0.5 + vec2(r*cos(u_pos1Pos2MixFreq * u_time), r*sin(u_pos1Pos2MixFreq * u_time));
-  const vec2 circleCentre2 = 0.4 + vec2(r*cos(1+u_pos1Pos2MixFreq * u_time), r*sin(1+u_pos1Pos2MixFreq * u_time));
-  float dist1 = distance(uv, circleCentre1);
-  float dist2 = distance(uv, circleCentre2) - 0.2;
-  //vec3 t = vec3(step(0.0, sdf_smin(dist1, dist2)));
-  //vec3 t = vec3(step(0.5, uv.x));
-  //float posDist = distance(filtBuff2Pos1, filtBuff2Pos2)/5.5;
-  //float posDist = distance(vec2(0), filtBuff2Pos2)/5.5;
+  const vec3 t = vec3(GetTMix());
 
-  const vec3 t = vec3(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
-  //const float t = 0.5;
-  // const float t = step(100, u_time % 200);
-
-  vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(t.x));
-  //float distUv = distance(uv, posUv) / sqrt(2);
-  float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
-  float brightness = mix(1.0, 1.01, distUv);
-  //brightness = 1.0;
-
-  //vec3 color = pow(mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t), vec3(brightness));
-  //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t*(1-distUv));
-  vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t);
-  //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color1.rgb, t);
-  //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, t);
-
-  return vec4(color, filtBuff2Color1.a);
-  //return vec4(color, filtBuff2Color2.a);
+  return vec4(GetMixedColor(t, filterBuffer2Colors), filterBuffer2Colors.color1.a);
+  // return vec4(GetMixedColor(t, filterBuffer2Colors), filterBuffer2Colors.color2.a);
 }
