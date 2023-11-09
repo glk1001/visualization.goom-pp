@@ -120,7 +120,7 @@ struct TexelPositions
   vec2 uv1;
   vec2 uv2;
 };
-struct FilterBuffer2Colors
+struct FilterBuffColors
 {
   vec4 color1;
   vec4 color2;
@@ -146,6 +146,14 @@ LerpedPositions GetLerpedPositions(ivec2 xy)
   );
 }
 
+void ResetImageSrceFilterBuffPositions(ivec2 xy, LerpedPositions lerpedPositions)
+{
+  // Reset the filter srce pos buffers to the current lerped state, ready
+  // for a new filter dest pos buffer.
+  imageStore(img_filterSrcePosBuff1, xy, vec4(lerpedPositions.pos1, 0, 0));
+  imageStore(img_filterSrcePosBuff2, xy, vec4(lerpedPositions.pos2, 0, 0));
+}
+
 vec2 GetTexelPos(vec2 filterPos)
 {
   float x = (filterPos.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
@@ -162,9 +170,9 @@ TexelPositions GetTexelPositions(LerpedPositions lerpedPositions)
   );
 }
 
-FilterBuffer2Colors GetFilterBuffer2Colors(TexelPositions texelPositions)
+FilterBuffColors GetFilterBuff2Colors(TexelPositions texelPositions)
 {
-  return FilterBuffer2Colors(
+  return FilterBuffColors(
              texture(tex_filterBuff2, texelPositions.uv1),
              texture(tex_filterBuff2, texelPositions.uv2)
   );
@@ -187,18 +195,22 @@ float GetTMix()
   // return step(100, u_time % 200);
 }
 
-vec3 GetMixedColor(vec3 t, FilterBuffer2Colors filterBuffer2Colors)
+vec3 GetMixedColor(vec2 uv,
+                   TexelPositions texelPositions,
+                   vec3 tMix,
+                   FilterBuffColors filterBuffColors)
 {
-  //vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(t.x));
+  //vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(tMix.x));
   //float distUv = distance(uv, posUv) / sqrt(2);
-  //float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
+  float distUv = distance(uv, texelPositions.uv2) / sqrt(2);
   //float brightness = mix(1.0, 1.01, distUv);
 
-  // return pow(mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t), vec3(brightness));
-  // return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t*(1-distUv));
-  // return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color1.rgb, t);
-  // return mix(filterBuffer2Colors.color2.rgb, filterBuffer2Colors.color2.rgb, t);
-  return mix(filterBuffer2Colors.color1.rgb, filterBuffer2Colors.color2.rgb, t);
+  // return pow(mix(filterBuffColors.color1.rgb, filterBuffColors.color2.rgb, tMix), vec3(brightness));
+  // return mix(filterBuffColors.color1.rgb, filterBuffColors.color1.rgb, tMix);
+  // return mix(filterBuffColors.color2.rgb, filterBuffColors.color2.rgb, tMix);
+
+  return mix(filterBuffColors.color1.rgb, filterBuffColors.color2.rgb, tMix * (1.0 - distUv));
+  //return mix(filterBuffColors.color1.rgb, filterBuffColors.color2.rgb, tMix);
 }
 
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
@@ -209,24 +221,21 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 
   if (u_resetSrceFilterPosBuffers)
   {
-    // Reset the filter srce pos buffers to the current lerped state, ready
-    // for a new filter dest pos buffer.
-    imageStore(img_filterSrcePosBuff1, xy, vec4(lerpedPositions.pos1, 0, 0));
-    imageStore(img_filterSrcePosBuff2, xy, vec4(lerpedPositions.pos2, 0, 0));
+    ResetImageSrceFilterBuffPositions(xy, lerpedPositions);
   }
 
-  TexelPositions texelPositions = GetTexelPositions(lerpedPositions);
+  TexelPositions filterBuff2Positions = GetTexelPositions(lerpedPositions);
 
   /**
-  const vec2 t1 = vec2(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
-  vec2 filtBuff2Pos = mix(lerpedPositions.pos1, lerpedPositions.pos2, t1);
-  return texture(tex_filterBuff2, filtBuff2Pos);
+  const vec2 tMix = vec2(GetTMix());
+  vec2 filterBuff2Pos = mix(filterBuff2Positions.uv1, filterBuff2Positions.uv2, tMix);
+  return texture(tex_filterBuff2, filterBuff2Pos);
   **/
 
-  FilterBuffer2Colors filterBuffer2Colors = GetFilterBuffer2Colors(texelPositions);
+  FilterBuffColors filterBuff2Colors = GetFilterBuff2Colors(filterBuff2Positions);
 
-  const vec3 t = vec3(GetTMix());
+  const vec3 t12Mix = vec3(GetTMix());
+  float alpha = filterBuff2Colors.color1.a;
 
-  return vec4(GetMixedColor(t, filterBuffer2Colors), filterBuffer2Colors.color1.a);
-  // return vec4(GetMixedColor(t, filterBuffer2Colors), filterBuffer2Colors.color2.a);
+  return vec4(GetMixedColor(uv, filterBuff2Positions, t12Mix, filterBuff2Colors), alpha);
 }
