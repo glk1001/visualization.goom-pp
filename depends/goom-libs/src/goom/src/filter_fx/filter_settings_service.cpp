@@ -8,14 +8,12 @@
 #include "filter_settings.h"
 #include "filter_speed.h"
 #include "goom/goom_config.h"
-#include "goom/math20.h"
 #include "goom_plugin_info.h"
 #include "normalized_coords.h"
 #include "utils/enum_utils.h"
 #include "utils/math/goom_rand_base.h"
 #include "utils/math/misc.h"
 
-#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <map>
@@ -60,7 +58,8 @@ namespace
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::HYPERCOS_MODE2;
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::HYPERCOS_MODE3;
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::IMAGE_DISPLACEMENT_MODE;
-constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::NORMAL_MODE;
+constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::MOBIUS_MODE;
+//constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::NORMAL_MODE;
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::SCRUNCH_MODE;
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::SPEEDWAY_MODE0;
 //constexpr auto FORCED_FILTER_MODE = ZoomFilterMode::SPEEDWAY_MODE1;
@@ -106,6 +105,7 @@ constexpr auto FILTER_MODE_NAMES = EnumMap<ZoomFilterMode, std::string_view>{{{
     {ZoomFilterMode::HYPERCOS_MODE2, "Hypercos Mode 2"},
     {ZoomFilterMode::HYPERCOS_MODE3, "Hypercos Mode 3"},
     {ZoomFilterMode::IMAGE_DISPLACEMENT_MODE, "Image Displacement"},
+    {ZoomFilterMode::MOBIUS_MODE, "Mobius"},
     {ZoomFilterMode::NORMAL_MODE, "Normal"},
     {ZoomFilterMode::SCRUNCH_MODE, "Scrunch"},
     {ZoomFilterMode::SPEEDWAY_MODE0, "Speedway Mode 0"},
@@ -152,7 +152,7 @@ constexpr auto GetEffectsProbabilities() noexcept -> EnumMap<ZoomFilterMode, Aft
   effectsProbs[FiltMode::DISTANCE_FIELD_MODE1][EffectType::ROTATION] = PROB_HIGH;
   effectsProbs[FiltMode::DISTANCE_FIELD_MODE2][EffectType::ROTATION] = PROB_HIGH;
 
-  effectsProbs[FiltMode::EXP_RECIPROCAL_MODE][EffectType::ROTATION] = PROB_LOW;
+  effectsProbs[FiltMode::EXP_RECIPROCAL_MODE][EffectType::ROTATION] = PROB_HALF;
 
   effectsProbs[FiltMode::HYPERCOS_MODE0][EffectType::ROTATION] = PROB_LOW;
   effectsProbs[FiltMode::HYPERCOS_MODE1][EffectType::ROTATION] = PROB_LOW;
@@ -160,6 +160,8 @@ constexpr auto GetEffectsProbabilities() noexcept -> EnumMap<ZoomFilterMode, Aft
   effectsProbs[FiltMode::HYPERCOS_MODE3][EffectType::ROTATION] = PROB_LOW;
 
   effectsProbs[FiltMode::IMAGE_DISPLACEMENT_MODE][EffectType::ROTATION] = PROB_ZERO;
+
+  effectsProbs[FiltMode::MOBIUS_MODE][EffectType::ROTATION] = PROB_HALF;
 
   effectsProbs[FiltMode::NORMAL_MODE][EffectType::ROTATION] = PROB_ZERO;
 
@@ -472,6 +474,13 @@ auto GetWeightedFilterEvents(const UTILS::MATH::IGoomRand& goomRand)
        {Hyp::MODE2, 1.0F},
        {Hyp::MODE3, 1.0F}}
   };
+  constexpr auto MOBIUS_HYPERCOS_WEIGHTS = ModeWeights{
+      {{Hyp::NONE, FORCED_HYPERCOS ? 0.0F : 10.0F},
+       {Hyp::MODE0, 5.0F},
+       {Hyp::MODE1, 1.0F},
+       {Hyp::MODE2, 1.0F},
+       {Hyp::MODE3, 0.0F}}
+  };
   constexpr auto NORMAL_HYPERCOS_WEIGHTS = ModeWeights{
       {{Hyp::NONE, FORCED_HYPERCOS ? 0.0F : 10.0F},
        {Hyp::MODE0, 5.0F},
@@ -549,6 +558,7 @@ auto GetWeightedFilterEvents(const UTILS::MATH::IGoomRand& goomRand)
       {ZoomFilterMode::HYPERCOS_MODE2, HYPERCOS2_HYPERCOS_WEIGHTS},
       {ZoomFilterMode::HYPERCOS_MODE3, HYPERCOS3_HYPERCOS_WEIGHTS},
       {ZoomFilterMode::IMAGE_DISPLACEMENT_MODE, IMAGE_DISPLACEMENT_HYPERCOS_WEIGHTS},
+      {ZoomFilterMode::MOBIUS_MODE, MOBIUS_HYPERCOS_WEIGHTS},
       {ZoomFilterMode::NORMAL_MODE, NORMAL_HYPERCOS_WEIGHTS},
       {ZoomFilterMode::SCRUNCH_MODE, SCRUNCH_HYPERCOS_WEIGHTS},
       {ZoomFilterMode::SPEEDWAY_MODE0, SPEEDWAY_HYPERCOS_WEIGHTS},

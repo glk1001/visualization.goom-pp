@@ -108,6 +108,7 @@ add_library(goom
             src/filter_fx/after_effects/after_effects_types.h
             src/filter_fx/after_effects/zoom_vector_after_effects.cpp
             src/filter_fx/filter_effects/adjustment_effects/amulet.cpp
+            src/filter_fx/filter_effects/adjustment_effects/complex_utils.cpp
             src/filter_fx/filter_effects/adjustment_effects/crystal_ball.cpp
             src/filter_fx/filter_effects/adjustment_effects/distance_field.cpp
             src/filter_fx/filter_effects/adjustment_effects/exp_reciprocal.cpp

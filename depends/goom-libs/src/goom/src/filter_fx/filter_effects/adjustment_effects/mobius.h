@@ -7,15 +7,13 @@
 #include "utils/math/goom_rand_base.h"
 #include "utils/name_value_pairs.h"
 
-#include <complex>
-
 namespace GOOM::FILTER_FX::FILTER_EFFECTS
 {
 
-class ExpReciprocal : public IZoomAdjustmentEffect
+class Mobius : public IZoomAdjustmentEffect
 {
 public:
-  explicit ExpReciprocal(const UTILS::MATH::IGoomRand& goomRand) noexcept;
+  explicit Mobius(const UTILS::MATH::IGoomRand& goomRand) noexcept;
 
   auto SetRandomParams() noexcept -> void override;
   [[nodiscard]] auto GetZoomAdjustmentViewport() const noexcept -> Viewport override;
@@ -30,9 +28,11 @@ public:
   {
     Viewport viewport;
     Amplitude amplitude;
+    float a;
+    float b;
+    float c;
+    float d;
     bool noInverseSquare;
-    std::complex<float> magnifyAndRotate;
-    float reciprocalExponent;
     bool useModulatorContours;
     float modulatorPeriod;
   };
@@ -46,17 +46,17 @@ private:
   Params m_params;
 };
 
-inline auto ExpReciprocal::GetZoomAdjustmentViewport() const noexcept -> Viewport
+inline auto Mobius::GetZoomAdjustmentViewport() const noexcept -> Viewport
 {
   return m_params.viewport;
 }
 
-inline auto ExpReciprocal::GetParams() const noexcept -> const Params&
+inline auto Mobius::GetParams() const noexcept -> const Params&
 {
   return m_params;
 }
 
-inline void ExpReciprocal::SetParams(const Params& params) noexcept
+inline void Mobius::SetParams(const Params& params) noexcept
 {
   m_params = params;
 }

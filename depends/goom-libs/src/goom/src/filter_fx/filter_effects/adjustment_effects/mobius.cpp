@@ -1,6 +1,6 @@
 //#undef NO_LOGGING
 
-#include "exp_reciprocal.h"
+#include "mobius.h"
 
 #include "complex_utils.h"
 #include "filter_fx/normalized_coords.h"
@@ -21,24 +21,28 @@ using UTILS::GetFullParamGroup;
 using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::IGoomRand;
-using UTILS::MATH::TWO_PI;
 
 static constexpr auto DEFAULT_VIEWPORT = Viewport{};
 
 static constexpr auto DEFAULT_AMPLITUDE = 0.1F;
 static constexpr auto AMPLITUDE_RANGE   = IGoomRand::NumberRange<float>{0.01F, 0.11F};
 
-static constexpr auto DEFAULT_MAGNIFY_AND_ROTATE = std::complex<float>{0.0F, 0.0F};
-static constexpr auto ROTATE_RANGE               = IGoomRand::NumberRange<float>{0.0F, TWO_PI};
-static constexpr auto MAGNIFY_RANGE              = IGoomRand::NumberRange<float>{0.95F, 1.05F};
+static constexpr auto DEFAULT_A = 1.0F;
+static constexpr auto A_RANGE   = IGoomRand::NumberRange<float>{0.5F, 1.5F};
 
-static constexpr auto DEFAULT_RECIPROCAL_EXPONENT = 3.0F;
-static constexpr auto RECIPROCAL_EXPONENT_RANGE   = IGoomRand::NumberRange<uint32_t>{3, 6};
+static constexpr auto DEFAULT_B = 1.0F;
+static constexpr auto B_RANGE   = IGoomRand::NumberRange<float>{0.5F, 1.5F};
+
+static constexpr auto DEFAULT_C = 1.0F;
+static constexpr auto C_RANGE   = IGoomRand::NumberRange<float>{0.5F, 1.5F};
+
+static constexpr auto DEFAULT_D = -1.0F;
+static constexpr auto D_RANGE   = IGoomRand::NumberRange<float>{-1.5F, -0.5F};
 
 static constexpr auto DEFAULT_MODULATOR_PERIOD = 2.0F;
 static constexpr auto MODULATOR_PERIOD_RANGE   = IGoomRand::NumberRange<float>{1.0F, 100.0F};
 
-static constexpr auto PROB_AMPLITUDES_EQUAL       = 0.95F;
+static constexpr auto PROB_AMPLITUDES_EQUAL       = 0.75F;
 static constexpr auto PROB_NO_INVERSE_SQUARE      = 0.90F;
 static constexpr auto PROB_USE_MODULATOR_CONTOURS = 0.01F;
 
@@ -49,21 +53,23 @@ static constexpr auto VIEWPORT_RECTANGLES = std::array{
     Viewport::Rectangle{ {0.30F, -0.10F}, {0.70F, 0.10F}},
 };
 
-ExpReciprocal::ExpReciprocal(const IGoomRand& goomRand) noexcept
+Mobius::Mobius(const IGoomRand& goomRand) noexcept
   : m_goomRand{&goomRand},
     m_params{
         DEFAULT_VIEWPORT,
         {DEFAULT_AMPLITUDE, DEFAULT_AMPLITUDE},
+        DEFAULT_A,
+        DEFAULT_B,
+        DEFAULT_C,
+        DEFAULT_D,
         true,
-        DEFAULT_MAGNIFY_AND_ROTATE,
-        DEFAULT_RECIPROCAL_EXPONENT,
         false,
         DEFAULT_MODULATOR_PERIOD,
     }
 {
 }
 
-auto ExpReciprocal::SetRandomParams() noexcept -> void
+auto Mobius::SetRandomParams() noexcept -> void
 {
   const auto viewport = Viewport{VIEWPORT_RECTANGLES.at(
       m_goomRand->GetRandInRange(0U, static_cast<uint32_t>(VIEWPORT_RECTANGLES.size())))};
@@ -73,14 +79,12 @@ auto ExpReciprocal::SetRandomParams() noexcept -> void
                               ? xAmplitude
                               : m_goomRand->GetRandInRange(AMPLITUDE_RANGE);
 
-  const auto noInverseSquare = m_goomRand->ProbabilityOf(PROB_NO_INVERSE_SQUARE);
+  const auto a = m_goomRand->GetRandInRange(A_RANGE);
+  const auto b = m_goomRand->GetRandInRange(B_RANGE);
+  const auto c = m_goomRand->GetRandInRange(C_RANGE);
+  const auto d = m_goomRand->GetRandInRange(D_RANGE);
 
-  const auto rotate  = std::polar(1.0F, m_goomRand->GetRandInRange(ROTATE_RANGE));
-  const auto magnify = m_goomRand->GetRandInRange(MAGNIFY_RANGE);
-
-  const auto reciprocalExponent =
-      static_cast<float>(m_goomRand->GetRandInRange(RECIPROCAL_EXPONENT_RANGE));
-
+  const auto noInverseSquare      = m_goomRand->ProbabilityOf(PROB_NO_INVERSE_SQUARE);
   const auto useModulatorContours = m_goomRand->ProbabilityOf(PROB_USE_MODULATOR_CONTOURS);
   const auto modulatorPeriod =
       not useModulatorContours ? 0.0F : m_goomRand->GetRandInRange(MODULATOR_PERIOD_RANGE);
@@ -88,31 +92,31 @@ auto ExpReciprocal::SetRandomParams() noexcept -> void
   SetParams({
       viewport,
       {xAmplitude, yAmplitude},
+      a,
+      b,
+      c,
+      d,
       noInverseSquare,
-      magnify * rotate,
-      reciprocalExponent,
       useModulatorContours,
       modulatorPeriod,
   });
 }
 
-auto ExpReciprocal::GetZoomAdjustment(const NormalizedCoords& coords,
-                                      const float sqDistFromZero) const noexcept -> Point2dFlt
+auto Mobius::GetZoomAdjustment(const NormalizedCoords& coords,
+                               [[maybe_unused]] const float sqDistFromZero) const noexcept
+    -> Point2dFlt
 {
   Expects(GetZoomAdjustmentViewport().GetViewportWidth() != NormalizedCoords::COORD_WIDTH);
 
-  if (sqDistFromZero < UTILS::MATH::SMALL_FLOAT)
-  {
-    return GetBaseZoomAdjustment();
-  }
+  const auto z = std::complex<FltCalcType>{static_cast<FltCalcType>(coords.GetX()),
+                                           static_cast<FltCalcType>(coords.GetY())};
 
-  const auto zOffset = std::complex<FltCalcType>{};
-  const auto z       = static_cast<std::complex<FltCalcType>>(m_params.magnifyAndRotate) *
-                 (std::complex<FltCalcType>{static_cast<FltCalcType>(coords.GetX()),
-                                            static_cast<FltCalcType>(coords.GetY())} +
-                  zOffset);
+  const auto a = static_cast<FltCalcType>(m_params.a);
+  const auto b = static_cast<FltCalcType>(m_params.b);
+  const auto c = static_cast<FltCalcType>(m_params.c);
+  const auto d = static_cast<FltCalcType>(m_params.d);
 
-  const auto fz      = std::exp(ONE / std::pow(z, m_params.reciprocalExponent));
+  const auto fz      = ((a * z) + b) / ((c * z) + d);
   const auto absSqFz = std::norm(fz);
 
   if (absSqFz < static_cast<FltCalcType>(UTILS::MATH::SMALL_FLOAT))
@@ -135,25 +139,20 @@ auto ExpReciprocal::GetZoomAdjustment(const NormalizedCoords& coords,
           GetBaseZoomAdjustment().y + static_cast<float>(modulatedPhase.imag())};
 }
 
-auto ExpReciprocal::GetZoomAdjustmentEffectNameValueParams() const noexcept -> NameValuePairs
+auto Mobius::GetZoomAdjustmentEffectNameValueParams() const noexcept -> NameValuePairs
 {
-  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "exp reciprocal"});
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "mobius"});
   return {
-      GetPair(fullParamGroup, "exp reciprocal", m_params.reciprocalExponent),
       GetPair(fullParamGroup, "amplitude", Point2dFlt{m_params.amplitude.x, m_params.amplitude.y}),
-      GetPair(fullParamGroup,
-              "magnify/rotate",
-              Point2dFlt{m_params.magnifyAndRotate.real(), m_params.magnifyAndRotate.imag()}),
+      GetPair(fullParamGroup, "a", m_params.a),
+      GetPair(fullParamGroup, "b", m_params.b),
+      GetPair(fullParamGroup, "c", m_params.c),
+      GetPair(fullParamGroup, "d", m_params.d),
       GetPair(fullParamGroup, "modulatorPeriod", m_params.modulatorPeriod),
       GetPair(PARAM_GROUP,
               "viewport0",
               m_params.viewport
                   .GetViewportCoords({NormalizedCoords::MIN_COORD, NormalizedCoords::MIN_COORD})
-                  .GetFltCoords()),
-      GetPair(PARAM_GROUP,
-              "viewport1",
-              m_params.viewport
-                  .GetViewportCoords({NormalizedCoords::MAX_COORD, NormalizedCoords::MAX_COORD})
                   .GetFltCoords()),
   };
 }

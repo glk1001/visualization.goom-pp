@@ -5,6 +5,7 @@
 #include "filter_fx/filter_effects/adjustment_effects/distance_field.h"
 #include "filter_fx/filter_effects/adjustment_effects/exp_reciprocal.h"
 #include "filter_fx/filter_effects/adjustment_effects/image_zoom_adjustment.h"
+#include "filter_fx/filter_effects/adjustment_effects/mobius.h"
 #include "filter_fx/filter_effects/adjustment_effects/scrunch.h"
 #include "filter_fx/filter_effects/adjustment_effects/speedway.h"
 #include "filter_fx/filter_effects/adjustment_effects/uniform_zoom_adjustment_effect.h"
@@ -51,6 +52,8 @@ auto CreateZoomAdjustmentEffect(const ZoomFilterMode filterMode,
       return std::make_shared<UniformZoomAdjustmentEffect>();
     case ZoomFilterMode::IMAGE_DISPLACEMENT_MODE:
       return std::make_shared<ImageZoomAdjustment>(resourcesDirectory, goomRand);
+    case ZoomFilterMode::MOBIUS_MODE:
+      return std::make_shared<Mobius>(goomRand);
     case ZoomFilterMode::NORMAL_MODE:
       return std::make_shared<UniformZoomAdjustmentEffect>();
     case ZoomFilterMode::SCRUNCH_MODE:
