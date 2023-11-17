@@ -93,6 +93,9 @@ float GetBaseColorMultiplier(vec3 color)
                                       pow(color.r / BLACK_CUTOFF, 3.0));
 }
 
+vec2 GetTexelPos(vec2 filterPos);
+float GetSinTMix();
+
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 {
   xy = ivec2(xy.x, HEIGHT - 1 - xy.y);
@@ -114,18 +117,15 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
     imageStore(img_filterSrcePosBuff2, xy, vec4(lerpNormalizedPos2, 0, 0));
   }
 
-  vec2 filterBuff2Pos1 = vec2((lerpNormalizedPos1.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                              (lerpNormalizedPos1.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
-  vec2 filterBuff2Pos2 = vec2((lerpNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                              (lerpNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
+  vec2 filterBuff2Pos1 = GetTexelPos(lerpNormalizedPos1);
+  vec2 filterBuff2Pos2 = GetTexelPos(lerpNormalizedPos2);;
 
+  // return texture(tex_filterBuff2, filtBuff2Pos);
 
-  // return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
+  vec4 filterBuff2Color1 = texture(tex_filterBuff2, filterBuff2Pos1);
+  vec4 filterBuff2Color2 = texture(tex_filterBuff2, filterBuff2Pos2);
 
-  vec4 filterBuff2Color1 = texture(tex_filterBuff2, vec2(filterBuff2Pos1.x, 1 - (ASPECT_RATIO * filterBuff2Pos1.y)));
-  vec4 filterBuff2Color2 = texture(tex_filterBuff2, vec2(filterBuff2Pos2.x, 1 - (ASPECT_RATIO * filterBuff2Pos2.y)));
-
-  const vec3 t = vec3(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
+  const vec3 t = vec3(GetSinTMix());
   float alpha = filterBuff2Color1.a;
 
   vec3 color = mix(filterBuff2Color1.rgb, filterBuff2Color2.rgb, t);
@@ -133,4 +133,30 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
   //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, t);
 
   return vec4(color, alpha);
+}
+
+vec2 GetTexelPos(vec2 filterPos)
+{
+  float x = (filterPos.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+  float y = (filterPos.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+
+  return vec2(x, 1 - (ASPECT_RATIO * y));
+}
+
+float GetSinTMix()
+{
+  // const float r = 0.25;
+  // const vec2 circleCentre1 = 0.5 + vec2(r*cos(u_pos1Pos2MixFreq * u_time), r*sin(u_pos1Pos2MixFreq * u_time));
+  // const vec2 circleCentre2 = 0.4 + vec2(r*cos(1+u_pos1Pos2MixFreq * u_time), r*sin(1+u_pos1Pos2MixFreq * u_time));
+  // float dist1 = distance(uv, circleCentre1);
+  // float dist2 = distance(uv, circleCentre2) - 0.2;
+  // vec3 t = vec3(step(0.0, sdf_smin(dist1, dist2)));
+
+  // vec3 t = vec3(step(0.5, uv.x));
+  // float posDist = distance(filtBuff2Pos1, filtBuff2Pos2)/5.5;
+  // float posDist = distance(vec2(0), filtBuff2Pos2)/5.5;
+
+  // return 0.5;
+  // return step(100, u_time % 200);
+  return 0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time));
 }
