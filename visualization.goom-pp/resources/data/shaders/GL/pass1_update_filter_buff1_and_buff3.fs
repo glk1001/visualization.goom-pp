@@ -107,7 +107,9 @@ LerpedPositions GetLerpedPositions(ivec2 xy);
 TexelPositions GetTexelPositions(LerpedPositions lerpedPositions);
 void ResetImageSrceFilterBuffPositions(ivec2 xy, LerpedPositions lerpedPositions);
 float GetColorBlendTMix(vec2 uv, TexelPositions texelPositions);
+float GetPosBlendTMix();
 vec4 GetColorFromBlendedColors(TexelPositions filterBuff2Positions, float tMix);
+vec4 GetColorFromBlendedPos(TexelPositions filterBuff2Positions, float tMix);
 
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 {
@@ -124,6 +126,7 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 
   return
       GetColorFromBlendedColors(filterBuff2Positions, GetColorBlendTMix(uv, filterBuff2Positions));
+  //return GetColorFromBlendedPos(filterBuff2Positions, GetPosBlendTMix());
 }
 
 struct SrceAndDestPositions
@@ -209,10 +212,26 @@ float GetSinTMix()
   return 0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time));
 }
 
+float GetUVDistAdjustedTMix(vec2 uv, TexelPositions texelPositions, float tMix)
+{
+  const float MAX_UV = sqrt(2.0);
+  //vec2 posUv = mix(texelPositions.uv1, texelPositions.uv2, vec2(tMix.x));
+  //float distUv = min(distance(uv, posUv), MAX_UV) / MAX_UV;
+  float uvDist = min(distance(uv, texelPositions.uv2), MAX_UV) / MAX_UV;
+
+  return tMix * (1.0 - uvDist);
+}
+
 float GetColorBlendTMix(vec2 uv, TexelPositions texelPositions)
 {
   const float SIN_T_MIX = GetSinTMix();
-  return SIN_T_MIX;
+  // return SIN_T_MIX;
+  return GetUVDistAdjustedTMix(uv, texelPositions, SIN_T_MIX);
+}
+
+float GetPosBlendTMix()
+{
+  return GetSinTMix();
 }
 
 vec3 GetMixedColor(vec3 tMix, FilterBuffColors filterBuffColors)
@@ -229,4 +248,11 @@ vec4 GetColorFromBlendedColors(TexelPositions filterBuff2Positions, float tMix)
   float alpha = filterBuff2Colors.color1.a;
 
   return vec4(GetMixedColor(vec3(tMix), filterBuff2Colors), alpha);
+}
+
+vec4 GetColorFromBlendedPos(TexelPositions filterBuff2Positions, float tMix)
+{
+  vec2 filterBuff2Pos = mix(filterBuff2Positions.uv1, filterBuff2Positions.uv2, vec2(tMix));
+
+  return texture(tex_filterBuff2, filterBuff2Pos);
 }
