@@ -28,7 +28,7 @@ uniform float u_pos1Pos2MixFreq;
 uniform uint u_time;
 
 // For base multiplier, too close to 1, gives washed
-// out look, too far away things get too dark.
+// out look, too far away and things get too dark.
 uniform float u_baseColorMultiplier;
 uniform float u_mainColorMultiplier = 1.0;
 uniform float u_lowColorMultiplier  = 0.7;
@@ -49,8 +49,8 @@ void main()
 {
   ivec2 xy = ivec2(gl_FragCoord.xy);
 
-  vec4 filtBuff2Val = GetPosMappedFilterBuff2Value(texCoord, xy);
-  vec4 filtBuff3Val = imageLoad(img_filterBuff3, xy);
+  vec4 filterBuff2Val = GetPosMappedFilterBuff2Value(texCoord, xy);
+  vec4 filterBuff3Val = imageLoad(img_filterBuff3, xy);
 
   vec4 colorMain = texture(tex_mainImage, texCoord);
   vec4 colorLow  = texture(tex_lowImage, texCoord);
@@ -62,18 +62,15 @@ void main()
   //  vec4 filtBuff2ColorMain = vec4(blend(100*colorMain.rgb, 0.5*filtBuff2Val.rgb, colorMain.a), 1.0);
   //  vec4 filtBuff2ColorMain = vec4(filtBuff2Val.rgb, 1.0);
 
-  filtBuff2Val.rgb = mix(filtBuff2Val.rgb, filtBuff3Val.rgb, u_buff2Buff3Mix);
+  filterBuff2Val.rgb = mix(filterBuff2Val.rgb, filterBuff3Val.rgb, u_buff2Buff3Mix);
 
-  float baseMultiplier = GetBaseColorMultiplier(filtBuff2Val.rgb);
-  //float baseMultiplier = u_baseColorMultiplier;
-  //filtBuff2Val.rgb *= 1.00;
-  filtBuff2Val.rgb *= baseMultiplier;
+  filterBuff2Val.rgb *= GetBaseColorMultiplier(filterBuff2Val.rgb);
 
-  vec3 filtBuff2ColorMain = filtBuff2Val.rgb + (u_mainColorMultiplier * colorMain.rgb);
-  vec3 filtBuff2ColorLow  = filtBuff2Val.rgb + (u_lowColorMultiplier * colorLow.rgb);
+  vec3 filterBuff2ColorMain = filterBuff2Val.rgb + (u_mainColorMultiplier * colorMain.rgb);
+  vec3 filterBuff2ColorLow  = filterBuff2Val.rgb + (u_lowColorMultiplier * colorLow.rgb);
 
-  imageStore(img_filterBuff1, xy, vec4(filtBuff2ColorLow, colorLow.a));
-  imageStore(img_filterBuff3, xy, vec4(filtBuff2ColorMain, colorLow.a));
+  imageStore(img_filterBuff1, xy, vec4(filterBuff2ColorLow, colorLow.a));
+  imageStore(img_filterBuff3, xy, vec4(filterBuff2ColorMain, colorLow.a));
 
   discard;
 }
@@ -106,58 +103,34 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
   vec2 srceNormalizedPos2 = imageLoad(img_filterSrcePosBuff2, xy).xy;
   vec2 destNormalizedPos2 = imageLoad(img_filterDestPosBuff2, xy).xy;
 
-  // u_time example use 1.
-  // vec2 focusPoint = 0.5 * (1.0 + vec2(sin(0.01*u_time), cos(0.01*u_time)));
-  // float d = length(destNormalizedPos - focusPoint);
-  // destNormalizedPos *= 1.0 - 0.5*d;
-  // float FREQ_FACTOR = (1.0 + (0.5*(1.0 + sin(0.01 * u_time))))*1.1;
-  // destNormalizedPos = vec2(fract(FREQ_FACTOR * destNormalizedPos.x),
-  //                          fract(FREQ_FACTOR * destNormalizedPos.y));
-  // const float FREQ_FACTOR = 20.1;
-  // destNormalizedPos = vec2((1.0 - 0.5*0.5*(1.0 + sin(FREQ_FACTOR*u_time))) * destNormalizedPos.x,
-  //                          (1.0 - 0.5*0.5*(1.0 + cos(FREQ_FACTOR*u_time))) * destNormalizedPos.y);
-
   vec2 lerpNormalizedPos1 = mix(srceNormalizedPos1, destNormalizedPos1, u_lerpFactor);
   vec2 lerpNormalizedPos2 = mix(srceNormalizedPos2, destNormalizedPos2, u_lerpFactor);
 
   if (u_resetSrceFilterPosBuffers)
   {
-    // Reset the filter srce pos buffers to the current lerped state, ready
-    // for a new filter dest pos buffer.
+    // Reset the filter srce pos buffers to the current lerped state, ready for
+    // a new filter dest pos buffer.
     imageStore(img_filterSrcePosBuff1, xy, vec4(lerpNormalizedPos1, 0, 0));
     imageStore(img_filterSrcePosBuff2, xy, vec4(lerpNormalizedPos2, 0, 0));
   }
 
-  // u_time example use 2.
-  // const float FREQ_FACTOR = 0.01;
-  // float amp = 0.5 * 0.5*(1.0 + sin(0.1*u_time));
-  // vec2 newMidPoint = amp * vec2(0.5*(1.0 + sin(FREQ_FACTOR*u_time)), 0.5*(1.0 + cos(FREQ_FACTOR*u_time)));
-  // lerpNormalizedPos -= newMidPoint;
-
-  vec2 filtBuff2Pos1 = vec2((lerpNormalizedPos1.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                            (lerpNormalizedPos1.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
-  vec2 filtBuff2Pos2 = vec2((lerpNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
-                            (lerpNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
+  vec2 filterBuff2Pos1 = vec2((lerpNormalizedPos1.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
+                              (lerpNormalizedPos1.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
+  vec2 filterBuff2Pos2 = vec2((lerpNormalizedPos2.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH,
+                              (lerpNormalizedPos2.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH);
 
 
-  //  vec4 tex = texture(tex_lowImage, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
-  //  return vec4(tex.x, tex.y, filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y));
+  // return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
 
-  //  vec4 tex = texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
-  //  return vec4(tex.x, tex.y, uv.x, uv.y);
-
-//  return texture(tex_filterBuff2, vec2(filtBuff2Pos.x, 1 - (ASPECT_RATIO * filtBuff2Pos.y)));
-
-  vec4 filtBuff2Color1 = texture(tex_filterBuff2, vec2(filtBuff2Pos1.x, 1 - (ASPECT_RATIO * filtBuff2Pos1.y)));
-  vec4 filtBuff2Color2 = texture(tex_filterBuff2, vec2(filtBuff2Pos2.x, 1 - (ASPECT_RATIO * filtBuff2Pos2.y)));
+  vec4 filterBuff2Color1 = texture(tex_filterBuff2, vec2(filterBuff2Pos1.x, 1 - (ASPECT_RATIO * filterBuff2Pos1.y)));
+  vec4 filterBuff2Color2 = texture(tex_filterBuff2, vec2(filterBuff2Pos2.x, 1 - (ASPECT_RATIO * filterBuff2Pos2.y)));
 
   const vec3 t = vec3(0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time)));
-  //const float t = 0.5;
-  // const float t = step(100, u_time % 200);
-  vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color2.rgb, t);
+  float alpha = filterBuff2Color1.a;
+
+  vec3 color = mix(filterBuff2Color1.rgb, filterBuff2Color2.rgb, t);
   //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color1.rgb, t);
   //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, t);
 
-  return vec4(color, filtBuff2Color1.a);
-  //return vec4(color, filtBuff2Color2.a);
+  return vec4(color, alpha);
 }
