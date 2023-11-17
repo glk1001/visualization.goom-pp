@@ -93,46 +93,78 @@ float GetBaseColorMultiplier(vec3 color)
                                       pow(color.r / BLACK_CUTOFF, 3.0));
 }
 
-vec2 GetTexelPos(vec2 filterPos);
-float GetSinTMix();
+struct LerpedPositions
+{
+  vec2 pos1;
+  vec2 pos2;
+};
+struct TexelPositions
+{
+  vec2 uv1;
+  vec2 uv2;
+};
+LerpedPositions GetLerpedPositions(ivec2 xy);
+TexelPositions GetTexelPositions(LerpedPositions lerpedPositions);
+void ResetImageSrceFilterBuffPositions(ivec2 xy, LerpedPositions lerpedPositions);
+float GetColorBlendTMix(vec2 uv, TexelPositions texelPositions);
+vec4 GetColorFromBlendedColors(TexelPositions filterBuff2Positions, float tMix);
 
 vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 {
   xy = ivec2(xy.x, HEIGHT - 1 - xy.y);
 
-  vec2 srceNormalizedPos1 = imageLoad(img_filterSrcePosBuff1, xy).xy;
-  vec2 destNormalizedPos1 = imageLoad(img_filterDestPosBuff1, xy).xy;
-
-  vec2 srceNormalizedPos2 = imageLoad(img_filterSrcePosBuff2, xy).xy;
-  vec2 destNormalizedPos2 = imageLoad(img_filterDestPosBuff2, xy).xy;
-
-  vec2 lerpNormalizedPos1 = mix(srceNormalizedPos1, destNormalizedPos1, u_lerpFactor);
-  vec2 lerpNormalizedPos2 = mix(srceNormalizedPos2, destNormalizedPos2, u_lerpFactor);
+  LerpedPositions lerpedPositions = GetLerpedPositions(xy);
 
   if (u_resetSrceFilterPosBuffers)
   {
-    // Reset the filter srce pos buffers to the current lerped state, ready for
-    // a new filter dest pos buffer.
-    imageStore(img_filterSrcePosBuff1, xy, vec4(lerpNormalizedPos1, 0, 0));
-    imageStore(img_filterSrcePosBuff2, xy, vec4(lerpNormalizedPos2, 0, 0));
+    ResetImageSrceFilterBuffPositions(xy, lerpedPositions);
   }
 
-  vec2 filterBuff2Pos1 = GetTexelPos(lerpNormalizedPos1);
-  vec2 filterBuff2Pos2 = GetTexelPos(lerpNormalizedPos2);;
+  TexelPositions filterBuff2Positions = GetTexelPositions(lerpedPositions);
 
-  // return texture(tex_filterBuff2, filtBuff2Pos);
+  return
+      GetColorFromBlendedColors(filterBuff2Positions, GetColorBlendTMix(uv, filterBuff2Positions));
+}
 
-  vec4 filterBuff2Color1 = texture(tex_filterBuff2, filterBuff2Pos1);
-  vec4 filterBuff2Color2 = texture(tex_filterBuff2, filterBuff2Pos2);
+struct SrceAndDestPositions
+{
+  vec2 srcePos1;
+  vec2 destPos1;
+  vec2 srcePos2;
+  vec2 destPos2;
+};
+struct FilterBuffColors
+{
+  vec4 color1;
+  vec4 color2;
+};
 
-  const vec3 t = vec3(GetSinTMix());
-  float alpha = filterBuff2Color1.a;
+SrceAndDestPositions GetSrceAndDestPositions(ivec2 xy)
+{
+  return SrceAndDestPositions(
+             imageLoad(img_filterSrcePosBuff1, xy).xy,
+             imageLoad(img_filterDestPosBuff1, xy).xy,
+             imageLoad(img_filterSrcePosBuff2, xy).xy,
+             imageLoad(img_filterDestPosBuff2, xy).xy
+  );
+}
 
-  vec3 color = mix(filterBuff2Color1.rgb, filterBuff2Color2.rgb, t);
-  //vec3 color = mix(filtBuff2Color1.rgb, filtBuff2Color1.rgb, t);
-  //vec3 color = mix(filtBuff2Color2.rgb, filtBuff2Color2.rgb, t);
+LerpedPositions GetLerpedPositions(ivec2 xy)
+{
+  SrceAndDestPositions normalizedPositions = GetSrceAndDestPositions(xy);
 
-  return vec4(color, alpha);
+  return LerpedPositions(
+             mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_lerpFactor),
+             mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_lerpFactor)
+  );
+}
+
+void ResetImageSrceFilterBuffPositions(ivec2 xy, LerpedPositions lerpedPositions)
+{
+  // Reset the filter srce pos buffers to the current lerped state, ready for
+  // a new filter dest pos buffer.
+  imageStore(img_filterSrcePosBuff1, xy, vec4(lerpedPositions.pos1, 0, 0));
+  imageStore(img_filterSrcePosBuff2, xy, vec4(lerpedPositions.pos2, 0, 0));
 }
 
 vec2 GetTexelPos(vec2 filterPos)
@@ -141,6 +173,22 @@ vec2 GetTexelPos(vec2 filterPos)
   float y = (filterPos.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
 
   return vec2(x, 1 - (ASPECT_RATIO * y));
+}
+
+TexelPositions GetTexelPositions(LerpedPositions lerpedPositions)
+{
+  return TexelPositions(
+             GetTexelPos(lerpedPositions.pos1),
+             GetTexelPos(lerpedPositions.pos2)
+  );
+}
+
+FilterBuffColors GetFilterBuff2Colors(TexelPositions texelPositions)
+{
+  return FilterBuffColors(
+             texture(tex_filterBuff2, texelPositions.uv1),
+             texture(tex_filterBuff2, texelPositions.uv2)
+  );
 }
 
 float GetSinTMix()
@@ -159,4 +207,26 @@ float GetSinTMix()
   // return 0.5;
   // return step(100, u_time % 200);
   return 0.5 * (1.0 + sin(u_pos1Pos2MixFreq * u_time));
+}
+
+float GetColorBlendTMix(vec2 uv, TexelPositions texelPositions)
+{
+  const float SIN_T_MIX = GetSinTMix();
+  return SIN_T_MIX;
+}
+
+vec3 GetMixedColor(vec3 tMix, FilterBuffColors filterBuffColors)
+{
+  // return mix(filterBuffColors.color1.rgb, filterBuffColors.color1.rgb, tMix);
+  // return mix(filterBuffColors.color2.rgb, filterBuffColors.color2.rgb, tMix);
+
+  return mix(filterBuffColors.color1.rgb, filterBuffColors.color2.rgb, tMix);
+}
+
+vec4 GetColorFromBlendedColors(TexelPositions filterBuff2Positions, float tMix)
+{
+  FilterBuffColors filterBuff2Colors = GetFilterBuff2Colors(filterBuff2Positions);
+  float alpha = filterBuff2Colors.color1.a;
+
+  return vec4(GetMixedColor(vec3(tMix), filterBuff2Colors), alpha);
 }
