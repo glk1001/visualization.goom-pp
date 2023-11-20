@@ -90,6 +90,7 @@ private:
   };
   auto SetWaveModeSettings(const WaveModeSettings& waveModeSettings) noexcept -> void;
 
+  [[nodiscard]] auto GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt;
   [[nodiscard]] auto GetZoomAdjustmentAdd(WaveEffect waveEffect,
                                           float angle,
                                           float reducer) const noexcept -> float;
@@ -116,6 +117,13 @@ private:
 };
 
 inline auto Wave::GetZoomAdjustment(const NormalizedCoords& coords) const noexcept -> Point2dFlt
+{
+  const auto velocity = GetVelocity(coords);
+
+  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+}
+
+inline auto Wave::GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt
 {
   const auto sqDistFromZero = SqDistanceFromZero(coords);
   const auto angle          = GetAngle(sqDistFromZero, coords);

@@ -20,9 +20,20 @@ public:
 
   [[nodiscard]] auto GetZoomAdjustmentEffectNameValueParams() const noexcept
       -> GOOM::UTILS::NameValuePairs override;
+
+private:
+  [[nodiscard]] auto GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt;
 };
 
 inline auto UniformZoomAdjustmentEffect::GetZoomAdjustment(
+    const NormalizedCoords& coords) const noexcept -> Point2dFlt
+{
+  const auto velocity = GetVelocity(coords);
+
+  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+}
+
+inline auto UniformZoomAdjustmentEffect::GetVelocity(
     [[maybe_unused]] const NormalizedCoords& coords) const noexcept -> Point2dFlt
 {
   return GetBaseZoomAdjustment();

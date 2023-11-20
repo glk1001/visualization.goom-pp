@@ -35,13 +35,22 @@ protected:
 private:
   const UTILS::MATH::IGoomRand* m_goomRand;
   Params m_params;
+  [[nodiscard]] auto GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt;
 };
 
 inline auto Scrunch::GetZoomAdjustment(const NormalizedCoords& coords) const noexcept -> Point2dFlt
 {
+  const auto velocity = GetVelocity(coords);
+
+  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+}
+
+inline auto Scrunch::GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt
+{
   const auto sqDistFromZero  = SqDistanceFromZero(coords);
   const auto xZoomAdjustment = GetBaseZoomAdjustment().x + (m_params.amplitude.x * sqDistFromZero);
   const auto yZoomAdjustment = m_params.amplitude.y * xZoomAdjustment;
+
   return {xZoomAdjustment, yZoomAdjustment};
 }
 

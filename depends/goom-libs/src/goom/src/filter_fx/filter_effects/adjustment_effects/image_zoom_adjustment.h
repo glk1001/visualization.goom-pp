@@ -29,10 +29,19 @@ public:
 private:
   const GOOM::UTILS::MATH::IGoomRand* m_goomRand;
   FILTER_UTILS::ImageDisplacementList m_imageDisplacementList;
+  [[nodiscard]] auto GetVelocity(const NormalizedCoords& coords) const noexcept -> Point2dFlt;
   auto DoSetRandomParams() noexcept -> void;
 };
 
 inline auto ImageZoomAdjustment::GetZoomAdjustment(const NormalizedCoords& coords) const noexcept
+    -> Point2dFlt
+{
+  const auto velocity = GetVelocity(coords);
+
+  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+}
+
+inline auto ImageZoomAdjustment::GetVelocity(const NormalizedCoords& coords) const noexcept
     -> Point2dFlt
 {
   return m_imageDisplacementList.GetCurrentImageDisplacement().GetDisplacementVector(coords);

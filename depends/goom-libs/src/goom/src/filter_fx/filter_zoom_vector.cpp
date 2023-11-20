@@ -51,10 +51,10 @@ inline auto FilterZoomVector::GetFilterEffectsZoomPoint(
 
   const auto& multiplierEffect = m_zoomVectorEffects.GetMultiplierEffect(coords, zoomAdjustment);
 
-  const auto zoomFactor = 1.0F - Point2dFlt{multiplierEffect.x * zoomAdjustment.x,
-                                            multiplierEffect.y * zoomAdjustment.y};
+  const auto zoomVelocity = NormalizedCoords{-multiplierEffect.x * zoomAdjustment.x,
+                                             -multiplierEffect.y * zoomAdjustment.y};
 
-  return {zoomFactor.x * coords.GetX(), zoomFactor.y * coords.GetY()};
+  return coords + zoomVelocity;
 }
 
 inline auto FilterZoomVector::GetAfterEffectsVelocity(
