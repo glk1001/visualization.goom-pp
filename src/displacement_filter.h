@@ -68,6 +68,7 @@ protected:
   static constexpr auto* UNIFORM_LUMINANCE_PARAMS      = "u_params";
   static constexpr auto* UNIFORM_GAMMA                 = "u_gamma";
   static constexpr auto* UNIFORM_RESET_SRCE_FILTER_POS = "u_resetSrceFilterPosBuffers";
+  static constexpr auto* UNIFORM_USE_POS_BLENDER       = "u_usePosBlender";
   static constexpr auto* UNIFORM_POS1_POS2_MIX_FREQ    = "u_pos1Pos2MixFreq";
   static constexpr auto* UNIFORM_TIME                  = "u_time";
 

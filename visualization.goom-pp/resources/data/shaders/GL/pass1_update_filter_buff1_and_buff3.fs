@@ -24,6 +24,7 @@ in vec2 texCoord;
 uniform float u_lerpFactor;
 uniform float u_buff2Buff3Mix = 0.1;
 uniform bool u_resetSrceFilterPosBuffers;
+uniform bool u_usePosBlender;
 uniform float u_pos1Pos2MixFreq;
 uniform uint u_time;
 
@@ -124,9 +125,12 @@ vec4 GetPosMappedFilterBuff2Value(vec2 uv, ivec2 xy)
 
   TexelPositions filterBuff2Positions = GetTexelPositions(lerpedPositions);
 
+  if (u_usePosBlender)
+  {
+    return GetColorFromBlendedPos(filterBuff2Positions, GetPosBlendTMix());
+  }
   return
       GetColorFromBlendedColors(filterBuff2Positions, GetColorBlendTMix(uv, filterBuff2Positions));
-  //return GetColorFromBlendedPos(filterBuff2Positions, GetPosBlendTMix());
 }
 
 struct SrceAndDestPositions

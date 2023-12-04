@@ -614,6 +614,8 @@ auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept
       UNIFORM_RESET_SRCE_FILTER_POS,
       m_frameDataArray.at(pboIndex).filterPosArrays.filterDestPosNeedsUpdating);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
+      UNIFORM_USE_POS_BLENDER, m_frameDataArray.at(pboIndex).filterPosArrays.useFilterPosBlender);
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_POS1_POS2_MIX_FREQ,
       m_frameDataArray.at(pboIndex).filterPosArrays.filterPos1Pos2FreqMixFreq);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(

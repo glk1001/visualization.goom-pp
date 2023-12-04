@@ -161,6 +161,11 @@ private:
   float m_targetPos1Pos2MixFreq   = FilterPosArrays::DEFAULT_POS1_POS2_MIX_FREQ;
   auto UpdatePos1Pos2MixFreq() noexcept -> void;
 
+  static constexpr auto MIN_TIME_BETWEEN_POS_BLENDER_CHANGES = 100U;
+  static constexpr auto MAX_TIME_BETWEEN_POS_BLENDER_CHANGES = 1000U;
+  Timer m_posBlenderChangeTimer{m_goomTime, MIN_TIME_BETWEEN_POS_BLENDER_CHANGES, false};
+  auto UpdatePosBlender() noexcept -> void;
+
   bool m_noZooms    = false;
   PixelBuffer* m_p1 = nullptr;
   PixelBuffer* m_p2 = nullptr;
@@ -368,6 +373,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
   m_frameData->imageArrays.lowImagePixelBufferNeedsUpdating  = true;
 
   UpdatePos1Pos2MixFreq();
+  UpdatePosBlender();
 
   UpdateFilterPos();
 }
@@ -409,6 +415,21 @@ auto GoomControl::GoomControlImpl::UpdatePos1Pos2MixFreq() noexcept -> void
   m_previousPos1Pos2MixFreq = m_frameData->filterPosArrays.filterPos1Pos2FreqMixFreq;
   m_targetPos1Pos2MixFreq   = m_goomRand.GetRandInRange(FilterPosArrays::MIN_POS1_POS2_MIX_FREQ,
                                                       FilterPosArrays::MAX_POS1_POS2_MIX_FREQ);
+}
+
+auto GoomControl::GoomControlImpl::UpdatePosBlender() noexcept -> void
+{
+  if (not m_posBlenderChangeTimer.Finished())
+  {
+    return;
+  }
+
+  m_posBlenderChangeTimer.SetTimeLimit(m_goomRand.GetRandInRange(
+      MIN_TIME_BETWEEN_POS_BLENDER_CHANGES, MAX_TIME_BETWEEN_POS_BLENDER_CHANGES));
+  m_posBlenderChangeTimer.ResetToZero();
+
+  m_frameData->filterPosArrays.useFilterPosBlender =
+      not m_frameData->filterPosArrays.useFilterPosBlender;
 }
 
 inline auto GoomControl::GoomControlImpl::SetNoZooms(const bool value) -> void
@@ -470,6 +491,8 @@ inline auto GoomControl::GoomControlImpl::Start() -> void
   m_pos1Pos2MixFreqChangeTimer.ResetToZero();
   m_pos1Pos2TransitionLerpFactor.Reset();
   m_previousPos1Pos2MixFreq = FilterPosArrays::DEFAULT_POS1_POS2_MIX_FREQ;
+
+  m_posBlenderChangeTimer.ResetToZero();
 
   m_numUpdatesBetweenTimeChecks = DEFAULT_NUM_UPDATES_BETWEEN_TIME_CHECKS;
   m_goomTime.ResetTime();

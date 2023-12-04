@@ -17,6 +17,7 @@ struct FilterPosArrays
   static constexpr auto MIN_POS1_POS2_MIX_FREQ     = 0.001F;
   static constexpr auto MAX_POS1_POS2_MIX_FREQ     = 0.010F;
   static constexpr auto DEFAULT_POS1_POS2_MIX_FREQ = 0.01F;
+  bool useFilterPosBlender                         = true;
   float filterPos1Pos2FreqMixFreq                  = 0.0F;
   bool filterDestPosNeedsUpdating                  = false;
 };
