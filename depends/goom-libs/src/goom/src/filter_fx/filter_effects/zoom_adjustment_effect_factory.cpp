@@ -11,6 +11,7 @@ import Goom.FilterFx.FilterEffects.AdjustmentEffects.ComplexRational;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.CrystalBall;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.DistanceField;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.ExpReciprocal;
+import Goom.FilterFx.FilterEffects.AdjustmentEffects.FlowField;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.FunctionOfFunction;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.ImageZoomAdjustment;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.Mobius;
@@ -83,6 +84,8 @@ auto CreateFuncZoomAdjustmentEffect(const ZoomFilterMode filterMode,
       return std::make_unique<DistanceField>(DistanceField::Modes::MODE2, goomRand);
     case EXP_RECIPROCAL_MODE:
       return std::make_unique<ExpReciprocal>(goomRand);
+    case FLOW_FIELD_MODE:
+      return std::make_unique<FlowField>(goomRand);
     case HYPERCOS_MODE0:
     case HYPERCOS_MODE1:
     case HYPERCOS_MODE2:
