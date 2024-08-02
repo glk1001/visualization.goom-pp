@@ -75,11 +75,19 @@ auto FlowField::SetupAngles() noexcept -> void
     const auto x = -0.5F + (static_cast<float>(col) / static_cast<float>(GRID_WIDTH));
     for (auto row = 0U; row < GRID_HEIGHT; ++row)
     {
-      const auto xNoise = m_perlinNoise.octave2D_11(
-          xFreq * static_cast<float>(col), yFreq * static_cast<float>(row), 2, 0.5F);
+      const auto xNoise =
+          m_goomRand->GetRandInRange<NumberRange{0.9F, 1.0F}>() *
+          m_perlinNoise.octave2D_11(
+              xFreq * static_cast<float>(col), yFreq * static_cast<float>(row), 5, 0.5F);
+      const auto yNoise =
+          m_goomRand->GetRandInRange<NumberRange{0.9F, 1.0F}>() *
+          m_perlinNoise.octave2D_11(
+              xFreq * static_cast<float>(col), yFreq * static_cast<float>(row), 2, 1.0F);
       // const auto angle = xNoise * 2.0F * PI;
-      const auto y         = -0.5F + (static_cast<float>(row) / static_cast<float>(GRID_HEIGHT));
-      const auto angle     = (1.0F - 0.5F * xNoise) * std::sqrt(x * x + y * y) * 2.0F * PI;
+      const auto y     = -0.5F + (static_cast<float>(row) / static_cast<float>(GRID_HEIGHT));
+      const auto noise = row % 10 == 0 and col % 10 == 0 ? xNoise : yNoise;
+      auto angle       = (1.0F - 0.5F * noise) * std::sqrt(x * x + y * y) * 2.0F * PI;
+      //angle = std::floor(5.0F * angle) / 5.0F;
       gridAngles[row, col] = angle;
     }
   }
@@ -90,10 +98,17 @@ auto FlowField::GetVelocity(const NormalizedCoords& coords) const noexcept -> Ve
   const auto gridCoords =
       ToPoint2dInt(m_normalizedCoordsToGridConverter.NormalizedToOtherCoordsFlt(coords));
   const auto gridAngles = std::mdspan{m_gridArray.data(), GRID_HEIGHT, GRID_WIDTH};
-  const auto gridAngle  = gridAngles[gridCoords.x, gridCoords.y];
+  const auto gridAngle  = gridAngles[std::clamp(gridCoords.x, 0, static_cast<int>(GRID_WIDTH) - 1),
+                                    std::clamp(gridCoords.y, 0, static_cast<int>(GRID_HEIGHT) - 1)];
 
-  return {GetBaseZoomAdjustment().x + (m_params.amplitude.x * std::cos(15.0F * gridAngle)),
-          GetBaseZoomAdjustment().y + (m_params.amplitude.y * std::sin(25.0F * gridAngle))};
+  const auto sqDistFromZero = std::sqrt(SqDistanceFromZero(coords));
+
+  return {GetBaseZoomAdjustment().x +
+              (m_params.amplitude.x * sqDistFromZero * std::cos(15.0F * gridAngle)),
+          GetBaseZoomAdjustment().y +
+              (m_params.amplitude.y * sqDistFromZero * std::sin(25.0F * gridAngle))};
+  // return {coords.GetX() * (m_params.amplitude.x * sqDistFromZero*std::cos(15.0F * gridAngle)),
+  //         coords.GetY() * + (m_params.amplitude.y * sqDistFromZero*std::sin(25.0F * gridAngle))};
 }
 
 auto FlowField::SetRandomParams() noexcept -> void
