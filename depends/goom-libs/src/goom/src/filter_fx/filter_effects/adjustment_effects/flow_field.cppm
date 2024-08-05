@@ -14,8 +14,8 @@ import Goom.Utils.NameValuePairs;
 import Goom.Utils.Math.GoomRand;
 import Goom.Lib.Point2d;
 
-using GOOM::UTILS::MATH::GoomRand;
 using GOOM::FILTER_FX::FILTER_UTILS::LerpToOneTs;
+using GOOM::UTILS::MATH::GoomRand;
 
 export namespace GOOM::FILTER_FX::FILTER_EFFECTS
 {
@@ -37,6 +37,11 @@ public:
   {
     Amplitude amplitude{};
     LerpToOneTs lerpToOneTs{};
+    FrequencyFactor noiseFrequencyFactor;
+    FrequencyFactor angleFrequencyFactor;
+    int32_t octaves;
+    float persistence;
+    float noiseFactor = 0.0F;
   };
   [[nodiscard]] auto GetParams() const noexcept -> const Params&;
 
@@ -45,11 +50,13 @@ protected:
 
 private:
   const GoomRand* m_goomRand;
-  static constexpr auto GRID_WIDTH = 500UL;
+  static constexpr auto GRID_WIDTH  = 500UL;
   static constexpr auto GRID_HEIGHT = 500UL;
   std::array<float, GRID_WIDTH * GRID_HEIGHT> m_gridArray{};
   //std::mdspan<float, std::extents<unsigned long, GRID_HEIGHT, GRID_WIDTH>> gridAngles{m_gridArray.data()};
-  NormalizedCoordsConverter m_normalizedCoordsToGridConverter{{GRID_WIDTH, GRID_HEIGHT}};
+  NormalizedCoordsConverter m_normalizedCoordsToGridConverter{
+      {GRID_WIDTH, GRID_HEIGHT}
+  };
   siv::BasicPerlinNoise<float> m_perlinNoise;
   siv::BasicPerlinNoise<float> m_perlinNoise2;
   auto SetupAngles() noexcept -> void;
