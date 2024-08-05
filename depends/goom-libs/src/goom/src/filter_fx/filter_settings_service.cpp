@@ -6,6 +6,7 @@ module;
 #include <memory>
 #include <string>
 #include <string_view>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -100,6 +101,7 @@ constexpr auto PROB_LOW  = 0.1F;
 constexpr auto PROB_ZERO = 0.0F;
 
 constexpr auto PROB_CRYSTAL_BALL_IN_MIDDLE = 0.8F;
+constexpr auto PROB_FLOW_FIELD_IN_MIDDLE   = 0.4F;
 constexpr auto PROB_WAVE_IN_MIDDLE         = 0.5F;
 constexpr auto PROB_CHANGE_SPEED           = 0.5F;
 constexpr auto PROB_REVERSE_SPEED          = 0.5F;
@@ -774,13 +776,13 @@ inline auto FilterSettingsService::GetZoomAdjustmentEffect()
   return m_filterModeData[m_filterMode].zoomAdjustmentEffect;
 }
 
-auto FilterSettingsService::NewCycle() -> void
+auto FilterSettingsService::NewCycle() noexcept -> void
 {
   m_filterModeAtLastUpdate = m_filterMode;
   m_filterSettings.transformBufferLerpData.Update();
 }
 
-auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() -> void
+auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() noexcept -> void
 {
   m_filterSettings.filterEffectsSettingsHaveChanged = false;
 
@@ -929,14 +931,25 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
     return;
   }
 
-  const auto allowEdgePoints = (m_filterMode != WAVE_SQ_DIST_ANGLE_EFFECT_MODE0) and
-                               (m_filterMode != WAVE_SQ_DIST_ANGLE_EFFECT_MODE1) and
-                               (m_filterMode != WAVE_ATAN_ANGLE_EFFECT_MODE0) and
-                               (m_filterMode != WAVE_ATAN_ANGLE_EFFECT_MODE1);
-  SetAnyRandomZoomMidpoint(allowEdgePoints);
+  SetAnyRandomZoomMidpoint(IsAllowedEdgePoints(m_filterMode));
 }
 
-auto FilterSettingsService::IsZoomMidpointInTheMiddle() const -> bool
+auto FilterSettingsService::IsAllowedEdgePoints(const ZoomFilterMode filterMode) const noexcept
+    -> bool
+{
+  static const auto s_NO_EDGE_POINTS = std::unordered_set{
+      EXP_RECIPROCAL_MODE,
+      FLOW_FIELD_MODE,
+      WAVE_SQ_DIST_ANGLE_EFFECT_MODE0,
+      WAVE_SQ_DIST_ANGLE_EFFECT_MODE1,
+      WAVE_ATAN_ANGLE_EFFECT_MODE0,
+      WAVE_ATAN_ANGLE_EFFECT_MODE1,
+  };
+
+  return not s_NO_EDGE_POINTS.contains(filterMode);
+}
+
+auto FilterSettingsService::IsZoomMidpointInTheMiddle() const noexcept -> bool
 {
   if ((m_filterMode == WATER_MODE) or (m_filterMode == AMULET_MODE))
   {
@@ -949,6 +962,11 @@ auto FilterSettingsService::IsZoomMidpointInTheMiddle() const -> bool
     return true;
   }
 
+  if ((m_filterMode == FLOW_FIELD_MODE) and m_goomRand->ProbabilityOf<PROB_FLOW_FIELD_IN_MIDDLE>())
+  {
+    return true;
+  }
+
   if (IsFilterModeAWaveMode() and m_goomRand->ProbabilityOf<PROB_WAVE_IN_MIDDLE>())
   {
     return true;
@@ -957,7 +975,7 @@ auto FilterSettingsService::IsZoomMidpointInTheMiddle() const -> bool
   return false;
 }
 
-inline auto FilterSettingsService::IsFilterModeAWaveMode() const -> bool
+inline auto FilterSettingsService::IsFilterModeAWaveMode() const noexcept -> bool
 {
   if (m_filterMode == WAVE_SQ_DIST_ANGLE_EFFECT_MODE0)
   {
@@ -978,33 +996,29 @@ inline auto FilterSettingsService::IsFilterModeAWaveMode() const -> bool
   return false;
 }
 
-auto FilterSettingsService::GetWeightRandomMidPoint(const bool allowEdgePoints) const
+auto FilterSettingsService::GetWeightRandomMidPoint(const bool allowEdgePoints) const noexcept
     -> ZoomMidpointEvents
 {
-  Expects(m_zoomMidpointWeights.GetSumOfWeights() > SMALL_FLOAT);
-  auto midPointEvent = m_zoomMidpointWeights.GetRandomWeighted();
-
   if (allowEdgePoints)
   {
-    return midPointEvent;
+    return m_zoomMidpointWeights.GetRandomWeighted();
   }
 
-  while (IsEdgeMidPoint(midPointEvent))
-  {
-    midPointEvent = m_zoomMidpointWeights.GetRandomWeighted();
-  }
-  return midPointEvent;
+  return m_zoomMidpointWeights.GetRandomWeightedUpTo(LAST_NON_EDGE_MIDPOINT);
 }
 
-inline auto FilterSettingsService::IsEdgeMidPoint(const ZoomMidpointEvents midPointEvent) -> bool
+inline auto FilterSettingsService::IsEdgeMidPoint(const ZoomMidpointEvents midPointEvent) noexcept
+    -> bool
 {
-  return (midPointEvent == ZoomMidpointEvents::BOTTOM_MID_POINT) or
-         (midPointEvent == ZoomMidpointEvents::TOP_MID_POINT) or
-         (midPointEvent == ZoomMidpointEvents::RIGHT_MID_POINT) or
-         (midPointEvent == ZoomMidpointEvents::LEFT_MID_POINT);
+  static_assert(ZoomMidpointEvents::BOTTOM_MID_POINT >= LAST_EDGE_MIDPOINT);
+  static_assert(ZoomMidpointEvents::TOP_MID_POINT >= LAST_EDGE_MIDPOINT);
+  static_assert(ZoomMidpointEvents::RIGHT_MID_POINT >= LAST_EDGE_MIDPOINT);
+  static_assert(ZoomMidpointEvents::LEFT_MID_POINT >= LAST_EDGE_MIDPOINT);
+
+  return midPointEvent >= LAST_EDGE_MIDPOINT;
 }
 
-auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints) -> void
+auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints) noexcept -> void
 {
   static constexpr auto HEIGHT_MARGIN = 2;
 
