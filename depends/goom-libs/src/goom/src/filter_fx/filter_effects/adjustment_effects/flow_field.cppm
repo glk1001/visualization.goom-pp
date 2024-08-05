@@ -37,11 +37,13 @@ public:
   {
     Amplitude amplitude{};
     LerpToOneTs lerpToOneTs{};
-    FrequencyFactor noiseFrequencyFactor;
-    FrequencyFactor angleFrequencyFactor;
-    int32_t octaves;
-    float persistence;
-    float noiseFactor = 0.0F;
+    FrequencyFactor noiseFrequencyFactor{};
+    FrequencyFactor angleFrequencyFactor{};
+    int32_t octaves1{};
+    float persistence1{};
+    int32_t octaves2{};
+    float persistence2{};
+    float noiseFactor{};
   };
   [[nodiscard]] auto GetParams() const noexcept -> const Params&;
 
@@ -50,12 +52,13 @@ protected:
 
 private:
   const GoomRand* m_goomRand;
-  static constexpr auto GRID_WIDTH  = 500UL;
   static constexpr auto GRID_HEIGHT = 500UL;
+  static constexpr auto GRID_WIDTH  = (1920UL * 500UL) / 1080UL;
   std::array<float, GRID_WIDTH * GRID_HEIGHT> m_gridArray{};
   //std::mdspan<float, std::extents<unsigned long, GRID_HEIGHT, GRID_WIDTH>> gridAngles{m_gridArray.data()};
   NormalizedCoordsConverter m_normalizedCoordsToGridConverter{
-      {GRID_WIDTH, GRID_HEIGHT}
+      {GRID_WIDTH, GRID_HEIGHT},
+      false
   };
   siv::BasicPerlinNoise<float> m_perlinNoise;
   siv::BasicPerlinNoise<float> m_perlinNoise2;
