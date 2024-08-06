@@ -52,6 +52,7 @@ lerper
 lerps
 lround
 LSYS
+mdspan
 mult
 noisify
 NOLINTBEGIN

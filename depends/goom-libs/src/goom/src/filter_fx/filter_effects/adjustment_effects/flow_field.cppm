@@ -53,12 +53,12 @@ protected:
 private:
   const GoomRand* m_goomRand;
   static constexpr auto GRID_HEIGHT = 500UL;
-  static constexpr auto GRID_WIDTH  = (1920UL * 500UL) / 1080UL;
+  static constexpr auto GRID_WIDTH  = 500UL;
   std::array<float, GRID_WIDTH * GRID_HEIGHT> m_gridArray{};
-  //std::mdspan<float, std::extents<unsigned long, GRID_HEIGHT, GRID_WIDTH>> gridAngles{m_gridArray.data()};
+  // std::mdspan<float, std::extents<unsigned long, GRID_HEIGHT, GRID_WIDTH>>
+  //    gridAngles{m_gridArray.data()};
   NormalizedCoordsConverter m_normalizedCoordsToGridConverter{
-      {GRID_WIDTH, GRID_HEIGHT},
-      false
+      {GRID_WIDTH, GRID_HEIGHT}
   };
   siv::BasicPerlinNoise<float> m_perlinNoise;
   siv::BasicPerlinNoise<float> m_perlinNoise2;
