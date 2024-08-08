@@ -30,7 +30,7 @@ using NameValuePairs = std::vector<NameValuePair>;
 // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
 inline void MoveNameValuePairs(NameValuePairs&& nameValues, NameValuePairs& dest)
 {
-  std::move(cbegin(nameValues), cend(nameValues), std::back_inserter(dest));
+  std::ranges::move(nameValues, std::back_inserter(dest));
 }
 
 [[nodiscard]] inline auto GetParamGroupPrefix(const std::string& paramGroup) -> std::string
@@ -141,10 +141,10 @@ namespace GOOM::UTILS
 [[nodiscard]] auto GetNameValuesString(const NameValuePairs& nameValuePairs) -> std::string
 {
   auto nameValueStrings = std::vector<std::string>{};
-  std::transform(cbegin(nameValuePairs),
-                 cend(nameValuePairs),
-                 std::back_inserter(nameValueStrings),
-                 [](const NameValuePair& pair) { return GetNameValueString(pair); });
+  std::ranges::transform(cbegin(nameValuePairs),
+                         cend(nameValuePairs),
+                         std::back_inserter(nameValueStrings),
+                         [](const NameValuePair& pair) { return GetNameValueString(pair); });
   return StringJoin(nameValueStrings, "\n");
 }
 

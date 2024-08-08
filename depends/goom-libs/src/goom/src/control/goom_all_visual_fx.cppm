@@ -99,9 +99,9 @@ private:
   static constexpr auto ASYNC_RANDOM_WEIGHT = 50.0F;
   Weights<GlobalBlendType> m_globalBlendTypeWeight{
       *m_goomRand,
-      {{GlobalBlendType::NONRANDOM, NONRANDOM_WEIGHT},
-                  {GlobalBlendType::SYNC_RANDOM, SYNC_RANDOM_WEIGHT},
-                  {GlobalBlendType::ASYNC_RANDOM, ASYNC_RANDOM_WEIGHT}}
+      {{.key = GlobalBlendType::NONRANDOM, .weight = NONRANDOM_WEIGHT},
+                  {.key = GlobalBlendType::SYNC_RANDOM, .weight = SYNC_RANDOM_WEIGHT},
+                  {.key = GlobalBlendType::ASYNC_RANDOM, .weight = ASYNC_RANDOM_WEIGHT}}
   };
 };
 

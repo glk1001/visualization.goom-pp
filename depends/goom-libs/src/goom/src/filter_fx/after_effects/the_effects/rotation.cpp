@@ -29,10 +29,10 @@ static constexpr auto ANGLE_RANGE          = NumberRange{(1.0F / 8.0F) * PI, (3.
 
 Rotation::Rotation(const GoomRand& goomRand) noexcept
   : m_goomRand{&goomRand},
-    m_params{DEFAULT_ROTATE_SPEED,
-             DEFAULT_ROTATE_SPEED,
-             std::sin(DEFAULT_ROTATE_ANGLE),
-             std::cos(DEFAULT_ROTATE_ANGLE)}
+    m_params{.xRotateSpeed = DEFAULT_ROTATE_SPEED,
+             .yRotateSpeed = DEFAULT_ROTATE_SPEED,
+             .sinAngle     = std::sin(DEFAULT_ROTATE_ANGLE),
+             .cosAngle     = std::cos(DEFAULT_ROTATE_ANGLE)}
 {
 }
 
@@ -53,14 +53,19 @@ auto Rotation::SetRandomParams() -> void
   const auto sinAngle = std::sin(angle);
   const auto cosAngle = std::cos(angle);
 
-  SetParams({xRotateSpeed, yRotateSpeed, sinAngle, cosAngle});
+  SetParams({.xRotateSpeed = xRotateSpeed,
+             .yRotateSpeed = yRotateSpeed,
+             .sinAngle     = sinAngle,
+             .cosAngle     = cosAngle});
 }
 
 auto Rotation::GetNameValueParams(const std::string& paramGroup) const -> NameValuePairs
 {
   const auto fullParamGroup = GetFullParamGroup({paramGroup, "rotation"});
   return {
-      GetPair(fullParamGroup, "speed", Point2dFlt{m_params.xRotateSpeed, m_params.yRotateSpeed}),
+      GetPair(fullParamGroup,
+              "speed",
+              Point2dFlt{.x = m_params.xRotateSpeed, .y = m_params.yRotateSpeed}),
       GetPair(fullParamGroup, "sinAngle", m_params.sinAngle),
       GetPair(fullParamGroup, "cosAngle", m_params.cosAngle),
   };

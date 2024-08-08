@@ -67,7 +67,7 @@ inline auto CrystalBall::GetZoomAdjustment(const NormalizedCoords& coords) const
 {
   const auto velocity = GetVelocity(coords);
 
-  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+  return {.x = coords.GetX() * velocity.x, .y = coords.GetY() * velocity.y};
 }
 
 inline auto CrystalBall::GetParams() const noexcept -> const Params&
@@ -84,16 +84,16 @@ inline auto CrystalBall::GetVelocity(const NormalizedCoords& coords) const noexc
 {
   const auto sqDistFromZero = SqDistanceFromZero(coords);
 
-  return {GetZoomAdjustment(GetBaseZoomAdjustment().x,
-                            sqDistFromZero,
-                            m_params.amplitude.x,
-                            m_params.sqDistMult.x,
-                            m_params.sqDistOffset.x),
-          GetZoomAdjustment(GetBaseZoomAdjustment().y,
-                            sqDistFromZero,
-                            m_params.amplitude.y,
-                            m_params.sqDistMult.y,
-                            m_params.sqDistOffset.y)};
+  return {.x = GetZoomAdjustment(GetBaseZoomAdjustment().x,
+                                 sqDistFromZero,
+                                 m_params.amplitude.x,
+                                 m_params.sqDistMult.x,
+                                 m_params.sqDistOffset.x),
+          .y = GetZoomAdjustment(GetBaseZoomAdjustment().y,
+                                 sqDistFromZero,
+                                 m_params.amplitude.y,
+                                 m_params.sqDistMult.y,
+                                 m_params.sqDistOffset.y)};
 }
 
 inline auto CrystalBall::GetZoomAdjustment(const float baseZoomAdjustment,

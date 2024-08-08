@@ -159,28 +159,16 @@ auto ShapesFx::ShapesFxImpl::GetShapes() noexcept -> std::array<Shape, NUM_SHAPE
   return {
       {
        Shape{*m_fxHelper,
-                {MIN_RADIUS_FRACTION,
-                 MAX_RADIUS_FRACTION,
-                 SHAPE0_MIN_DOT_RADIUS,
-                 SHAPE0_MAX_DOT_RADIUS,
-                 SHAPE0_MAX_NUM_PATHS,
-                 initialShapeZoomMidpoints.at(0),
-                 MIN_NUM_SHAPE_PATH_STEPS,
-                 MAX_NUM_SHAPE_PATH_STEPS},
+                {.minRadiusFraction    = MIN_RADIUS_FRACTION,
+                 .maxRadiusFraction    = MAX_RADIUS_FRACTION,
+                 .minShapeDotRadius    = SHAPE0_MIN_DOT_RADIUS,
+                 .maxShapeDotRadius    = SHAPE0_MAX_DOT_RADIUS,
+                 .maxNumShapePaths     = SHAPE0_MAX_NUM_PATHS,
+                 .zoomMidpoint         = initialShapeZoomMidpoints.at(0),
+                 .minNumShapePathSteps = MIN_NUM_SHAPE_PATH_STEPS,
+                 .maxNumShapePathSteps = MAX_NUM_SHAPE_PATH_STEPS},
                 m_defaultAlpha},
-       /**
-       Shape{m_goomRand,
-       m_goomInfo,
-       m_colorMapsManager,
-       {0.5F * MIN_RADIUS_FRACTION, 0.5F * MAX_RADIUS_FRACTION, 1, 3, 4,
-       initialShapeZoomMidpoints.at(1)}},
-       Shape{m_goomRand,
-       m_goomInfo,
-       m_colorMapsManager,
-       {0.2F * MIN_RADIUS_FRACTION, 0.2F * MAX_RADIUS_FRACTION, 1, 3, 4,
-       initialShapeZoomMidpoints.at(2)}},
-        **/
-      }
+       }
   };
 }
 
@@ -220,8 +208,8 @@ inline auto ShapesFx::ShapesFxImpl::UpdateShapeEffects() noexcept -> void
 inline auto ShapesFx::ShapesFxImpl::UpdateShapePathMinMaxNumSteps() noexcept -> void
 {
   const auto newMinMaxNumShapePathSteps =
-      MinMaxValues<uint32_t>{m_numIncrementsPerUpdate * MIN_NUM_SHAPE_PATH_STEPS,
-                             m_numIncrementsPerUpdate * MAX_NUM_SHAPE_PATH_STEPS};
+      MinMaxValues{.minValue = m_numIncrementsPerUpdate * MIN_NUM_SHAPE_PATH_STEPS,
+                   .maxValue = m_numIncrementsPerUpdate * MAX_NUM_SHAPE_PATH_STEPS};
   std::ranges::for_each(m_shapes,
                         [&newMinMaxNumShapePathSteps](Shape& shape)
                         { shape.SetShapePathsMinMaxNumSteps(newMinMaxNumShapePathSteps); });
@@ -252,9 +240,11 @@ auto ShapesFx::ShapesFxImpl::GetAdjustedZoomMidpoint(const Point2dInt& zoomMidpo
   const auto xMax = m_fxHelper->GetDimensions().GetIntWidth() - 1;
   const auto yMax = m_fxHelper->GetDimensions().GetIntHeight() - 1;
 
-  const auto minZoomMidpoint   = Point2dInt{xMax / 5, yMax / 5};
-  const auto maxZoomMidpoint   = Point2dInt{xMax - minZoomMidpoint.x, yMax - minZoomMidpoint.y};
-  const auto zoomClipRectangle = Rectangle2dInt{minZoomMidpoint, maxZoomMidpoint};
+  const auto minZoomMidpoint = Point2dInt{.x = xMax / 5, .y = yMax / 5};
+  const auto maxZoomMidpoint =
+      Point2dInt{.x = xMax - minZoomMidpoint.x, .y = yMax - minZoomMidpoint.y};
+  const auto zoomClipRectangle =
+      Rectangle2dInt{.topLeft = minZoomMidpoint, .bottomRight = maxZoomMidpoint};
 
   return GetPointClippedToRectangle(
       zoomMidpoint, zoomClipRectangle, m_fxHelper->GetDimensions().GetCentrePoint());
@@ -286,7 +276,7 @@ auto ShapesFx::ShapesFxImpl::GetRadialZoomMidpoints() const noexcept
 
     for (auto i = 1U; i < NUM_SHAPES; ++i)
     {
-      const Vec2dFlt radialOffset{radius * std::cos(angle()), radius * std::sin(angle())};
+      const Vec2dFlt radialOffset{.x = radius * std::cos(angle()), .y = radius * std::sin(angle())};
 
       shapeZoomMidpoints.at(i) = m_screenCentre + ToVec2dInt(radialOffset);
 
@@ -311,8 +301,8 @@ auto ShapesFx::ShapesFxImpl::GetRandomZoomMidpoints(const Point2dInt& zoomMidpoi
   for (auto i = 1U; i < NUM_SHAPES; ++i)
   {
     shapeZoomMidpoints.at(i) = {
-        m_fxHelper->GetGoomRand().GetRandInRange(NumberRange{MARGIN, xMax}),
-        m_fxHelper->GetGoomRand().GetRandInRange(NumberRange{MARGIN, yMax})};
+        .x = m_fxHelper->GetGoomRand().GetRandInRange(NumberRange{MARGIN, xMax}),
+        .y = m_fxHelper->GetGoomRand().GetRandInRange(NumberRange{MARGIN, yMax})};
   }
 
   return shapeZoomMidpoints;

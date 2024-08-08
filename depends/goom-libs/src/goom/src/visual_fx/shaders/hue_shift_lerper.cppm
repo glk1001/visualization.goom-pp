@@ -85,7 +85,7 @@ HueShiftLerper::HueShiftLerper(const PluginInfo& goomInfo,
   : m_goomInfo{&goomInfo},
     m_goomRand{&goomRand},
     m_params{params},
-    m_lerpT{{TValue::StepType::SINGLE_CYCLE, m_params.numLerpStepsRange.min}},
+    m_lerpT{{.stepType=TValue::StepType::SINGLE_CYCLE, .numSteps=m_params.numLerpStepsRange.min}},
     m_lerpConstTimer{m_goomInfo->GetTime(), m_params.lerpConstTimeRange.min, false}
 {
 }

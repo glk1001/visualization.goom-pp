@@ -34,7 +34,7 @@ auto ColorMapsGrid::GetCurrentHorizontalLineColors() const -> std::vector<Pixel>
 
   // clang-format off
   const auto& horizontalColorMap = m_horizontalColorMaps.at(GetCurrentHorizontalLineIndex());
-  auto horizontalT = TValue{{TValue::StepType::SINGLE_CYCLE, m_width}};
+  auto horizontalT = TValue{{.stepType=TValue::StepType::SINGLE_CYCLE, .numSteps=m_width}};
   // clang-format on
 
   for (auto i = 0U; i < m_width; ++i)

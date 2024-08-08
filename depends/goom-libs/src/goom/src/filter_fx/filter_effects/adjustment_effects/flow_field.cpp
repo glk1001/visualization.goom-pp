@@ -50,7 +50,7 @@ auto GetRandSeedForPerlinNoise() -> PerlinSeedType
 constexpr auto DEFAULT_AMPLITUDE = Amplitude{0.1F, 0.1F};
 constexpr auto AMPLITUDE_RANGE   = NumberRange{0.05F, 0.251F};
 
-constexpr auto DEFAULT_LERP_TO_ONE_T_S = LerpToOneTs{0.5F, 0.5F};
+constexpr auto DEFAULT_LERP_TO_ONE_T_S = LerpToOneTs{.xLerpT = 0.5F, .yLerpT = 0.5F};
 constexpr auto LERP_TO_ONE_T_RANGE     = NumberRange{0.0F, 1.0F};
 
 constexpr auto DEFAULT_NOISE_FREQUENCY_FACTOR = 0.01F;
@@ -84,8 +84,8 @@ FlowField::FlowField(const GoomRand& goomRand) noexcept
     m_params{
       .amplitude   = DEFAULT_AMPLITUDE,
       .lerpToOneTs = DEFAULT_LERP_TO_ONE_T_S,
-      .noiseFrequencyFactor ={DEFAULT_NOISE_FREQUENCY_FACTOR, DEFAULT_NOISE_FREQUENCY_FACTOR},
-      .angleFrequencyFactor ={DEFAULT_ANGLE_FREQUENCY_FACTOR, DEFAULT_ANGLE_FREQUENCY_FACTOR},
+      .noiseFrequencyFactor ={.x=DEFAULT_NOISE_FREQUENCY_FACTOR, .y=DEFAULT_NOISE_FREQUENCY_FACTOR},
+      .angleFrequencyFactor ={.x=DEFAULT_ANGLE_FREQUENCY_FACTOR, .y=DEFAULT_ANGLE_FREQUENCY_FACTOR},
       .octaves1     = DEFAULT_OCTAVES,
       .persistence1 = DEFAULT_PERSISTENCE,
       .octaves2     = DEFAULT_OCTAVES,
@@ -153,10 +153,10 @@ auto FlowField::GetVelocity(const NormalizedCoords& coords) const noexcept -> Ve
 
   const auto sqDistFromZero = std::sqrt(SqDistanceFromZero(coords));
 
-  return {GetBaseZoomAdjustment().x + (m_params.amplitude.x * sqDistFromZero *
-                                       std::cos(m_params.angleFrequencyFactor.x * gridAngle)),
-          GetBaseZoomAdjustment().y + (m_params.amplitude.y * sqDistFromZero *
-                                       std::sin(m_params.angleFrequencyFactor.y * gridAngle))};
+  return {.x = GetBaseZoomAdjustment().x + (m_params.amplitude.x * sqDistFromZero *
+                                            std::cos(m_params.angleFrequencyFactor.x * gridAngle)),
+          .y = GetBaseZoomAdjustment().y + (m_params.amplitude.y * sqDistFromZero *
+                                            std::sin(m_params.angleFrequencyFactor.y * gridAngle))};
 
   // return {coords.GetX() * (m_params.amplitude.x * sqDistFromZero*std::cos(15.0F * gridAngle)),
   //         coords.GetY() * + (m_params.amplitude.y * sqDistFromZero*std::sin(25.0F * gridAngle))};
@@ -199,10 +199,10 @@ auto FlowField::SetRandomParams() noexcept -> void
   const auto noiseFactor = m_goomRand->GetRandInRange<NOISE_FACTOR_RANGE>();
 
   SetParams({
-      .amplitude            = {           xAmplitude,            yAmplitude},
-      .lerpToOneTs          = {          xLerpToOneT,           yLerpToOneT},
-      .noiseFrequencyFactor = {xNoiseFrequencyFactor, yNoiseFrequencyFactor},
-      .angleFrequencyFactor = {xAngleFrequencyFactor, yAngleFrequencyFactor},
+      .amplitude            = {                xAmplitude,                 yAmplitude},
+      .lerpToOneTs          = {     .xLerpT = xLerpToOneT,      .yLerpT = yLerpToOneT},
+      .noiseFrequencyFactor = {.x = xNoiseFrequencyFactor, .y = yNoiseFrequencyFactor},
+      .angleFrequencyFactor = {.x = xAngleFrequencyFactor, .y = yAngleFrequencyFactor},
       .octaves1             = octaves1,
       .persistence1         = persistence1,
       .octaves2             = octaves2,
@@ -213,7 +213,7 @@ auto FlowField::SetRandomParams() noexcept -> void
 
 auto FlowField::GetZoomAdjustmentEffectNameValueParams() const noexcept -> NameValuePairs
 {
-  return NameValuePairs();
+  return {};
 }
 
 } // namespace GOOM::FILTER_FX::FILTER_EFFECTS

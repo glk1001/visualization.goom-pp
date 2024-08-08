@@ -2,4 +2,5 @@
 build*/*
 visualization.goom-pp/resources/*
 dockerize*/*
+.venv/*
 

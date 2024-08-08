@@ -206,9 +206,10 @@ private:
   static constexpr auto OFF_BRIGHTNESS             = 1.0F;
   OnOffTimer m_brightnessOnOffTimer{
       m_fxHelper->GetGoomTime(),
-      {BRIGHTNESS_ON_TIME,
-                       BRIGHTNESS_FAILED_ON_TIME, BRIGHTNESS_OFF_TIME,
-                       BRIGHTNESS_FAILED_OFF_TIME}
+      {.numOnCount               = BRIGHTNESS_ON_TIME,
+                       .numOnCountAfterFailedOff = BRIGHTNESS_FAILED_ON_TIME,
+                       .numOffCount              = BRIGHTNESS_OFF_TIME,
+                       .numOffCountAfterFailedOn = BRIGHTNESS_FAILED_OFF_TIME}
   };
   auto StartBrightnessTimer() noexcept -> void;
 
@@ -342,12 +343,14 @@ auto LSystem::StartBrightnessTimer() noexcept -> void
 {
   m_brightnessOnOffTimer.Reset();
 
-  m_brightnessOnOffTimer.SetActions({[this]()
+  m_brightnessOnOffTimer.SetActions({.onAction =
+                                         [this]()
                                      {
                                        m_lSysColors.SetGlobalBrightness(ON_BRIGHTNESS);
                                        return true;
                                      },
-                                     [this]()
+                                     .offAction =
+                                         [this]()
                                      {
                                        m_lSysColors.SetGlobalBrightness(OFF_BRIGHTNESS);
                                        return true;
@@ -537,18 +540,18 @@ inline auto LSystem::GetRandomDefaultInterpreterParams() const noexcept
     -> Interpreter::DefaultParams
 {
   return {
-      m_lSysModelSet.lSysProperties.turnAngle *
-          m_fxHelper->GetGoomRand().GetRandInRange(
-              NumberRange{m_lSysModelSet.lSysOverrides.minDefaultTurnAngleInDegreesFactor,
-                          m_lSysModelSet.lSysOverrides.maxDefaultTurnAngleInDegreesFactor}),
-      m_lSysModelSet.lSysProperties.lineWidth *
-          m_fxHelper->GetGoomRand().GetRandInRange(
-              NumberRange{m_lSysModelSet.lSysOverrides.minDefaultLineWidthFactor,
-                          m_lSysModelSet.lSysOverrides.maxDefaultLineWidthFactor}),
-      m_lSysModelSet.lSysProperties.lineDistance *
-          m_fxHelper->GetGoomRand().GetRandInRange(
-              NumberRange{m_lSysModelSet.lSysOverrides.minDefaultDistanceFactor,
-                          m_lSysModelSet.lSysOverrides.maxDefaultDistanceFactor}),
+      .turnAngleInDegrees = m_lSysModelSet.lSysProperties.turnAngle *
+                            m_fxHelper->GetGoomRand().GetRandInRange(NumberRange{
+                                m_lSysModelSet.lSysOverrides.minDefaultTurnAngleInDegreesFactor,
+                                m_lSysModelSet.lSysOverrides.maxDefaultTurnAngleInDegreesFactor}),
+      .width = m_lSysModelSet.lSysProperties.lineWidth *
+               m_fxHelper->GetGoomRand().GetRandInRange(
+                   NumberRange{m_lSysModelSet.lSysOverrides.minDefaultLineWidthFactor,
+                               m_lSysModelSet.lSysOverrides.maxDefaultLineWidthFactor}),
+      .distance = m_lSysModelSet.lSysProperties.lineDistance *
+                  m_fxHelper->GetGoomRand().GetRandInRange(
+                      NumberRange{m_lSysModelSet.lSysOverrides.minDefaultDistanceFactor,
+                                  m_lSysModelSet.lSysOverrides.maxDefaultDistanceFactor}),
   };
 }
 
@@ -661,8 +664,8 @@ inline auto LSystem::GetBoundingBox2d(const float expandBounds,
                                       const BoundingBox3d& boundingBox3d) noexcept -> BoundingBox2d
 {
   auto boundingBox2d =
-      BoundingBox2d{Scale(LSysDraw::GetPerspectivePoint(boundingBox3d.min), expandBounds),
-                    Scale(LSysDraw::GetPerspectivePoint(boundingBox3d.max), expandBounds)};
+      BoundingBox2d{.min = Scale(LSysDraw::GetPerspectivePoint(boundingBox3d.min), expandBounds),
+                    .max = Scale(LSysDraw::GetPerspectivePoint(boundingBox3d.max), expandBounds)};
   return boundingBox2d;
 }
 

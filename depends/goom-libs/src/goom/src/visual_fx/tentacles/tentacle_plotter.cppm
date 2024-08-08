@@ -66,7 +66,7 @@ private:
   static_assert(CAMERA_X_OFFSET_RANGE.min < CAMERA_X_OFFSET_RANGE.max);
   static_assert(CAMERA_Y_OFFSET_RANGE.min < CAMERA_Y_OFFSET_RANGE.max);
   static_assert(CAMERA_Z_OFFSET_RANGE.min < CAMERA_Z_OFFSET_RANGE.max);
-  V3dFlt m_cameraPosition{0.0F, 0.0F, CAMERA_Z_OFFSET_RANGE.min};
+  V3dFlt m_cameraPosition{.x = 0.0F, .y = 0.0F, .z = CAMERA_Z_OFFSET_RANGE.min};
 
   auto PlotPoints(const std::vector<V3dFlt>& points3D) -> void;
   struct Line2DInt
@@ -111,9 +111,9 @@ inline auto TentaclePlotter::SetNodeTOffset(const float value) noexcept -> void
 
 inline auto TentaclePlotter::UpdateCameraPosition() noexcept -> void
 {
-  m_cameraPosition = {m_goomRand->GetRandInRange<CAMERA_X_OFFSET_RANGE>(),
-                      m_goomRand->GetRandInRange<CAMERA_Y_OFFSET_RANGE>(),
-                      m_goomRand->GetRandInRange<CAMERA_Z_OFFSET_RANGE>()};
+  m_cameraPosition = {.x = m_goomRand->GetRandInRange<CAMERA_X_OFFSET_RANGE>(),
+                      .y = m_goomRand->GetRandInRange<CAMERA_Y_OFFSET_RANGE>(),
+                      .z = m_goomRand->GetRandInRange<CAMERA_Z_OFFSET_RANGE>()};
 }
 
 TentaclePlotter::TentaclePlotter(IGoomDraw& draw, const GoomRand& goomRand) noexcept
@@ -131,11 +131,11 @@ inline auto TentaclePlotter::GetLineClipRectangle(const uint8_t lineThickness) c
     -> Rectangle2dInt
 {
   const auto clipMargin  = static_cast<int32_t>(lineThickness + 1U);
-  const auto topLeft     = Point2dInt{clipMargin, clipMargin};
-  const auto bottomRight = Point2dInt{m_draw->GetDimensions().GetIntWidth() - clipMargin,
-                                      m_draw->GetDimensions().GetIntHeight() - clipMargin};
+  const auto topLeft     = Point2dInt{.x = clipMargin, .y = clipMargin};
+  const auto bottomRight = Point2dInt{.x = m_draw->GetDimensions().GetIntWidth() - clipMargin,
+                                      .y = m_draw->GetDimensions().GetIntHeight() - clipMargin};
 
-  return {topLeft, bottomRight};
+  return {.topLeft = topLeft, .bottomRight = bottomRight};
 }
 
 auto TentaclePlotter::Plot3D(const Tentacle3D& tentacle) noexcept -> void
@@ -156,7 +156,9 @@ inline auto TentaclePlotter::PlotPoints(const std::vector<V3dFlt>& points3D) -> 
   }
 
   auto nodeT = TValue{
-      {TValue::StepType::CONTINUOUS_REVERSIBLE, numNodes, m_nodeTOffset}
+      {.stepType  = TValue::StepType::CONTINUOUS_REVERSIBLE,
+       .numSteps  = numNodes,
+       .startingT = m_nodeTOffset}
   };
   for (const auto& line : lines2D)
   {
@@ -186,7 +188,8 @@ auto TentaclePlotter::GetPerspectiveProjection(const std::vector<V3dFlt>& points
     const auto pointFlt1 = GetPerspectivePoint(line3D.point1);
     const auto pointFlt2 = GetPerspectivePoint(line3D.point2);
 
-    const auto clippedLine = m_lineClipper.GetClippedLine({pointFlt1, pointFlt2});
+    const auto clippedLine =
+        m_lineClipper.GetClippedLine({.point1 = pointFlt1, .point2 = pointFlt2});
     if (clippedLine.clipResult == LineClipper::ClipResult::REJECTED)
     {
       continue;
@@ -206,7 +209,7 @@ inline auto TentaclePlotter::GetPerspectivePoint(const V3dFlt& point3D) const ->
   const auto xProj             = perspectiveFactor * point3D.x;
   const auto yProj             = perspectiveFactor * point3D.y;
 
-  return Point2dFlt{xProj, -yProj} + m_screenCentre;
+  return Point2dFlt{.x = xProj, .y = -yProj} + m_screenCentre;
 }
 
 inline auto TentaclePlotter::GetLines3D(const std::vector<V3dFlt>& points3D)
@@ -221,7 +224,7 @@ inline auto TentaclePlotter::GetLines3D(const std::vector<V3dFlt>& points3D)
   const auto numPointsMinus1 = points3D.size() - 1;
   for (auto i = 0U; i < numPointsMinus1; ++i)
   {
-    lines3D.emplace_back(Line3DFlt{points3D[i], points3D[i + 1]});
+    lines3D.emplace_back(Line3DFlt{.point1 = points3D[i], .point2 = points3D[i + 1]});
   }
 
   return lines3D;
@@ -230,7 +233,7 @@ inline auto TentaclePlotter::GetLines3D(const std::vector<V3dFlt>& points3D)
 inline auto TentaclePlotter::GetLine2D(const Point2dFlt& point1Flt,
                                        const Point2dFlt& point2Flt) noexcept -> Line2DInt
 {
-  auto line2D = Line2DInt{ToPoint2dInt(point1Flt), ToPoint2dInt(point2Flt)};
+  auto line2D = Line2DInt{.point1 = ToPoint2dInt(point1Flt), .point2 = ToPoint2dInt(point2Flt)};
 
   if (line2D.point1 == line2D.point2)
   {

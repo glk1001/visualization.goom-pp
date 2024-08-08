@@ -84,8 +84,9 @@ private:
   COLOR::ConstColorMapSharedPtr m_meetingPointMainColorMapPtr = nullptr;
   COLOR::ConstColorMapSharedPtr m_meetingPointLowColorMapPtr  = nullptr;
   static constexpr uint32_t NUM_MEETING_POINT_COLOR_STEPS     = 50;
-  UTILS::MATH::TValue m_meetingPointColorsT{
-      {UTILS::MATH::TValue::StepType::CONTINUOUS_REVERSIBLE, NUM_MEETING_POINT_COLOR_STEPS}
+  TValue m_meetingPointColorsT{
+      {.stepType = TValue::StepType::CONTINUOUS_REVERSIBLE,
+       .numSteps = NUM_MEETING_POINT_COLOR_STEPS}
   };
   [[nodiscard]] auto GetCurrentMeetingPointColors() const noexcept -> DRAW::MultiplePixels;
   [[nodiscard]] auto GetBrightnessAttenuation() const noexcept -> float;
@@ -188,17 +189,17 @@ auto Shape::GetInitialShapeParts(FxHelper& fxHelper,
   {
     static constexpr auto T_MIN_MAX_LERP = 0.5F;
     const auto shapePartParams           = ShapePart::Params{
-        i,
-        NUM_SHAPE_PARTS,
-        params.minRadiusFraction,
-        params.maxRadiusFraction,
-        params.minShapeDotRadius,
-        params.maxShapeDotRadius,
-        params.maxNumShapePaths,
-        T_MIN_MAX_LERP,
-        params.zoomMidpoint,
-        params.minNumShapePathSteps,
-        params.maxNumShapePathSteps,
+                  .shapePartNum          = i,
+                  .totalNumShapeParts    = NUM_SHAPE_PARTS,
+                  .minRadiusFraction     = params.minRadiusFraction,
+                  .maxRadiusFraction     = params.maxRadiusFraction,
+                  .minShapeDotRadius     = params.minShapeDotRadius,
+                  .maxShapeDotRadius     = params.maxShapeDotRadius,
+                  .maxNumShapePaths      = params.maxNumShapePaths,
+                  .tMinMaxLerp           = T_MIN_MAX_LERP,
+                  .shapePathsTargetPoint = params.zoomMidpoint,
+                  .shapePathsMinNumSteps = params.minNumShapePathSteps,
+                  .shapePathsMaxNumSteps = params.maxNumShapePathSteps,
     };
     shapeParts.emplace_back(fxHelper, shapePartParams, defaultAlpha);
   }
@@ -264,10 +265,10 @@ auto Shape::Start() noexcept -> void
 auto Shape::Draw() noexcept -> void
 {
   const auto shapePartParams = ShapePart::DrawParams{
-      GetBrightnessAttenuation(),
-      FirstShapePathAtMeetingPoint(),
-      m_varyDotRadius,
-      GetCurrentMeetingPointColors(),
+      .brightnessAttenuation        = GetBrightnessAttenuation(),
+      .firstShapePathAtMeetingPoint = FirstShapePathAtMeetingPoint(),
+      .varyDotRadius                = m_varyDotRadius,
+      .meetingPointColors           = GetCurrentMeetingPointColors(),
   };
   std::ranges::for_each(
       m_shapeParts, [&shapePartParams](ShapePart& shapePart) { shapePart.Draw(shapePartParams); });
@@ -280,8 +281,8 @@ auto Shape::Draw() noexcept -> void
 
 inline auto Shape::GetCurrentMeetingPointColors() const noexcept -> MultiplePixels
 {
-  return {m_meetingPointMainColorMapPtr->GetColor(m_meetingPointColorsT()),
-          m_meetingPointLowColorMapPtr->GetColor(m_meetingPointColorsT())};
+  return {.color1 = m_meetingPointMainColorMapPtr->GetColor(m_meetingPointColorsT()),
+          .color2 = m_meetingPointLowColorMapPtr->GetColor(m_meetingPointColorsT())};
 }
 
 inline auto Shape::GetBrightnessAttenuation() const noexcept -> float

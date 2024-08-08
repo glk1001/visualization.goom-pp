@@ -26,14 +26,14 @@ auto DrawTestPattern(IGoomDraw& draw,
   const auto y0            = lineThickness + (centre.y - (height / 2));
   const auto x1            = (centre.x + ((width - 1) / 2)) - lineThickness;
   const auto y1            = (centre.y + ((height - 1) / 2)) - lineThickness;
-  const auto topLeft       = Point2dInt{x0, y0};
-  const auto topRight      = Point2dInt{x1, y0};
-  const auto bottomLeft    = Point2dInt{x0, y1};
-  const auto bottomRight   = Point2dInt{x1, y1};
+  const auto topLeft       = Point2dInt{.x = x0, .y = y0};
+  const auto topRight      = Point2dInt{.x = x1, .y = y0};
+  const auto bottomLeft    = Point2dInt{.x = x0, .y = y1};
+  const auto bottomRight   = Point2dInt{.x = x1, .y = y1};
 
   static constexpr auto BRIGHTNESS = 10.0F;
   const auto white                 = GetBrighterColor(BRIGHTNESS, WHITE_PIXEL);
-  const auto color                 = MultiplePixels{white, white};
+  const auto color                 = MultiplePixels{.color1 = white, .color2 = white};
 
   auto lineDrawer = LineDrawerClippedEndPoints{draw};
   lineDrawer.SetLineThickness(lineThickness);

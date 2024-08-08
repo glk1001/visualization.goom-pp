@@ -128,15 +128,15 @@ auto LSysPath::GetPathsToAndFrom() const noexcept -> std::unique_ptr<PathsToAndF
 
   // clang-format off
   auto pathsToAndFrom = PathsToAndFrom{
-      OscillatingPath{std::make_unique<TValue>(
+      .pathToTarget=OscillatingPath{std::make_unique<TValue>(
                      TValue::NumStepsProperties{
-                          TValue::StepType::SINGLE_CYCLE, m_pathNumSteps}),
-                      StartAndEndPos{ToPoint2dFlt(m_lSysPathStart), ToPoint2dFlt(m_lSysPathTarget)},
+                          .stepType=TValue::StepType::SINGLE_CYCLE, .numSteps=m_pathNumSteps}),
+                      StartAndEndPos{.startPos=ToPoint2dFlt(m_lSysPathStart), .endPos=ToPoint2dFlt(m_lSysPathTarget)},
                       pathParams},
-      OscillatingPath{std::make_unique<TValue>(
+      .pathFromTarget=OscillatingPath{std::make_unique<TValue>(
                       TValue::NumStepsProperties{
-                          TValue::StepType::SINGLE_CYCLE, m_pathNumSteps}),
-                      StartAndEndPos{ToPoint2dFlt(m_lSysPathTarget), ToPoint2dFlt(m_lSysPathStart)},
+                          .stepType=TValue::StepType::SINGLE_CYCLE, .numSteps=m_pathNumSteps}),
+                      StartAndEndPos{.startPos=ToPoint2dFlt(m_lSysPathTarget), .endPos=ToPoint2dFlt(m_lSysPathStart)},
                       pathParams}
   };
   // clang-format on
@@ -151,9 +151,9 @@ auto LSysPath::GetPathParams() const noexcept -> OscillatingFunction::Params
   static constexpr auto PATH_Y_FREQ_RANGE    = NumberRange{0.9F, 2.0F};
 
   return {
-      m_goomRand->GetRandInRange<PATH_AMPLITUDE_RANGE>(),
-      m_goomRand->GetRandInRange<PATH_X_FREQ_RANGE>(),
-      m_goomRand->GetRandInRange<PATH_Y_FREQ_RANGE>(),
+      .oscillatingAmplitude = m_goomRand->GetRandInRange<PATH_AMPLITUDE_RANGE>(),
+      .xOscillatingFreq     = m_goomRand->GetRandInRange<PATH_X_FREQ_RANGE>(),
+      .yOscillatingFreq     = m_goomRand->GetRandInRange<PATH_Y_FREQ_RANGE>(),
   };
 }
 

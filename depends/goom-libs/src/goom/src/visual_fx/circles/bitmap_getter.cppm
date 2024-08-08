@@ -56,6 +56,8 @@ namespace GOOM::VISUAL_FX::CIRCLES
 
 using UTILS::GRAPHICS::SmallImageBitmaps;
 
+using enum SmallImageBitmaps::ImageNames;
+
 static constexpr auto IMAGE_NAMES_CIRCLE_WEIGHT        = 05.0F;
 static constexpr auto IMAGE_NAMES_SPHERE_WEIGHT        = 05.0F;
 static constexpr auto IMAGE_NAMES_ORANGE_FLOWER_WEIGHT = 20.0F;
@@ -69,12 +71,12 @@ BitmapGetter::BitmapGetter(const UTILS::MATH::GoomRand& goomRand,
     m_bitmapTypes{
       goomRand,
       {
-          {SmallImageBitmaps::ImageNames::CIRCLE,        IMAGE_NAMES_CIRCLE_WEIGHT},
-          {SmallImageBitmaps::ImageNames::SPHERE,        IMAGE_NAMES_SPHERE_WEIGHT},
-          {SmallImageBitmaps::ImageNames::ORANGE_FLOWER, IMAGE_NAMES_ORANGE_FLOWER_WEIGHT},
-          {SmallImageBitmaps::ImageNames::PINK_FLOWER,   IMAGE_NAMES_PINK_FLOWER_WEIGHT},
-          {SmallImageBitmaps::ImageNames::RED_FLOWER,    IMAGE_NAMES_RED_FLOWER_WEIGHT},
-          {SmallImageBitmaps::ImageNames::WHITE_FLOWER,  IMAGE_NAMES_WHITE_FLOWER_WEIGHT},
+          {.key = CIRCLE,        .weight = IMAGE_NAMES_CIRCLE_WEIGHT},
+          {.key = SPHERE,        .weight = IMAGE_NAMES_SPHERE_WEIGHT},
+          {.key = ORANGE_FLOWER, .weight = IMAGE_NAMES_ORANGE_FLOWER_WEIGHT},
+          {.key = PINK_FLOWER,   .weight = IMAGE_NAMES_PINK_FLOWER_WEIGHT},
+          {.key = RED_FLOWER,    .weight = IMAGE_NAMES_RED_FLOWER_WEIGHT},
+          {.key = WHITE_FLOWER,  .weight = IMAGE_NAMES_WHITE_FLOWER_WEIGHT},
         }
     }
 {

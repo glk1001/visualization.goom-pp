@@ -120,7 +120,7 @@ private:
 
   int32_t m_availableWidth  = m_fxHelper->GetDimensions().GetIntWidth() - CHUNK_WIDTH;
   int32_t m_availableHeight = m_fxHelper->GetDimensions().GetIntHeight() - CHUNK_HEIGHT;
-  Point2dInt m_screenCentre{I_HALF * m_availableWidth, I_HALF* m_availableHeight};
+  Point2dInt m_screenCentre{.x = I_HALF * m_availableWidth, .y = I_HALF * m_availableHeight};
   float m_maxRadius = HALF * static_cast<float>(std::min(m_availableWidth, m_availableHeight));
   [[nodiscard]] auto GetNewRandBrightnessFactor() const -> float;
   float m_randBrightnessFactor{GetNewRandBrightnessFactor()};
@@ -144,13 +144,13 @@ private:
   RandomPixelBlender m_pixelBlender{
       m_fxHelper->GetGoomRand(),
       {
-          {RandomPixelBlender::PixelBlendType::ADD,           ADD_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::DARKEN_ONLY,   DARKEN_ONLY_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::LIGHTEN_ONLY,  LIGHTEN_ONLY_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::LUMA_MIX,      LUMA_MIX_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::MULTIPLY,      MULTIPLY_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::ALPHA,         ALPHA_WEIGHT},
-          {RandomPixelBlender::PixelBlendType::ALPHA_AND_ADD, ALPHA_AND_ADD_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::ADD,           .weight=ADD_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::DARKEN_ONLY,   .weight=DARKEN_ONLY_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::LIGHTEN_ONLY,  .weight=LIGHTEN_ONLY_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::LUMA_MIX,      .weight=LUMA_MIX_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::MULTIPLY,      .weight=MULTIPLY_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::ALPHA,         .weight=ALPHA_WEIGHT},
+          {.key=RandomPixelBlender::PixelBlendType::ALPHA_AND_ADD, .weight=ALPHA_AND_ADD_WEIGHT},
       }
   };
   // clang-format on
@@ -163,13 +163,15 @@ private:
   static constexpr uint32_t NUM_STEPS    = 400;
   static constexpr uint32_t T_DELAY_TIME = 15;
   TValue m_inOutT{
-      {TValue::StepType::CONTINUOUS_REPEATABLE, NUM_STEPS},
-      {{1.0F, T_DELAY_TIME}}
+      {.stepType = TValue::StepType::CONTINUOUS_REPEATABLE, .numSteps = NUM_STEPS},
+      {{.t0 = 1.0F, .delayTime = T_DELAY_TIME}}
   };
   float m_inOutTSq = 0.0F;
   Point2dInt m_floatingStartPosition{};
   TValue m_floatingT{
-      {TValue::StepType::CONTINUOUS_REVERSIBLE, NUM_STEPS, 1.0F}
+      {.stepType  = TValue::StepType::CONTINUOUS_REVERSIBLE,
+       .numSteps  = NUM_STEPS,
+       .startingT = 1.0F}
   };
   auto InitImage() -> void;
 
@@ -194,7 +196,7 @@ private:
   [[nodiscard]] auto GetChunkFloatingStartPosition(size_t i) const -> Point2dInt;
 
   static constexpr float GAMMA = 1.0F;
-  ColorAdjustment m_colorAdjust{{GAMMA}};
+  ColorAdjustment m_colorAdjust{{.gamma = GAMMA}};
 };
 
 ImageFx::ImageFx(Parallel& parallel,
@@ -380,8 +382,8 @@ auto ImageFx::ImageFxImpl::ResetStartPositions() -> void
     const auto theta = m_fxHelper->GetGoomRand().GetRandInRange<THETA_RANGE>();
 
     const auto startPos =
-        m_screenCentre + Vec2dInt{static_cast<int32_t>((std::cos(theta) * radius)),
-                                  static_cast<int32_t>((std::sin(theta) * radius))};
+        m_screenCentre + Vec2dInt{.x = static_cast<int32_t>((std::cos(theta) * radius)),
+                                  .y = static_cast<int32_t>((std::sin(theta) * radius))};
 
     m_currentImage->SetStartPosition(i, startPos);
 
@@ -402,17 +404,17 @@ inline auto ImageFx::ImageFxImpl::GetChunkFloatingStartPosition(const size_t i) 
   const auto theta =
       (TWO_PI * static_cast<float>(i)) / static_cast<float>(m_currentImage->GetNumChunks());
   const auto floatingStartPosition =
-      m_screenCentre + Vec2dInt{static_cast<int32_t>((std::cos(theta) * aRadius)),
-                                static_cast<int32_t>((std::sin(theta) * bRadius))};
+      m_screenCentre + Vec2dInt{.x = static_cast<int32_t>((std::cos(theta) * aRadius)),
+                                .y = static_cast<int32_t>((std::sin(theta) * bRadius))};
   return floatingStartPosition;
 }
 
 inline auto ImageFx::ImageFxImpl::SetNewFloatingStartPosition() -> void
 {
   m_floatingStartPosition =
-      m_screenCentre - Vec2dInt{m_fxHelper->GetGoomRand().GetRandInRange(
+      m_screenCentre - Vec2dInt{.x = m_fxHelper->GetGoomRand().GetRandInRange(
                                     NumberRange{CHUNK_WIDTH, m_availableWidth - 1}),
-                                m_fxHelper->GetGoomRand().GetRandInRange(
+                                .y = m_fxHelper->GetGoomRand().GetRandInRange(
                                     NumberRange{CHUNK_HEIGHT, m_availableHeight - 1})};
 }
 
@@ -529,7 +531,7 @@ auto ImageFx::ImageFxImpl::DrawChunk(const Point2dInt& pos,
         continue;
       }
       const auto pixelColors = GetPixelColors(xPixel, brightness);
-      m_pixelDrawer.DrawPixels({x, y}, pixelColors);
+      m_pixelDrawer.DrawPixels({.x = x, .y = y}, pixelColors);
 
       ++x;
     }
@@ -548,10 +550,10 @@ inline auto ImageFx::ImageFxImpl::GetPixelColors(const Pixel& pixelColor,
 
   if (m_pixelColorIsDominant)
   {
-    return {color1, color0};
+    return {.color1 = color1, .color2 = color0};
   }
 
-  return {color0, color1};
+  return {.color1 = color0, .color2 = color1};
 }
 
 inline auto ImageFx::ImageFxImpl::GetMappedColor(const Pixel& pixelColor) const -> Pixel
@@ -610,7 +612,7 @@ auto ChunkedImage::SplitImageIntoChunks(const ImageBitmap& imageBitmap,
     for (auto xChunk = 0; xChunk < numXChunks; ++xChunk)
     {
       ImageChunk imageChunk;
-      imageChunk.finalPosition = {x, y};
+      imageChunk.finalPosition = {.x = x, .y = y};
       SetImageChunkPixels(imageBitmap, yImage, xImage, imageChunk);
       imageAsChunks.emplace_back(imageChunk);
 

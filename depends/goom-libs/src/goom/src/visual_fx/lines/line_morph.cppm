@@ -101,7 +101,7 @@ private:
 
   static constexpr float GAMMA = 1.9F;
   ColorAdjustment m_colorAdjust{
-      {GAMMA, ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = GAMMA, .alterChromaFactor = ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
 
   std::vector<LinePoint> m_srcePoints;
@@ -205,28 +205,28 @@ LineMorph::LineMorph(IGoomDraw& draw,
         *m_goomRand,
         smallBitmaps,
         {
-            // min dot sizes
+          .minDotSizes =
             {
                 *m_goomRand,
                 {
-                    {DotSizes::DOT_SIZE01, MIN_DOT_SIZE01_WEIGHT},
-                    {DotSizes::DOT_SIZE02, MIN_DOT_SIZE02_WEIGHT},
-                    {DotSizes::DOT_SIZE03, MIN_DOT_SIZE03_WEIGHT},
-                    {DotSizes::DOT_SIZE04, MIN_DOT_SIZE04_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE01, .weight = MIN_DOT_SIZE01_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE02, .weight = MIN_DOT_SIZE02_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE03, .weight = MIN_DOT_SIZE03_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE04, .weight = MIN_DOT_SIZE04_WEIGHT},
                 }
             },
-            // normal dot sizes
+          .normalDotSizes =
             {
                 *m_goomRand,
                 {
-                    {DotSizes::DOT_SIZE01, NORMAL_DOT_SIZE01_WEIGHT},
-                    {DotSizes::DOT_SIZE02, NORMAL_DOT_SIZE02_WEIGHT},
-                    {DotSizes::DOT_SIZE03, NORMAL_DOT_SIZE03_WEIGHT},
-                    {DotSizes::DOT_SIZE04, NORMAL_DOT_SIZE04_WEIGHT},
-                    {DotSizes::DOT_SIZE05, NORMAL_DOT_SIZE05_WEIGHT},
-                    {DotSizes::DOT_SIZE06, NORMAL_DOT_SIZE06_WEIGHT},
-                    {DotSizes::DOT_SIZE07, NORMAL_DOT_SIZE07_WEIGHT},
-                    {DotSizes::DOT_SIZE08, NORMAL_DOT_SIZE08_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE01, .weight = NORMAL_DOT_SIZE01_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE02, .weight = NORMAL_DOT_SIZE02_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE03, .weight = NORMAL_DOT_SIZE03_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE04, .weight = NORMAL_DOT_SIZE04_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE05, .weight = NORMAL_DOT_SIZE05_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE06, .weight = NORMAL_DOT_SIZE06_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE07, .weight = NORMAL_DOT_SIZE07_WEIGHT},
+                    {.key = DotSizes::DOT_SIZE08, .weight = NORMAL_DOT_SIZE08_WEIGHT},
                 }
             }
         }
@@ -274,11 +274,13 @@ inline auto LineMorph::GetFreshLine(const LineType lineType,
   switch (lineType)
   {
     case LineType::H_LINE:
-      return GetHorizontalLinePoints(
-          {AudioSamples::AUDIO_SAMPLE_LEN, m_goomInfo->GetDimensions().GetWidth()}, lineParam);
+      return GetHorizontalLinePoints({.numPoints = AudioSamples::AUDIO_SAMPLE_LEN,
+                                      .length    = m_goomInfo->GetDimensions().GetWidth()},
+                                     lineParam);
     case LineType::V_LINE:
-      return GetVerticalLinePoints(
-          {AudioSamples::AUDIO_SAMPLE_LEN, m_goomInfo->GetDimensions().GetHeight()}, lineParam);
+      return GetVerticalLinePoints({.numPoints = AudioSamples::AUDIO_SAMPLE_LEN,
+                                    .length    = m_goomInfo->GetDimensions().GetHeight()},
+                                   lineParam);
     case LineType::CIRCLE:
       return GetCircularLinePoints(
           AudioSamples::AUDIO_SAMPLE_LEN,
@@ -400,7 +402,7 @@ auto LineMorph::DrawLines(const AudioSamples::SampleArray& soundData,
     const auto& nextPointData = audioPoints[i];
 
     const auto point2 = nextPointData.point;
-    const auto colors = MultiplePixels{lineColor, nextPointData.color};
+    const auto colors = MultiplePixels{.color1 = lineColor, .color2 = nextPointData.color};
 
     m_lineDrawer.DrawLine(point1, point2, colors);
 
@@ -419,7 +421,7 @@ auto LineMorph::DrawFlatLine(const Pixel& lineColor) noexcept -> void
 {
   const auto& pt0   = m_srcePoints[0];
   const auto& ptN   = m_srcePoints[AudioSamples::AUDIO_SAMPLE_LEN - 1];
-  const auto colors = MultiplePixels{lineColor, lineColor};
+  const auto colors = MultiplePixels{.color1 = lineColor, .color2 = lineColor};
 
   m_lineDrawer.DrawLine(ToPoint2dInt(pt0.point), ToPoint2dInt(ptN.point), colors);
 }
@@ -477,17 +479,17 @@ auto LineMorph::GetNextPointData(const LinePoint& linePoint,
   const auto normalizedDataVal = m_maxNormalizedPeak * tData;
   Ensures(normalizedDataVal >= 0.0F);
   // TODO(glk) - Is 'm_srceLineParams.amplitude' the right abstraction level?
-  const auto nextPointData =
-      Point2dInt{static_cast<int32_t>(linePoint.point.x +
-                                      (m_srceLineParams.amplitude * cosAngle * normalizedDataVal)),
-                 static_cast<int32_t>(linePoint.point.y +
-                                      (m_srceLineParams.amplitude * sinAngle * normalizedDataVal))};
+  const auto nextPointData = Point2dInt{
+      .x = static_cast<int32_t>(linePoint.point.x +
+                                (m_srceLineParams.amplitude * cosAngle * normalizedDataVal)),
+      .y = static_cast<int32_t>(linePoint.point.y +
+                                (m_srceLineParams.amplitude * sinAngle * normalizedDataVal))};
 
   const auto brightness = m_currentBrightness * tData;
   const auto modColor =
       m_colorAdjust.GetAdjustment(brightness, ColorMaps::GetColorMix(mainColor, randColor, tData));
 
-  return {nextPointData, modColor};
+  return {.point = nextPointData, .color = modColor};
 }
 
 inline auto LineMorph::GetMainColor(const Pixel& lineColor, const float t) const noexcept -> Pixel

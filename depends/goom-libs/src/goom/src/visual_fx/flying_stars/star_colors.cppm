@@ -59,7 +59,7 @@ private:
 
   static constexpr auto GAMMA = 1.4F;
   COLOR::ColorAdjustment m_colorAdjust{
-      {GAMMA, COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = GAMMA, .alterChromaFactor = COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
   [[nodiscard]] auto GetColorCorrection(float brightness,
                                         const Pixel& color) const noexcept -> Pixel;
@@ -146,7 +146,7 @@ inline auto StarColors::GetFinalMixedColors(const MixedColorsParams& mixedColors
 
   if (m_colorProperties.similarLowColors)
   {
-    return {mixedMainColor, mixedLowColor};
+    return {.color1 = mixedMainColor, .color2 = mixedLowColor};
   }
 
   static constexpr auto MAIN_LOW_MIX_T = 0.4F;
@@ -154,7 +154,7 @@ inline auto StarColors::GetFinalMixedColors(const MixedColorsParams& mixedColors
       GetColorCorrection(mixedColorsParams.brightness,
                          ColorMaps::GetColorMix(mixedMainColor, mixedLowColor, MAIN_LOW_MIX_T));
 
-  return {mixedMainColor, remixedLowColor};
+  return {.color1 = mixedMainColor, .color2 = remixedLowColor};
 }
 
 inline auto StarColors::GetFinalTMix(const float lengthT) const noexcept -> float
@@ -173,8 +173,8 @@ inline auto StarColors::GetFinalTMix(const float lengthT) const noexcept -> floa
 
 inline auto StarColors::GetColors(const float t) const noexcept -> MultiplePixels
 {
-  return {m_colorProperties.colorMapsSet.currentMainColorMapPtr->GetColor(t),
-          m_colorProperties.colorMapsSet.currentLowColorMapPtr->GetColor(t)};
+  return {.color1 = m_colorProperties.colorMapsSet.currentMainColorMapPtr->GetColor(t),
+          .color2 = m_colorProperties.colorMapsSet.currentLowColorMapPtr->GetColor(t)};
 }
 
 inline auto StarColors::GetReversedMixColors(const float t) const noexcept -> MultiplePixels
@@ -191,9 +191,9 @@ inline auto StarColors::GetSineMixColors() const noexcept -> MultiplePixels
 
   const auto tSin = T_MIX_FACTOR * (1.0F + std::sin(FREQ * s_t));
 
-  auto starColors =
-      MultiplePixels{m_colorProperties.colorMapsSet.currentMainColorMapPtr->GetColor(tSin),
-                     m_colorProperties.colorMapsSet.currentLowColorMapPtr->GetColor(tSin)};
+  auto starColors = MultiplePixels{
+      .color1 = m_colorProperties.colorMapsSet.currentMainColorMapPtr->GetColor(tSin),
+      .color2 = m_colorProperties.colorMapsSet.currentLowColorMapPtr->GetColor(tSin)};
 
   s_t += T_STEP;
 

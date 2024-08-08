@@ -153,10 +153,10 @@ TEST_CASE("Weighted Events")
   static constexpr auto EVENT3_WEIGHT = 10.0F;
   static constexpr auto EVENT4_WEIGHT = 06.0F;
   const auto weightPairs              = Weights<Events>::EventWeightPairs{
-                   {Events::EVENT1, EVENT1_WEIGHT},
-                   {Events::EVENT2, EVENT2_WEIGHT},
-                   {Events::EVENT3, EVENT3_WEIGHT},
-                   {Events::EVENT4, EVENT4_WEIGHT},
+                   {.key = Events::EVENT1, .weight = EVENT1_WEIGHT},
+                   {.key = Events::EVENT2, .weight = EVENT2_WEIGHT},
+                   {.key = Events::EVENT3, .weight = EVENT3_WEIGHT},
+                   {.key = Events::EVENT4, .weight = EVENT4_WEIGHT},
   };
   const auto weightedEvents = Weights<Events>{GOOM_RAND, weightPairs};
   static constexpr auto EXPECTED_SUM =
@@ -194,10 +194,10 @@ TEST_CASE("Weighted Events")
     static constexpr auto SAMPLE_EVENT3_WEIGHT = 10.0F;
     static constexpr auto SAMPLE_EVENT4_WEIGHT = 06.0F;
     const auto weightedSamplePairs             = Weights<Events>::EventWeightPairs{
-                    {Events::EVENT1, SAMPLE_EVENT1_WEIGHT},
-                    {Events::EVENT2, SAMPLE_EVENT2_WEIGHT},
-                    {Events::EVENT3, SAMPLE_EVENT3_WEIGHT},
-                    {Events::EVENT4, SAMPLE_EVENT4_WEIGHT},
+                    {.key = Events::EVENT1, .weight = SAMPLE_EVENT1_WEIGHT},
+                    {.key = Events::EVENT2, .weight = SAMPLE_EVENT2_WEIGHT},
+                    {.key = Events::EVENT3, .weight = SAMPLE_EVENT3_WEIGHT},
+                    {.key = Events::EVENT4, .weight = SAMPLE_EVENT4_WEIGHT},
     };
     const auto weightedSampleEvents = Weights<Events>{GOOM_RAND, weightedSamplePairs};
     const auto sumOfWeights         = static_cast<double>(weightedSampleEvents.GetSumOfWeights());
@@ -249,7 +249,7 @@ TEST_CASE("Weighted Events")
         {Events::EVENT4, 1.0F},
     };
     static const auto s_WEIGHT_MULTIPLIERS = ConditionalWeights<Events>::EventWeightMultiplierPairs{
-        {PREVIOUS_EVENT, s_EVENT3_WEIGHT_MULTIPLIERS}
+        {.key = PREVIOUS_EVENT, .weightMultipliers = s_EVENT3_WEIGHT_MULTIPLIERS}
     };
     const auto conditionalWeightedEvents =
         ConditionalWeights<Events>{GOOM_RAND, weightPairs, s_WEIGHT_MULTIPLIERS};
@@ -271,8 +271,8 @@ TEST_CASE("Weighted Events")
       UNSCOPED_INFO(
           std::format("i:{}, conditionalCountFraction = {}", i, conditionalCountFraction));
 
-      const auto fConditionalEventWeight = static_cast<double>(
-          conditionalWeightedEvents.GetWeight({PREVIOUS_EVENT, static_cast<Events>(i)}));
+      const auto fConditionalEventWeight  = static_cast<double>(conditionalWeightedEvents.GetWeight(
+          {.previousEvent = PREVIOUS_EVENT, .event = static_cast<Events>(i)}));
       const auto conditionalEventFraction = fConditionalEventWeight / conditionalSumOfWeights;
       UNSCOPED_INFO(std::format("i:{}, fConditionalEventWeight({}) = {}",
                                 i,
@@ -308,10 +308,10 @@ TEST_CASE("Weighted Events Corner Cases")
   const auto weightedEvents = Weights<Events>{
       GOOM_RAND,
       {
-        {Events::EVENT1, 0.0F},
-        {Events::EVENT2, 1.0F},
-        {Events::EVENT3, 0.0F},
-        {Events::EVENT4, 0.0F},
+        {.key = Events::EVENT1, .weight = 0.0F},
+        {.key = Events::EVENT2, .weight = 1.0F},
+        {.key = Events::EVENT3, .weight = 0.0F},
+        {.key = Events::EVENT4, .weight = 0.0F},
         }
   };
 

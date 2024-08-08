@@ -65,7 +65,7 @@ inline auto YOnly::GetZoomAdjustment(const NormalizedCoords& coords) const noexc
 {
   const auto velocity = GetVelocity(coords);
 
-  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+  return {.x = coords.GetX() * velocity.x, .y = coords.GetY() * velocity.y};
 }
 
 inline auto YOnly::GetParams() const noexcept -> const Params&
@@ -84,12 +84,12 @@ inline auto YOnly::GetVelocity(const NormalizedCoords& coords) const noexcept ->
                                GetYOnlyZoomAdjustmentMultiplier(m_params.xyEffect.xEffect, coords);
   if (m_params.xyEffect.yEffect == YOnlyEffect::NONE)
   {
-    return {xZoomAdjustment, xZoomAdjustment};
+    return {.x = xZoomAdjustment, .y = xZoomAdjustment};
   }
 
-  return {xZoomAdjustment,
-          GetBaseZoomAdjustment().y * m_params.amplitude.y *
-              GetYOnlyZoomAdjustmentMultiplier(m_params.xyEffect.yEffect, coords)};
+  return {.x = xZoomAdjustment,
+          .y = GetBaseZoomAdjustment().y * m_params.amplitude.y *
+               GetYOnlyZoomAdjustmentMultiplier(m_params.xyEffect.yEffect, coords)};
 }
 
 } // namespace GOOM::FILTER_FX::FILTER_EFFECTS

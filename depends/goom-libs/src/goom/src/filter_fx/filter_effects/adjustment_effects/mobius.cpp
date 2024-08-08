@@ -26,7 +26,7 @@ using UTILS::MATH::NumberRange;
 static constexpr auto DEFAULT_AMPLITUDE = 0.1F;
 static constexpr auto AMPLITUDE_RANGE   = NumberRange{0.01F, 0.11F};
 
-static constexpr auto DEFAULT_LERP_TO_ONE_T_S = LerpToOneTs{0.5F, 0.5F};
+static constexpr auto DEFAULT_LERP_TO_ONE_T_S = LerpToOneTs{.xLerpT = 0.5F, .yLerpT = 0.5F};
 static constexpr auto LERP_TO_ONE_T_RANGE     = NumberRange{0.5F, 1.0F};
 
 static constexpr auto DEFAULT_A = 1.0F;
@@ -47,11 +47,12 @@ static constexpr auto MODULATOR_PERIOD_RANGE   = NumberRange{1.0F, 100.0F};
 static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
     .minSideLength       = 0.1F,
     .probUseCentredSides = 0.5F,
-    .rect                = {.minMaxXMin = {-10.0F, +1.0F},
-                            .minMaxYMin = {-10.0F, +1.0F},
-                            .minMaxXMax = {-10.0F + 0.1F, +10.0F},
-                            .minMaxYMax = {-10.0F + 0.1F, +10.0F}},
-    .sides               = {.minMaxWidth = {0.1F, 20.0F}, .minMaxHeight = {0.1F, 20.0F}}
+    .rect                = {.minMaxXMin = {.minValue = -10.0F, .maxValue = +1.0F},
+                            .minMaxYMin = {.minValue = -10.0F, .maxValue = +1.0F},
+                            .minMaxXMax = {.minValue = -10.0F + 0.1F, .maxValue = +10.0F},
+                            .minMaxYMax = {.minValue = -10.0F + 0.1F, .maxValue = +10.0F}},
+    .sides               = {.minMaxWidth  = {.minValue = 0.1F, .maxValue = 20.0F},
+                            .minMaxHeight = {.minValue = 0.1F, .maxValue = 20.0F}}
 };
 
 static constexpr auto PROB_AMPLITUDES_EQUAL         = 0.90F;
@@ -64,17 +65,17 @@ Mobius::Mobius(const GoomRand& goomRand) noexcept
   : m_goomRand{&goomRand},
     m_randomViewport{goomRand, VIEWPORT_BOUNDS},
     m_params{
-        Viewport{},
-        {DEFAULT_AMPLITUDE, DEFAULT_AMPLITUDE},
-        DEFAULT_LERP_TO_ONE_T_S,
-        DEFAULT_A,
-        DEFAULT_B,
-        DEFAULT_C,
-        DEFAULT_D,
-        true,
-        false,
-        false,
-        DEFAULT_MODULATOR_PERIOD,
+        .viewport=Viewport{},
+        .amplitude={DEFAULT_AMPLITUDE, DEFAULT_AMPLITUDE},
+        .lerpToOneTs=DEFAULT_LERP_TO_ONE_T_S,
+        .a=DEFAULT_A,
+        .b=DEFAULT_B,
+        .c=DEFAULT_C,
+        .d=DEFAULT_D,
+        .noInverseSquare=true,
+        .useNormalizedAmplitude=false,
+        .useModulatorContours=false,
+        .modulatorPeriod=DEFAULT_MODULATOR_PERIOD,
     }
 {
 }
@@ -105,17 +106,17 @@ auto Mobius::SetRandomParams() noexcept -> void
       not useModulatorContours ? 0.0F : m_goomRand->GetRandInRange<MODULATOR_PERIOD_RANGE>();
 
   SetParams({
-      viewport,
-      { xAmplitude,  yAmplitude},
-      {xLerpToOneT, yLerpToOneT},
-      a,
-      b,
-      c,
-      d,
-      noInverseSquare,
-      useNormalizedAmplitude,
-      useModulatorContours,
-      modulatorPeriod,
+      .viewport               = viewport,
+      .amplitude              = {           xAmplitude,            yAmplitude},
+      .lerpToOneTs            = {.xLerpT = xLerpToOneT, .yLerpT = yLerpToOneT},
+      .a                      = a,
+      .b                      = b,
+      .c                      = c,
+      .d                      = d,
+      .noInverseSquare        = noInverseSquare,
+      .useNormalizedAmplitude = useNormalizedAmplitude,
+      .useModulatorContours   = useModulatorContours,
+      .modulatorPeriod        = modulatorPeriod,
   });
 }
 
@@ -153,12 +154,12 @@ auto Mobius::GetVelocity(const NormalizedCoords& coords) const noexcept -> Vec2d
 
   if (absSqFz < SMALL_FLT)
   {
-    return {0.0F, 0.0F};
+    return {.x = 0.0F, .y = 0.0F};
   }
   if (not m_params.useNormalizedAmplitude)
   {
-    return {(m_params.amplitude.x * static_cast<float>(fz.real())),
-            (m_params.amplitude.y * static_cast<float>(fz.imag()))};
+    return {.x = (m_params.amplitude.x * static_cast<float>(fz.real())),
+            .y = (m_params.amplitude.y * static_cast<float>(fz.imag()))};
   }
 
   const auto normalizedAmplitude =
@@ -166,24 +167,27 @@ auto Mobius::GetVelocity(const NormalizedCoords& coords) const noexcept -> Vec2d
 
   if (not m_params.useModulatorContours)
   {
-    return {static_cast<float>(normalizedAmplitude.real()),
-            static_cast<float>(normalizedAmplitude.imag())};
+    return {.x = static_cast<float>(normalizedAmplitude.real()),
+            .y = static_cast<float>(normalizedAmplitude.imag())};
   }
 
   const auto modulatedValue =
       GetModulatedValue(absSqFz, normalizedAmplitude, m_params.modulatorPeriod);
 
-  return {static_cast<float>(modulatedValue.real()), static_cast<float>(modulatedValue.imag())};
+  return {.x = static_cast<float>(modulatedValue.real()),
+          .y = static_cast<float>(modulatedValue.imag())};
 }
 
 auto Mobius::GetZoomAdjustmentEffectNameValueParams() const noexcept -> NameValuePairs
 {
   const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "mobius"});
   return {
-      GetPair(fullParamGroup, "amplitude", Point2dFlt{m_params.amplitude.x, m_params.amplitude.y}),
+      GetPair(fullParamGroup,
+              "amplitude",
+              Point2dFlt{.x = m_params.amplitude.x, .y = m_params.amplitude.y}),
       GetPair(fullParamGroup,
               "lerpToOneTs",
-              Point2dFlt{m_params.lerpToOneTs.xLerpT, m_params.lerpToOneTs.yLerpT}),
+              Point2dFlt{.x = m_params.lerpToOneTs.xLerpT, .y = m_params.lerpToOneTs.yLerpT}),
       GetPair(fullParamGroup, "a", m_params.a),
       GetPair(fullParamGroup, "b", m_params.b),
       GetPair(fullParamGroup, "c", m_params.c),

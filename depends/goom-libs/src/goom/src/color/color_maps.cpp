@@ -52,7 +52,7 @@ public:
   auto operator=(ColorMapSharedPtrWrapper&&) noexcept -> ColorMapSharedPtrWrapper&      = default;
 
   [[nodiscard]] auto GetNumStops() const noexcept -> size_t override;
-  [[nodiscard]] auto GetMapName() const noexcept -> COLOR_DATA::ColorMapName override;
+  [[nodiscard]] auto GetMapName() const noexcept -> ColorMapName override;
   [[nodiscard]] auto GetColor(float t) const noexcept -> Pixel override;
 
 protected:
@@ -123,9 +123,9 @@ namespace
 {
 
 template<class T>
-const T& at(const std::array<T, UTILS::NUM<ColorMapGroup>>& arr, ColorMapGroup idx) noexcept;
+auto at(const std::array<T, NUM<ColorMapGroup>>& arr, ColorMapGroup idx) noexcept -> const T&;
 template<class T>
-T& at(std::array<T, UTILS::NUM<ColorMapGroup>>& arr, ColorMapGroup idx) noexcept;
+auto at(std::array<T, NUM<ColorMapGroup>>& arr, ColorMapGroup idx) noexcept -> T&;
 
 [[nodiscard]] auto GetAllColorMapNames() noexcept -> const std::vector<ColorMapName>&;
 [[nodiscard]] auto MakeAllColorMapNames() noexcept -> std::vector<ColorMapName>;
@@ -133,8 +133,7 @@ T& at(std::array<T, UTILS::NUM<ColorMapGroup>>& arr, ColorMapGroup idx) noexcept
 [[nodiscard]] auto GetPreBuiltColorMaps() noexcept -> const std::vector<PrebuiltColorMap>&;
 [[nodiscard]] auto MakePrebuiltColorMaps() noexcept -> std::vector<PrebuiltColorMap>;
 
-using ColorGroupNamesArray =
-    std::array<const std::vector<COLOR_DATA::ColorMapName>*, NUM<ColorMapGroup>>;
+using ColorGroupNamesArray = std::array<const std::vector<ColorMapName>*, NUM<ColorMapGroup>>;
 [[nodiscard]] auto GetColorGroupNames() noexcept -> const ColorGroupNamesArray&;
 [[nodiscard]] auto MakeColorGroupNames() noexcept -> ColorGroupNamesArray;
 
@@ -192,7 +191,7 @@ auto ColorMaps::GetNumColorMapNames() noexcept -> uint32_t
 }
 
 auto ColorMaps::GetColorMapNames(const ColorMapGroup colorMapGroup) noexcept
-    -> const std::vector<COLOR_DATA::ColorMapName>&
+    -> const std::vector<ColorMapName>&
 {
   if (colorMapGroup == ColorMapGroup::ALL)
   {
@@ -246,19 +245,18 @@ auto MakePrebuiltColorMaps() noexcept -> std::vector<PrebuiltColorMap>
 }
 
 template<class T>
-inline const T& at(const std::array<T, UTILS::NUM<ColorMapGroup>>& arr,
-                   const ColorMapGroup idx) noexcept
+auto at(const std::array<T, NUM<ColorMapGroup>>& arr, const ColorMapGroup idx) noexcept -> const T&
 {
   return arr.at(static_cast<size_t>(idx));
 }
 
 template<class T>
-inline T& at(std::array<T, UTILS::NUM<ColorMapGroup>>& arr, const ColorMapGroup idx) noexcept
+auto at(std::array<T, NUM<ColorMapGroup>>& arr, const ColorMapGroup idx) noexcept -> T&
 {
   return arr.at(static_cast<size_t>(idx));
 }
 
-inline auto GetAllColorMapNames() noexcept -> const std::vector<ColorMapName>&
+auto GetAllColorMapNames() noexcept -> const std::vector<ColorMapName>&
 {
   static const auto s_ALL_COLOR_MAP_NAMES = MakeAllColorMapNames();
 
@@ -324,8 +322,7 @@ auto MakeColorGroupNames() noexcept -> ColorGroupNamesArray
   at(groups, ColorMapGroup::COLD)         = &COLOR_DATA::COLD_MAPS;
   at(groups, ColorMapGroup::PASTEL)       = &COLOR_DATA::PASTEL_MAPS;
 
-  Ensures(std::all_of(
-      groups.cbegin(), groups.cend(), [](const auto& group) { return group != nullptr; }));
+  Ensures(std::ranges::all_of(groups, [](const auto& group) { return group != nullptr; }));
 
   return groups;
 }
@@ -352,7 +349,7 @@ inline auto ColorMapSharedPtrWrapper::GetColor(const float t) const noexcept -> 
 {
   const auto color = m_colorMapPtr->GetColor(t);
   return Pixel{
-      {color.R(), color.G(), color.B(), m_defaultAlpha}
+      {.red = color.R(), .green = color.G(), .blue = color.B(), .alpha = m_defaultAlpha}
   };
 }
 

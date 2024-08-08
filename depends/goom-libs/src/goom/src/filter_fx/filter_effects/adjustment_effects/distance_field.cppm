@@ -157,8 +157,8 @@ inline auto DistanceField::GetVelocity(const NormalizedCoords& coords) const noe
 {
   const auto sqDistFromClosestPoint = GetDistanceSquaredFromClosestPoint(coords);
 
-  return {m_params.amplitude.x * sqDistFromClosestPoint,
-          m_params.amplitude.y * sqDistFromClosestPoint};
+  return {.x = m_params.amplitude.x * sqDistFromClosestPoint,
+          .y = m_params.amplitude.y * sqDistFromClosestPoint};
 }
 
 } // namespace GOOM::FILTER_FX::FILTER_EFFECTS

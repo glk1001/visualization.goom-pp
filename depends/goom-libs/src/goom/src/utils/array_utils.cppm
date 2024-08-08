@@ -23,8 +23,8 @@ namespace DETAIL
 {
 
 template<typename T, std::size_t... Is>
-constexpr std::array<T, sizeof...(Is)> CreateArrayImpl(
-    const T value, [[maybe_unused]] std::index_sequence<Is...> args)
+constexpr auto CreateArrayImpl(const T value, [[maybe_unused]] std::index_sequence<Is...> args)
+    -> std::array<T, sizeof...(Is)>
 {
   // Cast 'Is' to void to remove the warning: unused value
   return {{(static_cast<void>(Is), value)...}};

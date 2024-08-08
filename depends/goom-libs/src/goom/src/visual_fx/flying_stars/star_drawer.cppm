@@ -69,19 +69,19 @@ private:
     DOTS,
     CIRCLES_AND_LINES,
   };
-  static constexpr float DRAW_ELEMENT_TYPES_DOTS_WEIGHT              = 30.0F;
-  static constexpr float DRAW_ELEMENT_TYPES_CIRCLES_WEIGHT           = 20.0F;
-  static constexpr float DRAW_ELEMENT_TYPES_LINES_WEIGHT             = 10.0F;
-  static constexpr float DRAW_ELEMENT_TYPES_CIRCLES_AND_LINES_WEIGHT = 15.0F;
+  static constexpr float DRAW_ELEMENT_TYPES_DOTS_WGT              = 30.0F;
+  static constexpr float DRAW_ELEMENT_TYPES_CIRCLES_WGT           = 20.0F;
+  static constexpr float DRAW_ELEMENT_TYPES_LINES_WGT             = 10.0F;
+  static constexpr float DRAW_ELEMENT_TYPES_CIRCLES_AND_LINES_WGT = 15.0F;
   // clang-format off
   UTILS::MATH::Weights<DrawElementTypes> m_drawElementWeights{
       *m_goomRand,
-      {
-          {DrawElementTypes::DOTS, DRAW_ELEMENT_TYPES_DOTS_WEIGHT},
-          {DrawElementTypes::CIRCLES, DRAW_ELEMENT_TYPES_CIRCLES_WEIGHT},
-          {DrawElementTypes::LINES, DRAW_ELEMENT_TYPES_LINES_WEIGHT},
-          {DrawElementTypes::CIRCLES_AND_LINES, DRAW_ELEMENT_TYPES_CIRCLES_AND_LINES_WEIGHT},
-      }
+     {
+       {.key=DrawElementTypes::DOTS, .weight=DRAW_ELEMENT_TYPES_DOTS_WGT},
+       {.key=DrawElementTypes::CIRCLES, .weight=DRAW_ELEMENT_TYPES_CIRCLES_WGT},
+       {.key=DrawElementTypes::LINES, .weight=DRAW_ELEMENT_TYPES_LINES_WGT},
+       {.key=DrawElementTypes::CIRCLES_AND_LINES, .weight=DRAW_ELEMENT_TYPES_CIRCLES_AND_LINES_WGT},
+     }
   };
   // clang-format on
   DrawElementTypes m_requestedDrawElement = m_drawElementWeights.GetRandomWeighted();
@@ -201,20 +201,18 @@ StarDrawer::StarDrawer(IGoomDraw& draw,
          [this](const Point2dInt& point1,
                 const Point2dInt& point2,
                 const uint32_t size,
-                const DRAW::MultiplePixels& colors)
+                const MultiplePixels& colors)
          { DrawParticleCircle(point1, point2, size, colors); }},
         {DrawElementTypes::LINES,
          [this](const Point2dInt& point1,
                 const Point2dInt& point2,
                 const uint32_t size,
-                const DRAW::MultiplePixels& colors)
-         { DrawParticleLine(point1, point2, size, colors); }},
+                const MultiplePixels& colors) { DrawParticleLine(point1, point2, size, colors); }},
         {DrawElementTypes::DOTS,
          [this](const Point2dInt& point1,
                 const Point2dInt& point2,
                 const uint32_t size,
-                const DRAW::MultiplePixels& colors)
-         { DrawParticleDot(point1, point2, size, colors); }},
+                const MultiplePixels& colors) { DrawParticleDot(point1, point2, size, colors); }},
         {DrawElementTypes::CIRCLES_AND_LINES,
          [](const Point2dInt, const Point2dInt, const uint32_t, const DRAW::MultiplePixels&)
          { FailFast(); }},
@@ -247,8 +245,9 @@ auto StarDrawer::DrawStar(const Star& star,
     const auto point2 = point0 - GetPointVelocity(twistFrequency, thisPartVelocity);
 
     const auto thisPartBrightness = thisPartFraction * brightness;
-    const auto mixedColorParams   = StarColors::MixedColorsParams{thisPartBrightness, tAgeMix()};
-    const auto thisPartColors     = star.GetStarColors().GetMixedColors(mixedColorParams);
+    const auto mixedColorParams =
+        StarColors::MixedColorsParams{.brightness = thisPartBrightness, .lengthT = tAgeMix()};
+    const auto thisPartColors = star.GetStarColors().GetMixedColors(mixedColorParams);
 
     drawFunc(point1, point2, elementSize, thisPartColors);
 
@@ -261,8 +260,8 @@ inline auto StarDrawer::GetPointVelocity(const Vec2dFlt& twistFrequency,
                                          const Vec2dFlt& velocity) noexcept -> Vec2dInt
 {
   static constexpr auto HALF = 0.5F;
-  return {static_cast<int32_t>(HALF * (1.0F + std::sin(twistFrequency.x)) * velocity.x),
-          static_cast<int32_t>(HALF * (1.0F + std::cos(twistFrequency.y)) * velocity.y)};
+  return {.x = static_cast<int32_t>(HALF * (1.0F + std::sin(twistFrequency.x)) * velocity.x),
+          .y = static_cast<int32_t>(HALF * (1.0F + std::cos(twistFrequency.y)) * velocity.y)};
 }
 
 inline auto StarDrawer::GetBrightness(const float tAge) noexcept -> float

@@ -36,9 +36,11 @@ using UTILS::GRAPHICS::SmallImageBitmaps;
 using UTILS::MATH::NumberRange;
 using UTILS::MATH::Weights;
 
-static constexpr auto COLOR_MAP_MODE_ONE_MAP_PER_ANGLE_WEIGHT      = 30.0F;
-static constexpr auto COLOR_MAP_MODE_ONE_MAP_FOR_ALL_ANGLES_WEIGHT = 10.0F;
-static constexpr auto COLOR_MAP_MODE_MEGA_RANDOM_WEIGHT            = 01.0F;
+using enum IStarType::ColorMapMode;
+
+static constexpr auto COLOR_MAP_MODE_ONE_MAP_PER_ANGLE_WGT      = 30.0F;
+static constexpr auto COLOR_MAP_MODE_ONE_MAP_FOR_ALL_ANGLES_WGT = 10.0F;
+static constexpr auto COLOR_MAP_MODE_MEGA_RANDOM_WGT            = 01.0F;
 
 class FlyingStarsFx::FlyingStarsImpl
 {
@@ -158,9 +160,9 @@ FlyingStarsFx::FlyingStarsImpl::FlyingStarsImpl(FxHelper& fxHelper,
     m_colorMapModeWeights{
         m_fxHelper->GetGoomRand(),
         {
-            { ColorMapMode::ONE_MAP_PER_ANGLE,      COLOR_MAP_MODE_ONE_MAP_PER_ANGLE_WEIGHT },
-            { ColorMapMode::ONE_MAP_FOR_ALL_ANGLES, COLOR_MAP_MODE_ONE_MAP_FOR_ALL_ANGLES_WEIGHT },
-            { ColorMapMode::ALL_MAPS_RANDOM,        COLOR_MAP_MODE_MEGA_RANDOM_WEIGHT },
+            { .key = ONE_MAP_PER_ANGLE,      .weight = COLOR_MAP_MODE_ONE_MAP_PER_ANGLE_WGT },
+            { .key = ONE_MAP_FOR_ALL_ANGLES, .weight = COLOR_MAP_MODE_ONE_MAP_FOR_ALL_ANGLES_WGT },
+            { .key = ALL_MAPS_RANDOM,        .weight = COLOR_MAP_MODE_MEGA_RANDOM_WGT },
         }
     },
     m_pixelBlender{m_fxHelper->GetGoomRand()}

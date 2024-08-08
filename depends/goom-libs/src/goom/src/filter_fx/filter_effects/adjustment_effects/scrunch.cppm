@@ -47,7 +47,7 @@ inline auto Scrunch::GetZoomAdjustment(const NormalizedCoords& coords) const noe
 {
   const auto velocity = GetVelocity(coords);
 
-  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+  return {.x = coords.GetX() * velocity.x, .y = coords.GetY() * velocity.y};
 }
 
 inline auto Scrunch::GetParams() const noexcept -> const Params&
@@ -66,7 +66,7 @@ inline auto Scrunch::GetVelocity(const NormalizedCoords& coords) const noexcept 
   const auto xZoomAdjustment = GetBaseZoomAdjustment().x + (m_params.amplitude.x * sqDistFromZero);
   const auto yZoomAdjustment = m_params.amplitude.y * xZoomAdjustment;
 
-  return {xZoomAdjustment, yZoomAdjustment};
+  return {.x = xZoomAdjustment, .y = yZoomAdjustment};
 }
 
 } // namespace GOOM::FILTER_FX::FILTER_EFFECTS

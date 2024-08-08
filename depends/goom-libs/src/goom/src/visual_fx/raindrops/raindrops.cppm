@@ -139,7 +139,7 @@ private:
 
   static constexpr auto GAMMA = 2.2F;
   COLOR::ColorAdjustment m_colorAdjustment{
-      {GAMMA, COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = GAMMA, .alterChromaFactor = COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
 };
 
@@ -196,14 +196,14 @@ auto Raindrops::GetNewSourceRectangleWeightPoint(const Point2dInt& focusPoint) c
 {
   if (focusPoint != m_screenCentre)
   {
-    return {m_fxHelper->GetDimensions().GetIntWidth() - focusPoint.x,
-            m_fxHelper->GetDimensions().GetIntHeight() - focusPoint.y};
+    return {.x = m_fxHelper->GetDimensions().GetIntWidth() - focusPoint.x,
+            .y = m_fxHelper->GetDimensions().GetIntHeight() - focusPoint.y};
   }
 
   const auto xSign = m_fxHelper->GetGoomRand().ProbabilityOf<UTILS::MATH::HALF>() ? -1 : +1;
   const auto ySign = m_fxHelper->GetGoomRand().ProbabilityOf<UTILS::MATH::HALF>() ? -1 : +1;
-  return {m_screenCentre.x + (xSign * (m_fxHelper->GetDimensions().GetIntWidth() / 4)),
-          m_screenCentre.y + (ySign * (m_fxHelper->GetDimensions().GetIntHeight() / 4))};
+  return {.x = m_screenCentre.x + (xSign * (m_fxHelper->GetDimensions().GetIntWidth() / 4)),
+          .y = m_screenCentre.y + (ySign * (m_fxHelper->GetDimensions().GetIntHeight() / 4))};
 }
 
 auto Raindrops::GetNewRaindropParams(const Rectangle2dInt& rectangle2D) const noexcept
@@ -221,8 +221,9 @@ auto Raindrops::GetNewRaindropParams(const Rectangle2dInt& rectangle2D) const no
   raindropParams.maxGrowthRadius = MAX_GROWTH_FACTOR * raindropParams.maxStartingRadius;
 
   raindropParams.rectangle2D = {
-      rectangle2D.topLeft + static_cast<int32_t>(raindropParams.maxGrowthRadius),
-      rectangle2D.bottomRight - static_cast<int32_t>(raindropParams.maxGrowthRadius)};
+      .topLeft = rectangle2D.topLeft + static_cast<int32_t>(raindropParams.maxGrowthRadius),
+      .bottomRight =
+          rectangle2D.bottomRight - static_cast<int32_t>(raindropParams.maxGrowthRadius)};
 
   raindropParams.sameMainColorMap = m_randomMainColorMaps.GetRandomColorMap();
   raindropParams.sameLowColorMap  = m_randomLowColorMaps.GetRandomColorMap();
@@ -266,13 +267,15 @@ auto Raindrops::GetNewRaindrop(const uint32_t dropNum) const noexcept -> Raindro
   static constexpr auto LINE_THICKNESS_RANGE = NumberRange{1U, MAX_LINE_THICKNESS};
 
   return {
-      dropNum,
-      static_cast<uint8_t>(m_fxHelper->GetGoomRand().GetRandInRange<LINE_THICKNESS_RANGE>()),
-      fracFromWeightPoint,
-      IncrementedValue<float>{startingRadius, maxGrowthRadius, STEP_TYPE, numGrowthSteps},
-      m_randomMainColorMaps.GetRandomColorMap(),
-      m_randomLowColorMaps.GetRandomColorMap(),
-      TValue{{STEP_TYPE, numGrowthSteps}}
+      .dropNum = dropNum,
+      .lineThickness =
+          static_cast<uint8_t>(m_fxHelper->GetGoomRand().GetRandInRange<LINE_THICKNESS_RANGE>()),
+      .fracFromWeightPoint = fracFromWeightPoint,
+      .growthRadius =
+          IncrementedValue<float>{startingRadius, maxGrowthRadius, STEP_TYPE, numGrowthSteps},
+      .mainColorMap = m_randomMainColorMaps.GetRandomColorMap(),
+      .lowColorMap  = m_randomLowColorMaps.GetRandomColorMap(),
+      .colorT       = TValue{{.stepType = STEP_TYPE, .numSteps = numGrowthSteps}}
   };
 }
 
@@ -395,7 +398,7 @@ auto Raindrops::GetRaindropColors(const Raindrop& raindrop) const noexcept -> DR
   //          lowColor.G(),
   //          lowColor.B());
 
-  return {mainColor, lowColor};
+  return {.color1 = mainColor, .color2 = lowColor};
 }
 
 auto Raindrops::DrawCircleAroundWeightPoint() noexcept -> void
@@ -405,7 +408,7 @@ auto Raindrops::DrawCircleAroundWeightPoint() noexcept -> void
       static_cast<double>(WEIGHT_POINT_RADIUS_FRAC * m_raindropPositions.GetEnclosingRadius());
 
   FillCircleWithGradient(m_fxHelper->GetBlend2dContexts(),
-                         {m_mainWeightPointColor, m_lowWeightPointColor},
+                         {.color1 = m_mainWeightPointColor, .color2 = m_lowWeightPointColor},
                          WEIGHT_POINT_CIRCLE_BRIGHTNESS,
                          position,
                          radius);
@@ -420,10 +423,11 @@ auto Raindrops::DrawRaindrop(const Raindrop& raindrop,
   FillCircleWithGradient(m_fxHelper->GetBlend2dContexts(), colors, 1.0F, position, radius);
 
   m_lineDrawer.SetLineThickness(raindrop.lineThickness);
-  m_lineDrawer.DrawLine(position,
-                        m_raindropPositions.GetCurrentRectangleWeightPoint(),
-                        {GetBrighterColor(LINE_TO_TARGET_BRIGHTNESS, DRAW::GetMainColor(colors)),
-                         GetBrighterColor(LINE_TO_TARGET_BRIGHTNESS, DRAW::GetLowColor(colors))});
+  m_lineDrawer.DrawLine(
+      position,
+      m_raindropPositions.GetCurrentRectangleWeightPoint(),
+      {.color1 = GetBrighterColor(LINE_TO_TARGET_BRIGHTNESS, DRAW::GetMainColor(colors)),
+       .color2 = GetBrighterColor(LINE_TO_TARGET_BRIGHTNESS, DRAW::GetLowColor(colors))});
 
   //  const auto nextDropNum = raindrop.dropNum ==
   //                               m_raindrops.size() - 1 ? 0 : raindrop.dropNum + 1;

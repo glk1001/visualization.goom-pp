@@ -147,8 +147,8 @@ constexpr auto NormalizedCoordsConverter::OtherToNormalizedCoords(
 constexpr auto NormalizedCoordsConverter::NormalizedToOtherCoordsFlt(
     const NormalizedCoords& normalizedCoords) const noexcept -> Point2dFlt
 {
-  return {NormalizedToOtherXCoordFlt(normalizedCoords.m_fltCoords.x),
-          NormalizedToOtherYCoordFlt(normalizedCoords.m_fltCoords.y)};
+  return {.x = NormalizedToOtherXCoordFlt(normalizedCoords.m_fltCoords.x),
+          .y = NormalizedToOtherYCoordFlt(normalizedCoords.m_fltCoords.y)};
 }
 
 constexpr auto NormalizedCoordsConverter::OtherToNormalizedXCoord(
@@ -184,7 +184,7 @@ constexpr NormalizedCoords::NormalizedCoords(const Point2dFlt& alreadyNormalized
 
 constexpr NormalizedCoords::NormalizedCoords(const float xAlreadyNormalized,
                                              const float yAlreadyNormalized) noexcept
-  : m_fltCoords{xAlreadyNormalized, yAlreadyNormalized}
+  : m_fltCoords{.x = xAlreadyNormalized, .y = yAlreadyNormalized}
 {
 }
 
@@ -282,8 +282,8 @@ constexpr auto SqDistanceFromZero(const NormalizedCoords& coords) noexcept -> fl
 
 constexpr Viewport::Viewport() noexcept
   : Viewport{
-        {{NormalizedCoords::MIN_COORD, NormalizedCoords::MIN_COORD},
-         {NormalizedCoords::MAX_COORD, NormalizedCoords::MAX_COORD}}
+        {.bottomLeft = {NormalizedCoords::MIN_COORD, NormalizedCoords::MIN_COORD},
+         .topRight   = {NormalizedCoords::MAX_COORD, NormalizedCoords::MAX_COORD}}
 }
 {
 }

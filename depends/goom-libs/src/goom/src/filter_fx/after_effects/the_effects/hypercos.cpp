@@ -26,11 +26,13 @@ using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 using UTILS::MATH::PI;
 
+using enum Hypercos::HypercosEffect;
+
 // Hypercos:
 // applique une surcouche de hypercos effect
 // applies an overlay of hypercos effect
 static constexpr auto DEFAULT_OVERLAY = HypercosOverlayMode::NONE;
-static constexpr auto DEFAULT_EFFECT  = Hypercos::HypercosEffect::NONE;
+static constexpr auto DEFAULT_EFFECT  = NONE;
 static constexpr auto DEFAULT_REVERSE = false;
 
 static constexpr auto X_DEFAULT_FREQUENCY_FACTOR      = 10.0F;
@@ -51,15 +53,13 @@ static constexpr auto PROB_REVERSE                 = 0.5F;
 static constexpr auto PROB_AMPLITUDES_EQUAL        = 0.5F;
 static constexpr auto PROB_BIG_AMPLITUDE_RANGE     = 0.2F;
 
-// clang-format off
 static constexpr auto DEFAULT_PARAMS = Hypercos::Params{
-    DEFAULT_OVERLAY,
-    DEFAULT_EFFECT,
-    DEFAULT_REVERSE,
-    {X_DEFAULT_FREQUENCY_FACTOR, Y_DEFAULT_FREQUENCY_FACTOR},
-    {X_DEFAULT_AMPLITUDE, Y_DEFAULT_AMPLITUDE}
+    .overlay         = DEFAULT_OVERLAY,
+    .effect          = DEFAULT_EFFECT,
+    .reverse         = DEFAULT_REVERSE,
+    .frequencyFactor = {.x = X_DEFAULT_FREQUENCY_FACTOR, .y = Y_DEFAULT_FREQUENCY_FACTOR},
+    .amplitude       = {       .x = X_DEFAULT_AMPLITUDE,        .y = Y_DEFAULT_AMPLITUDE}
 };
-// clang-format on
 
 static constexpr auto HYPERCOS_EFFECT_NONE_WEIGHT               = 00.0F;
 static constexpr auto HYPERCOS_EFFECT_SIN_CURL_SWIRL_WEIGHT     = 15.0F;
@@ -79,17 +79,17 @@ Hypercos::Hypercos(const GoomRand& goomRand) noexcept
     m_hypercosOverlayWeights{
         *m_goomRand,
         {
-            { HypercosEffect::NONE,               HYPERCOS_EFFECT_NONE_WEIGHT },
-            { HypercosEffect::SIN_CURL_SWIRL,     HYPERCOS_EFFECT_SIN_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::COS_CURL_SWIRL,     HYPERCOS_EFFECT_COS_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::SIN_COS_CURL_SWIRL, HYPERCOS_EFFECT_SIN_COS_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::COS_SIN_CURL_SWIRL, HYPERCOS_EFFECT_COS_SIN_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::SIN_TAN_CURL_SWIRL, HYPERCOS_EFFECT_SIN_TAN_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::COS_TAN_CURL_SWIRL, HYPERCOS_EFFECT_COS_TAN_CURL_SWIRL_WEIGHT },
-            { HypercosEffect::SIN_RECTANGULAR,    HYPERCOS_EFFECT_SIN_RECTANGULAR_WEIGHT },
-            { HypercosEffect::COS_RECTANGULAR,    HYPERCOS_EFFECT_COS_RECTANGULAR_WEIGHT },
-            { HypercosEffect::SIN_OF_COS_SWIRL,   HYPERCOS_EFFECT_SIN_OF_COS_SWIRL_WEIGHT },
-            { HypercosEffect::COS_OF_SIN_SWIRL,   HYPERCOS_EFFECT_COS_OF_SIN_SWIRL_WEIGHT },
+            { .key = NONE,               .weight = HYPERCOS_EFFECT_NONE_WEIGHT },
+            { .key = SIN_CURL_SWIRL,     .weight = HYPERCOS_EFFECT_SIN_CURL_SWIRL_WEIGHT },
+            { .key = COS_CURL_SWIRL,     .weight = HYPERCOS_EFFECT_COS_CURL_SWIRL_WEIGHT },
+            { .key = SIN_COS_CURL_SWIRL, .weight = HYPERCOS_EFFECT_SIN_COS_CURL_SWIRL_WEIGHT },
+            { .key = COS_SIN_CURL_SWIRL, .weight = HYPERCOS_EFFECT_COS_SIN_CURL_SWIRL_WEIGHT },
+            { .key = SIN_TAN_CURL_SWIRL, .weight = HYPERCOS_EFFECT_SIN_TAN_CURL_SWIRL_WEIGHT },
+            { .key = COS_TAN_CURL_SWIRL, .weight = HYPERCOS_EFFECT_COS_TAN_CURL_SWIRL_WEIGHT },
+            { .key = SIN_RECTANGULAR,    .weight = HYPERCOS_EFFECT_SIN_RECTANGULAR_WEIGHT },
+            { .key = COS_RECTANGULAR,    .weight = HYPERCOS_EFFECT_COS_RECTANGULAR_WEIGHT },
+            { .key = SIN_OF_COS_SWIRL,   .weight = HYPERCOS_EFFECT_SIN_OF_COS_SWIRL_WEIGHT },
+            { .key = COS_OF_SIN_SWIRL,   .weight = HYPERCOS_EFFECT_COS_OF_SIN_SWIRL_WEIGHT },
         }
     }
 {
@@ -149,11 +149,11 @@ auto Hypercos::SetHypercosEffect(const HypercosOverlayMode overlay,
                               : m_goomRand->GetRandInRange(amplitudeRange);
 
   SetParams({
-      overlay,
-      m_hypercosOverlayWeights.GetRandomWeighted(),
-      reverse,
-      {xFrequencyFactor, yFrequencyFactor},
-      {      xAmplitude,       yAmplitude}
+      .overlay         = overlay,
+      .effect          = m_hypercosOverlayWeights.GetRandomWeighted(),
+      .reverse         = reverse,
+      .frequencyFactor = {.x = xFrequencyFactor, .y = yFrequencyFactor},
+      .amplitude       = {      .x = xAmplitude,       .y = yAmplitude}
   });
 }
 
@@ -181,45 +181,45 @@ auto Hypercos::GetVelocity(const NormalizedCoords& coords,
 
   switch (effect)
   {
-    case HypercosEffect::NONE:
+    case NONE:
       break;
-    case HypercosEffect::SIN_RECTANGULAR:
+    case SIN_RECTANGULAR:
       xVal = std::sin(frequencyFactorToUse.x * coords.GetX());
       yVal = std::sin(frequencyFactorToUse.y * coords.GetY());
       break;
-    case HypercosEffect::COS_RECTANGULAR:
+    case COS_RECTANGULAR:
       xVal = std::cos(frequencyFactorToUse.x * coords.GetX());
       yVal = std::cos(frequencyFactorToUse.y * coords.GetY());
       break;
-    case HypercosEffect::SIN_CURL_SWIRL:
+    case SIN_CURL_SWIRL:
       xVal = std::sin(frequencyFactorToUse.y * coords.GetY());
       yVal = std::sin(frequencyFactorToUse.x * coords.GetX());
       break;
-    case HypercosEffect::COS_CURL_SWIRL:
+    case COS_CURL_SWIRL:
       xVal = std::cos(frequencyFactorToUse.y * coords.GetY());
       yVal = std::cos(frequencyFactorToUse.x * coords.GetX());
       break;
-    case HypercosEffect::SIN_COS_CURL_SWIRL:
+    case SIN_COS_CURL_SWIRL:
       xVal = std::sin(frequencyFactorToUse.x * coords.GetY());
       yVal = std::cos(frequencyFactorToUse.y * coords.GetX());
       break;
-    case HypercosEffect::COS_SIN_CURL_SWIRL:
+    case COS_SIN_CURL_SWIRL:
       xVal = std::cos(frequencyFactorToUse.y * coords.GetY());
       yVal = std::sin(frequencyFactorToUse.x * coords.GetX());
       break;
-    case HypercosEffect::SIN_TAN_CURL_SWIRL:
+    case SIN_TAN_CURL_SWIRL:
       xVal = std::sin(std::tan(frequencyFactorToUse.y * coords.GetY()));
       yVal = std::cos(std::tan(frequencyFactorToUse.x * coords.GetX()));
       break;
-    case HypercosEffect::COS_TAN_CURL_SWIRL:
+    case COS_TAN_CURL_SWIRL:
       xVal = std::cos(std::tan(frequencyFactorToUse.y * coords.GetY()));
       yVal = std::sin(std::tan(frequencyFactorToUse.x * coords.GetX()));
       break;
-    case HypercosEffect::SIN_OF_COS_SWIRL:
+    case SIN_OF_COS_SWIRL:
       xVal = std::sin(PI * std::cos(frequencyFactorToUse.y * coords.GetY()));
       yVal = std::cos(PI * std::sin(frequencyFactorToUse.x * coords.GetX()));
       break;
-    case HypercosEffect::COS_OF_SIN_SWIRL:
+    case COS_OF_SIN_SWIRL:
       xVal = std::cos(PI * std::sin(frequencyFactorToUse.y * coords.GetY()));
       yVal = std::sin(PI * std::cos(frequencyFactorToUse.x * coords.GetX()));
       break;
@@ -249,8 +249,10 @@ auto Hypercos::GetNameValueParams(const std::string& paramGroup) const -> NameVa
       GetPair(fullParamGroup, "reverse", m_params.reverse),
       GetPair(fullParamGroup,
               "Freq",
-              Point2dFlt{m_params.frequencyFactor.x, m_params.frequencyFactor.y}),
-      GetPair(fullParamGroup, "Amplitude", Point2dFlt{m_params.amplitude.x, m_params.amplitude.y}),
+              Point2dFlt{.x = m_params.frequencyFactor.x, .y = m_params.frequencyFactor.y}),
+      GetPair(fullParamGroup,
+              "Amplitude",
+              Point2dFlt{.x = m_params.amplitude.x, .y = m_params.amplitude.y}),
   };
 }
 

@@ -169,7 +169,7 @@ private:
 
   static constexpr auto GAMMA = 1.9F;
   ColorAdjustment m_colorAdjustment{
-      {GAMMA, ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = GAMMA, .alterChromaFactor = ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
 
   float m_globalBrightnessFactor = 1.0F;
@@ -206,7 +206,7 @@ private:
   std::vector<uint32_t> m_rotatingDotNums;
   static constexpr uint32_t NUM_ROTATING_COLOR_STEPS = 100U;
   TValue m_rotatingColorsT{
-      {TValue::StepType::CONTINUOUS_REVERSIBLE, NUM_ROTATING_COLOR_STEPS}
+      {.stepType = TValue::StepType::CONTINUOUS_REVERSIBLE, .numSteps = NUM_ROTATING_COLOR_STEPS}
   };
   auto UpdateRotatingColorMaps() noexcept -> void;
 
@@ -393,7 +393,8 @@ auto Circle::CircleDots::SetPathParams(
     const UTILS::MATH::OscillatingFunction::Params& pathParams) noexcept -> void
 {
   m_pathParams = pathParams;
-  m_dotPaths.SetPathParams({m_pathParams, m_pathParams});
+  m_dotPaths.SetPathParams(
+      {.dotPathParamsToTarget = m_pathParams, .dotPathParamsFromTarget = m_pathParams});
 }
 
 inline auto Circle::CircleDots::GetNewDotPaths() const noexcept -> DotPaths
@@ -401,22 +402,27 @@ inline auto Circle::CircleDots::GetNewDotPaths() const noexcept -> DotPaths
   return {
       *m_goomRand,
       m_numDots,
-      {GetDotStartingPositions(m_numDots,
+      {.dotStartingPositionsFromTarget =
+           GetDotStartingPositions(m_numDots,
         m_circleParams.toTargetParams.circleCentreStart,
         m_circleParams.toTargetParams.circleRadius),
-        GetDotStartingPositions(m_numDots,
+        .dotStartingPositionsToTarget =
+           GetDotStartingPositions(m_numDots,
         m_circleParams.fromTargetParams.circleCentreStart,
         m_circleParams.fromTargetParams.circleRadius)},
-      {m_circleParams.toTargetParams.circleCentreTarget,
-        m_circleParams.fromTargetParams.circleCentreTarget},
-      {m_pathParams, m_pathParams},
+      {.dotTargetPositionToTarget   = m_circleParams.toTargetParams.circleCentreTarget,
+        .dotTargetPositionFromTarget = m_circleParams.fromTargetParams.circleCentreTarget},
+      {.dotPathParamsToTarget = m_pathParams, .dotPathParamsFromTarget = m_pathParams},
   };
 }
 
 inline auto Circle::CircleDots::GetNewDotDiameters() const noexcept -> DotDiameters
 {
   return {
-      *m_goomRand, {m_numDots, m_helper->minDotDiameter, m_helper->maxDotDiameter}
+      *m_goomRand,
+      {.numDots     = m_numDots,
+                  .minDiameter = m_helper->minDotDiameter,
+                  .maxDiameter = m_helper->maxDotDiameter}
   };
 }
 
@@ -445,9 +451,10 @@ inline auto Circle::CircleDots::GetDotStartingPositions(const uint32_t numDots,
                                                         const float radius) noexcept
     -> std::vector<Point2dInt>
 {
-  const auto stepProperties = TValue::NumStepsProperties{TValue::StepType::SINGLE_CYCLE, numDots};
-  auto positionT            = std::make_unique<TValue>(stepProperties);
-  const auto centrePos      = ToVec2dFlt(centre);
+  const auto stepProperties =
+      TValue::NumStepsProperties{.stepType = TValue::StepType::SINGLE_CYCLE, .numSteps = numDots};
+  auto positionT       = std::make_unique<TValue>(stepProperties);
+  const auto centrePos = ToVec2dFlt(centre);
   const auto path =
       std::make_unique<CirclePath>(std::move(positionT), centrePos, radius, AngleParams{});
 
@@ -470,7 +477,7 @@ Circle::Circle(FxHelper& fxHelper,
   : m_fxHelper{&fxHelper},
     m_helper{helper},
     m_lineDrawer{fxHelper.GetDraw(), fxHelper.GetGoomRand(),
-                 {CIRCLE_NOISE_RADIUS, NUM_CIRCLE_NOISE_PIXELS}},
+                 {.noiseRadius=CIRCLE_NOISE_RADIUS, .numNoisePixelsPerPixel=NUM_CIRCLE_NOISE_PIXELS}},
     m_circleDots{m_fxHelper->GetGoomRand(),
                  m_helper,
                  circleParams,
@@ -482,10 +489,10 @@ Circle::Circle(FxHelper& fxHelper,
     m_weightedGridColorRanges{
         m_fxHelper->GetGoomRand(),
         {
-            {GridColorRange::ONE, GRID_COLOR_RANGE_ONE_WEIGHT},
-            {GridColorRange::LOW, GRID_COLOR_RANGE_LOW_WEIGHT},
-            {GridColorRange::MEDIUM, GRID_COLOR_RANGE_MEDIUM_WEIGHT},
-            {GridColorRange::HIGH, GRID_COLOR_RANGE_HIGH_WEIGHT},
+            {.key=GridColorRange::ONE, .weight=GRID_COLOR_RANGE_ONE_WEIGHT},
+            {.key=GridColorRange::LOW, .weight=GRID_COLOR_RANGE_LOW_WEIGHT},
+            {.key=GridColorRange::MEDIUM, .weight=GRID_COLOR_RANGE_MEDIUM_WEIGHT},
+            {.key=GridColorRange::HIGH, .weight=GRID_COLOR_RANGE_HIGH_WEIGHT},
         }
     }
 {
@@ -754,8 +761,8 @@ auto Circle::DrawNextCircleDots() noexcept -> void
 
 inline auto Circle::GetAllDotColors() const noexcept -> AllDotColors
 {
-  return {m_mainColorMapsGrid.GetCurrentHorizontalLineColors(),
-          m_lowColorMapsGrid.GetCurrentHorizontalLineColors()};
+  return {.mainColors = m_mainColorMapsGrid.GetCurrentHorizontalLineColors(),
+          .lowColors  = m_lowColorMapsGrid.GetCurrentHorizontalLineColors()};
 }
 
 inline auto Circle::GetSingleDotColors(const uint32_t dotNum,
@@ -766,16 +773,18 @@ inline auto Circle::GetSingleDotColors(const uint32_t dotNum,
   {
     if (dotNum == m_rotatingDotNums.at(i))
     {
-      return {m_rotatingMainColorMaps.at(i).GetColor(m_rotatingColorsT()),
-              GetBrighterColor(DOT_ROTATING_COLOR_BRIGHTNESS_FACTOR * dotBrightness,
-                               m_rotatingLowColorMaps.at(i).GetColor(m_rotatingColorsT()))};
+      return {.color1 = m_rotatingMainColorMaps.at(i).GetColor(m_rotatingColorsT()),
+              .color2 =
+                  GetBrighterColor(DOT_ROTATING_COLOR_BRIGHTNESS_FACTOR * dotBrightness,
+                                   m_rotatingLowColorMaps.at(i).GetColor(m_rotatingColorsT()))};
     }
   }
 
   const auto dotMainColor = allDotColors.mainColors.at(dotNum);
   const auto dotLowColor  = allDotColors.lowColors.at(dotNum);
-  return {GetCorrectedColor(DOT_MAIN_COLOR_BRIGHTNESS_FACTOR * dotBrightness, dotMainColor),
-          GetCorrectedColor(DOT_LOW_COLOR_BRIGHTNESS_FACTOR * dotBrightness, dotLowColor)};
+  return {
+      .color1 = GetCorrectedColor(DOT_MAIN_COLOR_BRIGHTNESS_FACTOR * dotBrightness, dotMainColor),
+      .color2 = GetCorrectedColor(DOT_LOW_COLOR_BRIGHTNESS_FACTOR * dotBrightness, dotLowColor)};
 }
 
 inline auto Circle::GetCurrentBrightness() const noexcept -> float
@@ -857,7 +866,7 @@ inline auto Circle::DrawLineDots(const float lineBrightness,
     const auto lowColor  = GetCorrectedColor(LINE_LOW_COLOR_BRIGHTNESS_FACTOR * lineBrightness,
                                             m_linesLowColorMap.GetColor(tDotColor));
 
-    DrawDot(i, dotPos, {mainColor, lowColor});
+    DrawDot(i, dotPos, {.color1 = mainColor, .color2 = lowColor});
 
     tDotPos += T_DOT_POS_STEP;
     tDotColor += tDotColorStep;
@@ -898,7 +907,7 @@ auto Circle::DrawConnectingLine(const Point2dInt& position1,
   LogInfo("corrected lowColor = {},{},{}", lowColor.R(), lowColor.G(), lowColor.B());
 
 
-  m_lineDrawer.DrawLine(position1, position2, {mainColor, lowColor});
+  m_lineDrawer.DrawLine(position1, position2, {.color1 = mainColor, .color2 = lowColor});
 }
 
 } // namespace GOOM::VISUAL_FX::CIRCLES

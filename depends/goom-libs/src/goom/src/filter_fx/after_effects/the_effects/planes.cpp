@@ -83,17 +83,17 @@ static constexpr auto ZERO_EFFECTS_WEIGHT                                  = 2.0
 Planes::Planes(const GoomRand& goomRand) noexcept
   : m_goomRand{&goomRand},
     m_params{
-        {
-            false, false,
-            {0.0F,  0.0F},
+        .planeEffects={
+            .horizontalEffectActive=false, .verticalEffectActive=false,
+            .amplitude={0.0F,  0.0F},
         },
-        {
-            PlaneSwirlType::NONE,
-            {
-                DEFAULT_HORIZONTAL_SWIRL_FREQ,
-                DEFAULT_VERTICAL_SWIRL_FREQ,
+        .swirlEffects={
+            .swirlType=PlaneSwirlType::NONE,
+            .frequencyFactor={
+                .x=DEFAULT_HORIZONTAL_SWIRL_FREQ,
+                .y=DEFAULT_VERTICAL_SWIRL_FREQ,
             },
-            {
+            .amplitude={
                 DEFAULT_HORIZONTAL_SWIRL_AMPLITUDE,
                 DEFAULT_VERTICAL_SWIRL_AMPLITUDE,
             },
@@ -102,15 +102,15 @@ Planes::Planes(const GoomRand& goomRand) noexcept
     m_planeEffectWeights{
       *m_goomRand,
       {
-          { PlaneEffectEvents::ZERO_EFFECTS,       ZERO_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::SMALL_EFFECTS,      SMALL_PLANE_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::MEDIUM_EFFECTS,     MEDIUM_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::LARGE_EFFECTS,      LARGE_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::VERY_LARGE_EFFECTS, VERY_LARGE_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::POS_VERTICAL_NEG_HORIZONTAL_VERY_LARGE_EFFECTS,
-                                             POSITIVE_VERTICAL_NEGATIVE_HORIZONTAL_EFFECTS_WEIGHT },
-          { PlaneEffectEvents::POS_HORIZONTAL_NEG_VERTICAL_VERY_LARGE_EFFECTS,
-                                             POSITIVE_HORIZONTAL_NEGATIVE_VERTICAL_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::ZERO_EFFECTS,       .weight=ZERO_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::SMALL_EFFECTS,      .weight=SMALL_PLANE_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::MEDIUM_EFFECTS,     .weight=MEDIUM_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::LARGE_EFFECTS,      .weight=LARGE_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::VERY_LARGE_EFFECTS, .weight=VERY_LARGE_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::POS_VERTICAL_NEG_HORIZONTAL_VERY_LARGE_EFFECTS,
+                                             .weight=POSITIVE_VERTICAL_NEGATIVE_HORIZONTAL_EFFECTS_WEIGHT },
+          { .key=PlaneEffectEvents::POS_HORIZONTAL_NEG_VERTICAL_VERY_LARGE_EFFECTS,
+                                             .weight=POSITIVE_HORIZONTAL_NEGATIVE_VERTICAL_EFFECTS_WEIGHT },
       }
     }
 {
@@ -129,9 +129,9 @@ auto Planes::GetRandomParams(const GoomRand& goomRand,
 {
   const auto muchSpiralling = goomRand.ProbabilityOf<PROB_MUCH_SPIRALLING>();
 
-  return {
-      GetRandomPlaneEffects(goomRand, planeEffectsEvent, muchSpiralling, zoomMidpoint, screenWidth),
-      GetRandomSwirlEffects(goomRand, muchSpiralling)};
+  return {.planeEffects = GetRandomPlaneEffects(
+              goomRand, planeEffectsEvent, muchSpiralling, zoomMidpoint, screenWidth),
+          .swirlEffects = GetRandomSwirlEffects(goomRand, muchSpiralling)};
 }
 
 auto Planes::GetRandomPlaneEffects(const GoomRand& goomRand,
@@ -282,9 +282,9 @@ auto Planes::GetRandomSwirlEffects(const UTILS::MATH::GoomRand& goomRand,
 inline auto Planes::GetZeroSwirlEffects() -> PlaneSwirlEffects
 {
   return {
-      PlaneSwirlType::NONE,
-      {0.0F, 0.0F},
-      {0.0F, 0.0F},
+      .swirlType       = PlaneSwirlType::NONE,
+      .frequencyFactor = {.x = 0.0F, .y = 0.0F},
+      .amplitude       = {     0.0F,      0.0F},
   };
 }
 
@@ -384,17 +384,19 @@ auto Planes::GetNameValueParams(const std::string& paramGroup) const -> NameValu
   return {
       GetPair(fullParamGroup,
               "planeEffects.amplitudes",
-              Point2dFlt{m_params.planeEffects.amplitude.x, m_params.planeEffects.amplitude.y}),
+              Point2dFlt{.x = m_params.planeEffects.amplitude.x,
+                         .y = m_params.planeEffects.amplitude.y}),
       GetPair(fullParamGroup,
               "swirlEffects.swirlType",
               static_cast<int32_t>(m_params.swirlEffects.swirlType)),
       GetPair(fullParamGroup,
               "swirlEffects.frequencies",
-              Point2dFlt{m_params.swirlEffects.frequencyFactor.x,
-                         m_params.swirlEffects.frequencyFactor.y}),
+              Point2dFlt{.x = m_params.swirlEffects.frequencyFactor.x,
+                         .y = m_params.swirlEffects.frequencyFactor.y}),
       GetPair(fullParamGroup,
               "swirlEffects.amplitudes",
-              Point2dFlt{m_params.swirlEffects.amplitude.x, m_params.swirlEffects.amplitude.y}),
+              Point2dFlt{.x = m_params.swirlEffects.amplitude.x,
+                         .y = m_params.swirlEffects.amplitude.y}),
   };
 }
 

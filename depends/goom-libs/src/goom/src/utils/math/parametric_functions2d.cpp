@@ -15,7 +15,7 @@ namespace GOOM::UTILS::MATH
 
 auto IParametricFunction2d::GetPointData(const float t) const noexcept -> PointData
 {
-  return {GetPoint(t), HALF_PI};
+  return {.point = GetPoint(t), .normalAngle = HALF_PI};
 }
 
 CircleFunction::CircleFunction(const Vec2dFlt& centrePos,
@@ -33,7 +33,8 @@ auto CircleFunction::GetPointAtAngle(float angle) const noexcept -> Point2dFlt
     angle = -angle;
   }
 
-  return Point2dFlt{m_radius * std::cos(angle), -m_radius * std::sin(angle)} + m_centrePos;
+  return Point2dFlt{.x = m_radius * std::cos(angle), .y = -m_radius * std::sin(angle)} +
+         m_centrePos;
 }
 
 SpiralFunction::SpiralFunction(const Vec2dFlt& centrePos,
@@ -58,8 +59,8 @@ LissajousFunction::LissajousFunction(const Vec2dFlt& centrePos,
 
 auto LissajousFunction::GetPointAtAngle(const float angle) const noexcept -> Point2dFlt
 {
-  return Point2dFlt{+m_params.a * std::cos(m_params.kX * angle),
-                    -m_params.b * std::sin(m_params.kY * angle)} +
+  return Point2dFlt{.x = +m_params.a * std::cos(m_params.kX * angle),
+                    .y = -m_params.b * std::sin(m_params.kY * angle)} +
          m_centrePos;
 }
 
@@ -70,7 +71,7 @@ HypotrochoidFunction::HypotrochoidFunction(const Vec2dFlt& centrePos,
     m_angleParams{angleParams},
     m_params{params},
     m_rDiff{m_params.bigR - m_params.smallR},
-    m_numCusps{GetNumCusps({m_params.bigR, m_params.smallR})}
+    m_numCusps{GetNumCusps({.bigR = m_params.bigR, .smallR = m_params.smallR})}
 {
   Expects(params.bigR > 0.0F);
   Expects(params.smallR > 0.0F);
@@ -97,8 +98,8 @@ auto HypotrochoidFunction::GetPointAtAngle(const float angle) const noexcept -> 
   const auto angleArg2 = (m_rDiff / m_params.smallR) * angle;
 
   const auto point = Point2dFlt{
-      +(m_rDiff * std::cos(angle)) + (m_params.height * std::cos(angleArg2)),
-      -(m_rDiff * std::sin(angle)) + (m_params.height * std::sin(angleArg2)),
+      .x = +(m_rDiff * std::cos(angle)) + (m_params.height * std::cos(angleArg2)),
+      .y = -(m_rDiff * std::sin(angle)) + (m_params.height * std::sin(angleArg2)),
   };
 
   return Scale(point, m_params.amplitude) + m_centrePos;
@@ -136,10 +137,10 @@ auto EpicycloidFunction::GetPointAtAngle(const float angle) const noexcept -> Po
   const auto angleArg2 = (m_params.k + 1.0F) * angle;
 
   const auto point = Point2dFlt{
-      +(m_params.smallR * (m_params.k + 1.0F) * std::cos(angle)) -
-          +(m_params.smallR * std::cos(angleArg2)),
-      -(m_params.smallR * (m_params.k + 1.0F) * std::sin(angle)) +
-          +(m_params.smallR * std::sin(angleArg2)),
+      .x = +(m_params.smallR * (m_params.k + 1.0F) * std::cos(angle)) -
+           +(m_params.smallR * std::cos(angleArg2)),
+      .y = -(m_params.smallR * (m_params.k + 1.0F) * std::sin(angle)) +
+           +(m_params.smallR * std::sin(angleArg2)),
   };
 
   return Scale(point, m_params.amplitude) + m_centrePos;
@@ -158,9 +159,10 @@ auto SineFunction::GetPoint(const float t) const noexcept -> Point2dFlt
 {
   const auto y        = 100.0F * std::sin(m_params.freq * TWO_PI * t);
   const auto x        = m_distance * t;
-  const auto newPoint = Rotate(Point2dFlt{x, y}, m_rotateAngle);
+  const auto newPoint = Rotate(Point2dFlt{.x = x, .y = y}, m_rotateAngle);
 
-  return (Point2dFlt{newPoint.x, (m_params.amplitude * newPoint.y)} + ToVec2dFlt(m_startPos));
+  return (Point2dFlt{.x = newPoint.x, .y = (m_params.amplitude * newPoint.y)} +
+          ToVec2dFlt(m_startPos));
 }
 
 OscillatingFunction::OscillatingFunction(const StartAndEndPos& startAndEndPos,
@@ -206,7 +208,7 @@ inline auto OscillatingFunction::GetOscillatingOffset(float t) const noexcept ->
 {
   if (not m_allowOscillatingPath)
   {
-    return {0, 0};
+    return {.x = 0, .y = 0};
   }
 
   if (m_usingAngleT)
@@ -215,8 +217,8 @@ inline auto OscillatingFunction::GetOscillatingOffset(float t) const noexcept ->
   }
 
   return {
-      m_params.oscillatingAmplitude * std::cos(m_params.xOscillatingFreq * t * TWO_PI),
-      m_params.oscillatingAmplitude * std::sin(m_params.yOscillatingFreq * t * TWO_PI),
+      .x = m_params.oscillatingAmplitude * std::cos(m_params.xOscillatingFreq * t * TWO_PI),
+      .y = m_params.oscillatingAmplitude * std::sin(m_params.yOscillatingFreq * t * TWO_PI),
   };
 }
 

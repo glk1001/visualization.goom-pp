@@ -334,34 +334,34 @@ auto AllStandardVisualFx::ChangeColorMaps() -> void
   m_visualFxColorMaps.ChangeRandomColorMaps();
 
   m_drawablesMap[GoomDrawables::CIRCLES]->SetWeightedColorMaps(
-      {0,
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::CIRCLES_MAIN),
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::CIRCLES_LOW)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::CIRCLES_MAIN),
+       .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::CIRCLES_LOW)});
 
   ChangeDotsColorMaps();
 
   m_drawablesMap[GoomDrawables::IFS]->SetWeightedColorMaps(
-      {0, m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::IFS)});
+      {.id = 0, .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::IFS)});
 
   m_drawablesMap[GoomDrawables::IMAGE]->SetWeightedColorMaps(
-      {0, m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::IMAGE)});
+      {.id = 0, .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::IMAGE)});
 
   m_drawablesMap[GoomDrawables::L_SYSTEM]->SetWeightedColorMaps(
-      {0,
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::L_SYSTEM_MAIN),
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::L_SYSTEM_LOW)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::L_SYSTEM_MAIN),
+       .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::L_SYSTEM_LOW)});
 
   ChangeLinesColorMaps();
 
   m_drawablesMap[GoomDrawables::PARTICLES]->SetWeightedColorMaps(
-      {0,
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::PARTICLES_MAIN),
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::PARTICLES_LOW)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::PARTICLES_MAIN),
+       .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::PARTICLES_LOW)});
 
   m_drawablesMap[GoomDrawables::RAINDROPS]->SetWeightedColorMaps(
-      {0,
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::RAINDROPS_MAIN),
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::RAINDROPS_LOW)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::RAINDROPS_MAIN),
+       .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::RAINDROPS_LOW)});
 
   ChangeShapesColorMaps();
 
@@ -370,9 +370,9 @@ auto AllStandardVisualFx::ChangeColorMaps() -> void
   ChangeTentaclesColorMaps();
 
   m_drawablesMap[GoomDrawables::TUBES]->SetWeightedColorMaps(
-      {0,
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::TUBE_MAIN),
-       m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::TUBE_LOW)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::TUBE_MAIN),
+       .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::TUBE_LOW)});
 }
 
 auto AllStandardVisualFx::ChangeDotsColorMaps() noexcept -> void
@@ -385,16 +385,18 @@ auto AllStandardVisualFx::ChangeDotsColorMaps() noexcept -> void
   {
     const auto dotEffect = static_cast<GoomEffect>(i + static_cast<uint32_t>(GoomEffect::DOTS0));
     m_drawablesMap[GoomDrawables::DOTS]->SetWeightedColorMaps(
-        {i, m_visualFxColorMaps.GetCurrentRandomColorMaps(dotEffect)});
+        {.id = i, .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(dotEffect)});
   }
 }
 
 auto AllStandardVisualFx::ChangeLinesColorMaps() noexcept -> void
 {
   m_drawablesMap[GoomDrawables::LINES]->SetWeightedColorMaps(
-      {0, m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::LINES1)});
+      {.id            = 0,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::LINES1)});
   m_drawablesMap[GoomDrawables::LINES]->SetWeightedColorMaps(
-      {1, m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::LINES2)});
+      {.id            = 1,
+       .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(GoomEffect::LINES2)});
 }
 
 auto AllStandardVisualFx::ChangeShapesColorMaps() noexcept -> void
@@ -413,10 +415,10 @@ auto AllStandardVisualFx::ChangeShapesColorMaps() noexcept -> void
         static_cast<GoomEffect>(static_cast<uint32_t>(GoomEffect::SHAPES_INNER) + offsetFromZero);
 
     m_drawablesMap[GoomDrawables::SHAPES]->SetWeightedColorMaps(
-        {i,
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow),
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectInner)});
+        {.id             = i,
+         .mainColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
+         .lowColorMaps   = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow),
+         .extraColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectInner)});
   }
 }
 
@@ -437,9 +439,9 @@ auto AllStandardVisualFx::ChangeStarsColorMaps() noexcept -> void
         static_cast<uint32_t>(GoomEffect::STARS_LOW_FIREWORKS) + offsetFromZero);
 
     m_drawablesMap[GoomDrawables::STARS]->SetWeightedColorMaps(
-        {i,
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow)});
+        {.id            = i,
+         .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
+         .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow)});
   }
 }
 
@@ -460,9 +462,9 @@ auto AllStandardVisualFx::ChangeTentaclesColorMaps() noexcept -> void
         static_cast<uint32_t>(GoomEffect::TENTACLES_DOMINANT_LOW) + offsetFromZero);
 
     m_drawablesMap[GoomDrawables::TENTACLES]->SetWeightedColorMaps(
-        {i,
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
-         m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow)});
+        {.id            = i,
+         .mainColorMaps = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectMain),
+         .lowColorMaps  = m_visualFxColorMaps.GetCurrentRandomColorMaps(goomEffectLow)});
   }
 }
 

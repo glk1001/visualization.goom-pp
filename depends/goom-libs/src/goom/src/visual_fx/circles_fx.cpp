@@ -146,6 +146,9 @@ auto CirclesFx::ApplyToImageBuffers() noexcept -> void
 using CircleStartModes  = CircleParamsBuilder::CircleStartModes;
 using CircleTargetModes = CircleParamsBuilder::CircleTargetModes;
 
+using enum CircleStartModes;
+using enum CircleTargetModes;
+
 static constexpr auto CIRCLE_START_SAME_RADIUS_WEIGHT      = 10.0F;
 static constexpr auto CIRCLE_START_FOUR_CORNERED_WEIGHT    = 10.0F;
 static constexpr auto CIRCLE_START_REDUCING_RADIUS_WEIGHT  = 10.0F;
@@ -158,16 +161,16 @@ CirclesFx::CirclesFxImpl::CirclesFxImpl(FxHelper& fxHelper,
     m_weightedCircleStartModes{
         m_fxHelper->GetGoomRand(),
         {
-            {CircleStartModes::SAME_RADIUS, CIRCLE_START_SAME_RADIUS_WEIGHT},
-            {CircleStartModes::FOUR_CORNERED_IN_MAIN, CIRCLE_START_FOUR_CORNERED_WEIGHT},
-            {CircleStartModes::REDUCING_RADIUS, CIRCLE_START_REDUCING_RADIUS_WEIGHT},
+            {.key= SAME_RADIUS, .weight=CIRCLE_START_SAME_RADIUS_WEIGHT},
+            {.key= FOUR_CORNERED_IN_MAIN, .weight=CIRCLE_START_FOUR_CORNERED_WEIGHT},
+            {.key= REDUCING_RADIUS, .weight=CIRCLE_START_REDUCING_RADIUS_WEIGHT},
         }
     },
     m_weightedCircleTargetModes{
         m_fxHelper->GetGoomRand(),
         {
-            {CircleTargetModes::SIMILAR_TARGETS, CIRCLE_TARGET_SIMILAR_TARGETS_WEIGHT},
-            {CircleTargetModes::FOUR_CORNERS, CIRCLE_TARGET_FOUR_CORNERS_WEIGHT},
+            {.key= SIMILAR_TARGETS, .weight=CIRCLE_TARGET_SIMILAR_TARGETS_WEIGHT},
+            {.key= FOUR_CORNERS, .weight=CIRCLE_TARGET_FOUR_CORNERS_WEIGHT},
         }
     },
     m_pixelBlender{fxHelper.GetGoomRand()}
@@ -253,10 +256,10 @@ inline auto CirclesFx::CirclesFxImpl::GetNextCircleCentre(
   const auto midLerp               = m_fxHelper->GetGoomRand().GetRandInRange<LERP_RANGE>();
   const auto newCircleCentre       = lerp(m_screenCentre, zoomMidpoint, midLerp);
 
-  const auto minPoint = Point2dInt{m_fxHelper->GetDimensions().GetIntWidth() / 10,
-                                   m_fxHelper->GetDimensions().GetIntHeight() / 10};
-  const auto maxPoint = Point2dInt{m_fxHelper->GetDimensions().GetIntWidth() - minPoint.x,
-                                   m_fxHelper->GetDimensions().GetIntHeight() - minPoint.y};
+  const auto minPoint = Point2dInt{.x = m_fxHelper->GetDimensions().GetIntWidth() / 10,
+                                   .y = m_fxHelper->GetDimensions().GetIntHeight() / 10};
+  const auto maxPoint = Point2dInt{.x = m_fxHelper->GetDimensions().GetIntWidth() - minPoint.x,
+                                   .y = m_fxHelper->GetDimensions().GetIntHeight() - minPoint.y};
 
   // NOLINTNEXTLINE(readability-suspicious-call-argument)
   return clamp(newCircleCentre, minPoint, maxPoint);
@@ -351,13 +354,13 @@ inline auto CirclesFx::CirclesFxImpl::GetPathParams() const noexcept
   static constexpr auto PATH_Y_FREQ_RANGE    = NumberRange{0.9F, 2.0F};
 
   const auto params = OscillatingFunction::Params{
-      m_fxHelper->GetGoomRand().GetRandInRange<PATH_AMPLITUDE_RANGE>(),
-      m_fxHelper->GetGoomRand().GetRandInRange<PATH_X_FREQ_RANGE>(),
-      m_fxHelper->GetGoomRand().GetRandInRange<PATH_Y_FREQ_RANGE>(),
+      .oscillatingAmplitude = m_fxHelper->GetGoomRand().GetRandInRange<PATH_AMPLITUDE_RANGE>(),
+      .xOscillatingFreq     = m_fxHelper->GetGoomRand().GetRandInRange<PATH_X_FREQ_RANGE>(),
+      .yOscillatingFreq     = m_fxHelper->GetGoomRand().GetRandInRange<PATH_Y_FREQ_RANGE>(),
   };
 
   auto pathParams = std::vector<OscillatingFunction::Params>(NUM_CIRCLES);
-  std::fill(begin(pathParams), end(pathParams), params);
+  std::ranges::fill(pathParams, params);
 
   return pathParams;
 }

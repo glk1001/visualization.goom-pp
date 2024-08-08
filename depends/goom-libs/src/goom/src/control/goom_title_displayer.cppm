@@ -112,7 +112,7 @@ private:
 
   static constexpr float TEXT_GAMMA = 1.0F / 2.0F;
   COLOR::ColorAdjustment m_textColorAdjust{
-      {TEXT_GAMMA, COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = TEXT_GAMMA, .alterChromaFactor = COLOR::ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
 };
 

@@ -49,8 +49,8 @@ private:
   static constexpr uint32_t HIGH_CONTRAST_ON_TIME =
       (2 * NUM_HIGH_CONTRAST_ON_STEPS) + HIGH_CONTRAST_ON_DELAY_TIME;
   TValue m_highContrastT{
-      {TValue::StepType::CONTINUOUS_REVERSIBLE, NUM_HIGH_CONTRAST_ON_STEPS},
-      {{1.0F, HIGH_CONTRAST_ON_DELAY_TIME}}
+      {.stepType = TValue::StepType::CONTINUOUS_REVERSIBLE, .numSteps = NUM_HIGH_CONTRAST_ON_STEPS},
+      {{.t0 = 1.0F, .delayTime = HIGH_CONTRAST_ON_DELAY_TIME}}
   };
   Timer m_highContrastOnTimer{m_goomInfo->GetTime(), HIGH_CONTRAST_ON_TIME, true};
   static constexpr uint32_t HIGH_CONTRAST_OFF_TIME = 300;

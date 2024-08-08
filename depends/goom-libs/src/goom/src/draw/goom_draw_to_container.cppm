@@ -103,7 +103,7 @@ inline auto GoomDrawToContainer::GetLastDrawnColor(const Point2dInt& point) cons
 inline auto GoomDrawToContainer::GetLastDrawnColors(const Point2dInt& point) const noexcept
     -> MultiplePixels
 {
-  return {GetLastDrawnColor(point), BLACK_PIXEL};
+  return {.color1 = GetLastDrawnColor(point), .color2 = BLACK_PIXEL};
 }
 
 } // namespace GOOM::DRAW

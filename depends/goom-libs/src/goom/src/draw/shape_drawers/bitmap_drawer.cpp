@@ -67,7 +67,7 @@ auto BitmapDrawer::Bitmap(const Point2dInt& centre,
       }
 
       const auto buffX = x0 + static_cast<int>(bitmapX);
-      m_draw->DrawPixels({buffX, buffY}, finalColors);
+      m_draw->DrawPixels({.x = buffX, .y = buffY}, finalColors);
     }
   };
 

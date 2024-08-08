@@ -61,7 +61,7 @@ private:
   uint32_t m_speed                                 = INITIAL_SPEED;
   static constexpr auto NUM_SPEED_TRANSITION_STEPS = 500U;
   TValue m_speedTransitionT{
-      {TValue::StepType::SINGLE_CYCLE, NUM_SPEED_TRANSITION_STEPS}
+      {.stepType = TValue::StepType::SINGLE_CYCLE, .numSteps = NUM_SPEED_TRANSITION_STEPS}
   };
   uint32_t m_maxCountTimesSpeed = MAX_COUNT_TIMES_SPEED_RANGE.max;
 

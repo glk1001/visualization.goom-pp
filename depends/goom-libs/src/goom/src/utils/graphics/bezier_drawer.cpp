@@ -37,16 +37,16 @@ void BezierDrawer::Draw(const Bezier::Bezier<3>& bezier, const float colorT0, co
   const auto tStep = 1.0F / static_cast<float>(m_numBezierSteps - 1);
   auto colorT      = colorT0 + colorTStep;
   auto t           = tStep;
-  auto point1      = Point2dInt{static_cast<int32_t>(bezier.valueAt(0.0F, 0)),
-                           static_cast<int32_t>(bezier.valueAt(0.0F, 1))};
+  auto point1      = Point2dInt{.x = static_cast<int32_t>(bezier.valueAt(0.0F, 0)),
+                                .y = static_cast<int32_t>(bezier.valueAt(0.0F, 1))};
 
   for (auto i = 1U; i < m_numBezierSteps; ++i)
   {
-    const auto point2 = Point2dInt{static_cast<int32_t>(bezier.valueAt(t, 0)),
-                                   static_cast<int32_t>(bezier.valueAt(t, 1))};
+    const auto point2 = Point2dInt{.x = static_cast<int32_t>(bezier.valueAt(t, 0)),
+                                   .y = static_cast<int32_t>(bezier.valueAt(t, 1))};
 
     const auto lineColor = GetBrighterColor(10.F, m_lineColorFunc(colorT));
-    lineDrawer.DrawLine(point1, point2, {lineColor, lineColor});
+    lineDrawer.DrawLine(point1, point2, {.color1 = lineColor, .color2 = lineColor});
 
     if (0 == (i % m_dotEveryNumBezierSteps))
     {

@@ -240,7 +240,7 @@ inline auto PixelBufferVector::GetBuffer() noexcept -> std::span<Pixel>
 }
 
 constexpr Pixel::Pixel(const RGB& color) noexcept
-  : m_color{color.red, color.green, color.blue, color.alpha}
+  : m_color{.r = color.red, .g = color.green, .b = color.blue, .a = color.alpha}
 {
 }
 
@@ -248,7 +248,7 @@ constexpr Pixel::Pixel(const PixelChannelType red,
                        const PixelChannelType green,
                        const PixelChannelType blue,
                        const PixelChannelType alpha) noexcept
-  : m_color{red, green, blue, alpha}
+  : m_color{.r = red, .g = green, .b = blue, .a = alpha}
 {
 }
 
@@ -370,7 +370,7 @@ inline auto PixelBuffer::GetPixelBuffer() noexcept -> Buffer&
 
 inline auto PixelBuffer::Fill(const Pixel& pixel) noexcept -> void
 {
-  std::fill(m_buff.begin(), m_buff.end(), pixel);
+  std::ranges::fill(m_buff, pixel);
 }
 
 inline auto PixelBuffer::operator()(const size_t x, const size_t y) const noexcept -> const Pixel&

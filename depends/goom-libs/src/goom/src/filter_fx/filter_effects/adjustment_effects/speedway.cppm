@@ -71,7 +71,7 @@ inline auto Speedway::GetZoomAdjustment(const NormalizedCoords& coords) const no
 {
   const auto velocity = GetVelocity(coords);
 
-  return {coords.GetX() * velocity.x, coords.GetY() * velocity.y};
+  return {.x = coords.GetX() * velocity.x, .y = coords.GetY() * velocity.y};
 }
 
 inline auto Speedway::GetParams() const noexcept -> const Params&
@@ -114,7 +114,7 @@ inline auto Speedway::GetMode0ZoomAdjustment(const NormalizedCoords& coords,
       GetBaseZoomAdjustment().x * (m_params.amplitude.x * (coords.GetY() + xAdd));
   const auto yZoomAdjustment = m_params.amplitude.y * xZoomAdjustment;
 
-  return {xZoomAdjustment, yZoomAdjustment};
+  return {.x = xZoomAdjustment, .y = yZoomAdjustment};
 }
 
 inline auto Speedway::GetMode1ZoomAdjustment(const NormalizedCoords& coords,
@@ -150,7 +150,7 @@ inline auto Speedway::GetMode1ZoomAdjustment(const NormalizedCoords& coords,
       amplitude * GetBaseZoomAdjustment().x * (m_params.amplitude.x * xWarp);
   const auto yZoomAdjustment = amplitude * m_params.amplitude.y * xZoomAdjustment;
 
-  return {xZoomAdjustment, yZoomAdjustment};
+  return {.x = xZoomAdjustment, .y = yZoomAdjustment};
 }
 
 inline auto Speedway::GetMode2ZoomAdjustment(const NormalizedCoords& coords,
@@ -169,7 +169,7 @@ inline auto Speedway::GetMode2ZoomAdjustment(const NormalizedCoords& coords,
   const auto yZoomAdjustment =
       std::tan(0.01F * sqDistFromZero) * m_params.amplitude.y * xZoomAdjustment;
 
-  return {xZoomAdjustment, yZoomAdjustment};
+  return {.x = xZoomAdjustment, .y = yZoomAdjustment};
 }
 
 } // namespace GOOM::FILTER_FX::FILTER_EFFECTS

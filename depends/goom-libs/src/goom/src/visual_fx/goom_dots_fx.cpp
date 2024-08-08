@@ -124,7 +124,7 @@ private:
 
   static constexpr auto GAMMA = 1.9F;
   ColorAdjustment m_colorAdjust{
-      {GAMMA, ColorAdjustment::INCREASED_CHROMA_FACTOR}
+      {.gamma = GAMMA, .alterChromaFactor = ColorAdjustment::INCREASED_CHROMA_FACTOR}
   };
 };
 
@@ -183,6 +183,8 @@ static constexpr auto IMAGE_NAMES_PINK_FLOWER_WEIGHT   = 05.0F;
 static constexpr auto IMAGE_NAMES_RED_FLOWER_WEIGHT    = 10.0F;
 static constexpr auto IMAGE_NAMES_WHITE_FLOWER_WEIGHT  = 05.0F;
 
+using enum SmallImageBitmaps::ImageNames;
+
 GoomDotsFx::GoomDotsFxImpl::GoomDotsFxImpl(FxHelper& fxHelper,
                                            const SmallImageBitmaps& smallBitmaps) noexcept
   : m_fxHelper{&fxHelper},
@@ -191,10 +193,10 @@ GoomDotsFx::GoomDotsFxImpl::GoomDotsFxImpl(FxHelper& fxHelper,
     m_flowerDotTypes{
         m_fxHelper->GetGoomRand(),
         {
-            {SmallImageBitmaps::ImageNames::ORANGE_FLOWER, IMAGE_NAMES_ORANGE_FLOWER_WEIGHT},
-            {SmallImageBitmaps::ImageNames::PINK_FLOWER,   IMAGE_NAMES_PINK_FLOWER_WEIGHT},
-            {SmallImageBitmaps::ImageNames::RED_FLOWER,    IMAGE_NAMES_RED_FLOWER_WEIGHT},
-            {SmallImageBitmaps::ImageNames::WHITE_FLOWER,  IMAGE_NAMES_WHITE_FLOWER_WEIGHT},
+            {.key=ORANGE_FLOWER, .weight=IMAGE_NAMES_ORANGE_FLOWER_WEIGHT},
+            {.key=PINK_FLOWER,   .weight=IMAGE_NAMES_PINK_FLOWER_WEIGHT},
+            {.key=RED_FLOWER,    .weight=IMAGE_NAMES_RED_FLOWER_WEIGHT},
+            {.key=WHITE_FLOWER,  .weight=IMAGE_NAMES_WHITE_FLOWER_WEIGHT},
         }
     },
     m_pixelBlender{fxHelper.GetGoomRand()}
@@ -204,30 +206,32 @@ GoomDotsFx::GoomDotsFxImpl::GoomDotsFxImpl(FxHelper& fxHelper,
 auto GoomDotsFx::GoomDotsFxImpl::GetDotPaths(const Point2dInt& centre)
     -> std::array<std::unique_ptr<IPath>, NUM_DOT_TYPES>
 {
-  static constexpr auto HYPOTROCHOID_PARAMS1 =
-      HypotrochoidFunction::Params{10.0F, 3.0F, 5.0F, 30.0F};
-  static constexpr auto HYPOTROCHOID_PARAMS2 =
-      HypotrochoidFunction::Params{12.0F, 3.0F, 5.0F, 30.0F};
-  static constexpr auto HYPOTROCHOID_PARAMS3 =
-      HypotrochoidFunction::Params{13.0F, 3.0F, 5.0F, 30.0F};
-  static constexpr auto LISSAJOUS_PATH_PARAMS = LissajousFunction::Params{60.0F, 50.F, 3.0F, 2.0F};
-  static constexpr auto EPICYCLOID_PARAMS     = EpicycloidFunction::Params{5.1F, 1.0F, 40.0F};
+  static constexpr auto HYPOTROCHOID_PARAMS1 = HypotrochoidFunction::Params{
+      .bigR = 10.0F, .smallR = 3.0F, .height = 5.0F, .amplitude = 30.0F};
+  static constexpr auto HYPOTROCHOID_PARAMS2 = HypotrochoidFunction::Params{
+      .bigR = 12.0F, .smallR = 3.0F, .height = 5.0F, .amplitude = 30.0F};
+  static constexpr auto HYPOTROCHOID_PARAMS3 = HypotrochoidFunction::Params{
+      .bigR = 13.0F, .smallR = 3.0F, .height = 5.0F, .amplitude = 30.0F};
+  static constexpr auto LISSAJOUS_PATH_PARAMS =
+      LissajousFunction::Params{.a = 60.0F, .b = 50.F, .kX = 3.0F, .kY = 2.0F};
+  static constexpr auto EPICYCLOID_PARAMS =
+      EpicycloidFunction::Params{.k = 5.1F, .smallR = 1.0F, .amplitude = 40.0F};
 
   static constexpr auto STEP_TYPE              = TValue::StepType::CONTINUOUS_REVERSIBLE;
   static constexpr auto HYPOTROCHOID_STEP_SIZE = 0.01F;
   static constexpr auto LISSAJOUS_STEP_SIZE    = 0.01F;
   static constexpr auto EPICYCLOID_STEP_SIZE   = 0.001F;
 
-  auto hypotrochoidPositionT1 =
-      std::make_unique<TValue>(TValue::StepSizeProperties{HYPOTROCHOID_STEP_SIZE, STEP_TYPE});
-  auto hypotrochoidPositionT2 =
-      std::make_unique<TValue>(TValue::StepSizeProperties{HYPOTROCHOID_STEP_SIZE, STEP_TYPE});
-  auto hypotrochoidPositionT3 =
-      std::make_unique<TValue>(TValue::StepSizeProperties{HYPOTROCHOID_STEP_SIZE, STEP_TYPE});
-  auto lissajousPositionT =
-      std::make_unique<TValue>(TValue::StepSizeProperties{LISSAJOUS_STEP_SIZE, STEP_TYPE});
-  auto epicycloidPositionT =
-      std::make_unique<TValue>(TValue::StepSizeProperties{EPICYCLOID_STEP_SIZE, STEP_TYPE});
+  auto hypotrochoidPositionT1 = std::make_unique<TValue>(
+      TValue::StepSizeProperties{.stepSize = HYPOTROCHOID_STEP_SIZE, .stepType = STEP_TYPE});
+  auto hypotrochoidPositionT2 = std::make_unique<TValue>(
+      TValue::StepSizeProperties{.stepSize = HYPOTROCHOID_STEP_SIZE, .stepType = STEP_TYPE});
+  auto hypotrochoidPositionT3 = std::make_unique<TValue>(
+      TValue::StepSizeProperties{.stepSize = HYPOTROCHOID_STEP_SIZE, .stepType = STEP_TYPE});
+  auto lissajousPositionT = std::make_unique<TValue>(
+      TValue::StepSizeProperties{.stepSize = LISSAJOUS_STEP_SIZE, .stepType = STEP_TYPE});
+  auto epicycloidPositionT = std::make_unique<TValue>(
+      TValue::StepSizeProperties{.stepSize = EPICYCLOID_STEP_SIZE, .stepType = STEP_TYPE});
 
   const auto centrePos                       = ToVec2dFlt(centre);
   static constexpr auto DEFAULT_ANGLE_PARAMS = AngleParams{};
@@ -458,8 +462,8 @@ auto GoomDotsFx::GoomDotsFxImpl::DotFilter(const Pixel& color,
     return GetMixedColor(LOW_BRIGHTNESS, bitmapPoint, color, radius, bgnd);
   };
 
-  const auto midPoint = Point2dInt{dotPosition.x + static_cast<int32_t>(radius),
-                                   dotPosition.y + static_cast<int32_t>(radius)};
+  const auto midPoint = Point2dInt{.x = dotPosition.x + static_cast<int32_t>(radius),
+                                   .y = dotPosition.y + static_cast<int32_t>(radius)};
   m_bitmapDrawer.Bitmap(
       midPoint, GetImageBitmap(static_cast<uint32_t>(diameter)), {getColor1, getColor2});
 }

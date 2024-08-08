@@ -46,18 +46,18 @@ inline auto ImageZoomAdjustment::DoSetRandomParams() noexcept -> void
   const auto xZoomFactor  = m_goomRand->GetRandInRange<ZOOM_FACTOR_RANGE>();
 
   m_imageDisplacementList.SetParams({
-      {xAmplitude,
-       m_goomRand->ProbabilityOf<PROB_AMPLITUDES_EQUAL>()
-           ? xAmplitude
-           : m_goomRand->GetRandInRange<AMPLITUDE_RANGE>()},
-      xColorCutoff,
-      m_goomRand->ProbabilityOf<PROB_XY_COLOR_CUTOFFS_EQUAL>()
-          ? xColorCutoff
-          : m_goomRand->GetRandInRange<COLOR_CUTOFF_RANGE>(),
-      xZoomFactor,
-      m_goomRand->ProbabilityOf<PROB_ZOOM_FACTORS_EQUAL>()
-          ? xZoomFactor
-          : m_goomRand->GetRandInRange<ZOOM_FACTOR_RANGE>()
+      .amplitude    = {.x = xAmplitude,
+                       .y = m_goomRand->ProbabilityOf<PROB_AMPLITUDES_EQUAL>()
+                                ? xAmplitude
+                                : m_goomRand->GetRandInRange<AMPLITUDE_RANGE>()},
+      .xColorCutoff = xColorCutoff,
+      .yColorCutoff = m_goomRand->ProbabilityOf<PROB_XY_COLOR_CUTOFFS_EQUAL>()
+                          ? xColorCutoff
+                          : m_goomRand->GetRandInRange<COLOR_CUTOFF_RANGE>(),
+      .xZoomFactor  = xZoomFactor,
+      .yZoomFactor  = m_goomRand->ProbabilityOf<PROB_ZOOM_FACTORS_EQUAL>()
+                          ? xZoomFactor
+                          : m_goomRand->GetRandInRange<ZOOM_FACTOR_RANGE>()
   });
 }
 

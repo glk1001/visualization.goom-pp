@@ -49,7 +49,7 @@ TEST_CASE("Colors are brightened")
   static constexpr auto GREEN = 50;
   static constexpr auto BLUE  = 20;
   static constexpr auto COLOR = Pixel{
-      {RED, GREEN, BLUE}
+      {.red = RED, .green = GREEN, .blue = BLUE}
   };
 
   auto brighterColor = GetBrighterColor(1.0F, COLOR);
@@ -93,7 +93,7 @@ TEST_CASE("Lighten")
   static constexpr auto GREEN = 0;
   static constexpr auto BLUE  = 0;
   static constexpr auto COLOR = Pixel{
-      {RED, GREEN, BLUE}
+      {.red = RED, .green = GREEN, .blue = BLUE}
   };
 
   const auto lightenedColor = GetLightenedColor(COLOR, 10.0);
@@ -108,7 +108,7 @@ TEST_CASE("Lightened color")
   static constexpr auto GREEN = 50;
   static constexpr auto BLUE  = 20;
   static constexpr auto COLOR = Pixel{
-      {RED, GREEN, BLUE}
+      {.red = RED, .green = GREEN, .blue = BLUE}
   };
 
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers, readability-magic-numbers)

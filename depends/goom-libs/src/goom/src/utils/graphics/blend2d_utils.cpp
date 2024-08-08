@@ -41,9 +41,9 @@ auto GetRadialGradient(const Point2dInt& centre,
     float brightnessFactor;
   };
   static constexpr auto RADIAL_STOPS = std::array{
-      RadialStop{0.0, 0.25F},
-      RadialStop{0.5, 0.50F},
-      RadialStop{1.0, 1.00F},
+      RadialStop{.offset = 0.0, .brightnessFactor = 0.25F},
+      RadialStop{.offset = 0.5, .brightnessFactor = 0.50F},
+      RadialStop{.offset = 1.0, .brightnessFactor = 1.00F},
   };
   for (const auto& stop : RADIAL_STOPS)
   {

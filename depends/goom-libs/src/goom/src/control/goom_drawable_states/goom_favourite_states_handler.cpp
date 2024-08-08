@@ -38,11 +38,11 @@ GoomFavouriteStatesHandler::GoomFavouriteStatesHandler(const GoomRand& goomRand)
    m_weightedFavourites{
         goomRand,
         {
-          {Favourites::DOTS_ONLY,      DOTS_ONLY_WEIGHT},
-          {Favourites::DOTS_PARTICLES, DOTS_PARTICLES_WEIGHT},
-          {Favourites::DOTS_IFS,       DOTS_IFS_WEIGHT},
-          {Favourites::PARTICLES_ONLY, PARTICLES_ONLY_WEIGHT},
-          {Favourites::PARTICLES_IFS,  PARTICLES_IFS_WEIGHT},
+          {.key = Favourites::DOTS_ONLY,      .weight = DOTS_ONLY_WEIGHT},
+          {.key = Favourites::DOTS_PARTICLES, .weight = DOTS_PARTICLES_WEIGHT},
+          {.key = Favourites::DOTS_IFS,       .weight = DOTS_IFS_WEIGHT},
+          {.key = Favourites::PARTICLES_ONLY, .weight = PARTICLES_ONLY_WEIGHT},
+          {.key = Favourites::PARTICLES_IFS,  .weight = PARTICLES_IFS_WEIGHT},
         }
   },
   m_currentDrawablesState{GetGoomDrawablesState(m_weightedFavourites.GetRandomWeighted())}

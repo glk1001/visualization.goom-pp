@@ -101,9 +101,9 @@ auto RaindropsFx::RaindropsFxImpl::Start() noexcept -> void
 {
   // clang-format off
   const auto raindropRectangle = Rectangle2dInt{
-      Point2dInt{0, 0},
-      Point2dInt{m_fxHelper->GetDimensions().GetIntWidth() - 1,
-                 m_fxHelper->GetDimensions().GetIntHeight() - 1}
+      .topLeft=Point2dInt{.x=0, .y=0},
+      .bottomRight=Point2dInt{.x=m_fxHelper->GetDimensions().GetIntWidth() - 1,
+                 .y=m_fxHelper->GetDimensions().GetIntHeight() - 1}
   };
   // clang-format on
 

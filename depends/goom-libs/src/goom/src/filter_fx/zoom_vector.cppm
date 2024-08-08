@@ -24,7 +24,8 @@ public:
   virtual auto SetFilterEffectsSettings(const FilterEffectsSettings& filterEffectsSettings) noexcept
       -> void = 0;
 
-  virtual auto GetZoomPoint(const NormalizedCoords& coords) const noexcept -> NormalizedCoords = 0;
+  [[nodiscard]] virtual auto GetZoomPoint(const NormalizedCoords& coords) const noexcept
+      -> NormalizedCoords = 0;
 
   [[nodiscard]] virtual auto GetNameValueParams(const std::string& paramGroup) const noexcept
       -> UTILS::NameValuePairs = 0;

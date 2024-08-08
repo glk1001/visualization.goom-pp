@@ -36,16 +36,17 @@ public:
   auto operator=(const SmallImageBitmaps&) noexcept -> SmallImageBitmaps& = delete;
   auto operator=(SmallImageBitmaps&&) noexcept -> SmallImageBitmaps&      = delete;
 
-  auto GetImageBitmap(ImageNames name, size_t res) const -> const ImageBitmap&;
+  [[nodiscard]] auto GetImageBitmap(ImageNames name, size_t res) const -> const ImageBitmap&;
   // void AddImageBitmap(const std::string& name, size_t res);
 
 private:
   std::string m_resourcesDirectory;
   std::map<std::string, std::unique_ptr<const ImageBitmap>, std::less<>> m_bitmapImages;
-  auto GetImageBitmapPtr(ImageNames name,
-                         size_t sizeOfImageSquare) const -> std::unique_ptr<const ImageBitmap>;
+  [[nodiscard]] auto GetImageBitmapPtr(ImageNames name, size_t sizeOfImageSquare) const
+      -> std::unique_ptr<const ImageBitmap>;
   static auto GetImageKey(ImageNames name, size_t sizeOfImageSquare) -> std::string;
-  auto GetImageFilename(ImageNames name, size_t sizeOfImageSquare) const -> std::string;
+  [[nodiscard]] auto GetImageFilename(ImageNames name,
+                                      size_t sizeOfImageSquare) const -> std::string;
 };
 
 } // namespace GOOM::UTILS::GRAPHICS

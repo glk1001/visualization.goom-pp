@@ -60,12 +60,12 @@ struct GenPosAndMaxStartPosOffset
   glm::vec4 startPosOffset;
 };
 static constexpr auto GEN_POS_AND_MAX_START_POS_OFFSETS = std::array{
-    GenPosAndMaxStartPosOffset{glm::vec4{0.0F, 0.0F, Z_GEN_POS[0], 0.0F},
-                               glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
-    GenPosAndMaxStartPosOffset{glm::vec4{0.0F, 0.0F, Z_GEN_POS[1], 0.0F},
-                               glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
-    GenPosAndMaxStartPosOffset{glm::vec4{0.0F, 0.0F, Z_GEN_POS[2], 0.0F},
-                               glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
+    GenPosAndMaxStartPosOffset{.pos            = glm::vec4{0.0F, 0.0F, Z_GEN_POS[0], 0.0F},
+                               .startPosOffset = glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
+    GenPosAndMaxStartPosOffset{.pos            = glm::vec4{0.0F, 0.0F, Z_GEN_POS[1], 0.0F},
+                               .startPosOffset = glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
+    GenPosAndMaxStartPosOffset{.pos            = glm::vec4{0.0F, 0.0F, Z_GEN_POS[2], 0.0F},
+                               .startPosOffset = glm::vec4{0.0F, 0.0F, 0.00F, 0.0F}},
 };
 static_assert(GEN_POS_AND_MAX_START_POS_OFFSETS.size() == AttractorEffect::NUM_EMITTERS);
 
