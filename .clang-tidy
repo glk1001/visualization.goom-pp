@@ -1,7 +1,12 @@
 ---
 
 # Disabled:
-#  '-llvm-header-guard'  doesn't work with '#pragma once'
+#  '-llvm-header-guard' doesn't work with '#pragma once'
+#  '-misc-include-cleaner' doesn't work with C++ modules
+#  '-misc-use-internal-linkage' doesn't work with C++ modules
+#  '-readability-redundant-declaration' broken with '/usr/bin/../lib/gcc/x86_64-linux-gnu/14/../../../../include/c++/14/new:135:6'
+#  '-modernize-pass-by-value'  don't quite like it yet
+
 Checks: >
   -*,
   abseil-*,
@@ -15,15 +20,17 @@ Checks: >
   hicpp-*,
   llvm-*,
   misc-*,
-  mpi-*
   modernize-*,
+  mpi-*
   openmp-*,
   performance-*,
   portability-*,
   readability-*,
   zircon-*,
-  -misc-include-cleaner,
   -llvm-header-guard,
+  -misc-include-cleaner,
+  -misc-use-internal-linkage,
+  -modernize-pass-by-value,
   -readability-redundant-declaration,
   -abseil-string-find-str-contains,
   -cert-dcl58-cpp

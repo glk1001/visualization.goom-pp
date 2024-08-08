@@ -77,47 +77,18 @@ if [[ "${COMPILER:-}" == "" ]]; then
   echo
   exit 1
 fi
-if [[ "${COMPILER}" == "gcc-11" ]]; then
-  declare -r C_COMPILER=gcc-11
-  declare -r CPP_COMPILER=g++-11
-  declare -r COMPILER_VERSION=11
-elif [[ "${COMPILER}" == "gcc-12" ]]; then
-  declare -r C_COMPILER=gcc-12
-  declare -r CPP_COMPILER=g++-12
-  declare -r COMPILER_VERSION=12
-elif [[ "${COMPILER}" == "gcc-13" ]]; then
-  declare -r C_COMPILER=gcc-13
-  declare -r CPP_COMPILER=g++-13
-  declare -r COMPILER_VERSION=13
-elif [[ "${COMPILER}" == "clang" ]]; then
+if [[ "${COMPILER}" == "clang" ]]; then
+  declare -r COMPILER_NO_VER=clang
   declare -r C_COMPILER=clang
   declare -r CPP_COMPILER=clang++
   declare -r COMPILER_VERSION=
-elif [[ "${COMPILER}" == "clang-13" ]]; then
-  declare -r C_COMPILER=clang-13
-  declare -r CPP_COMPILER=clang-13
-  declare -r COMPILER_VERSION=13
-elif [[ "${COMPILER}" == "clang-14" ]]; then
-  declare -r C_COMPILER=clang-14
-  declare -r CPP_COMPILER=clang-14
-  declare -r COMPILER_VERSION=14
-elif [[ "${COMPILER}" == "clang-15" ]]; then
-  declare -r C_COMPILER=clang-15
-  declare -r CPP_COMPILER=clang-15
-  declare -r COMPILER_VERSION=15
-elif [[ "${COMPILER}" == "clang-16" ]]; then
-  declare -r C_COMPILER=clang-16
-  declare -r CPP_COMPILER=clang-16
-  declare -r COMPILER_VERSION=16
-elif [[ "${COMPILER}" == "clang-17" ]]; then
-  declare -r C_COMPILER=clang-17
-  declare -r CPP_COMPILER=clang-17
-  declare -r COMPILER_VERSION=17
 elif [[ "${COMPILER}" == "clang-18" ]]; then
+  declare -r COMPILER_NO_VER=clang
   declare -r C_COMPILER=clang-18
   declare -r CPP_COMPILER=clang-18
   declare -r COMPILER_VERSION=18
 elif [[ "${COMPILER}" == "clang-19" ]]; then
+  declare -r COMPILER_NO_VER=clang
   declare -r C_COMPILER=clang-19
   declare -r CPP_COMPILER=clang-19
   declare -r COMPILER_VERSION=19
@@ -160,7 +131,7 @@ else
 fi
 
 declare -r HOST_TIME_ZONE=$(cat /etc/timezone)
-declare -r DOCKER_BUILD_IMAGE="$(get_docker_build_image ${DOCKER_OS_TYPE} ${DOCKER_OS_TAG} ${DOCKER_TAG} ${COMPILER} ${COMPILER_VERSION})"
+declare -r DOCKER_BUILD_IMAGE="$(get_docker_build_image ${DOCKER_OS_TYPE} ${DOCKER_OS_TAG} ${DOCKER_TAG} ${COMPILER_NO_VER} ${COMPILER_VERSION})"
 
 # Clion
 if [[ "${USING_CLION}" == "no" ]]; then
