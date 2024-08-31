@@ -12,6 +12,7 @@ import Goom.FilterFx.AfterEffects.TheEffects.Rotation;
 import Goom.FilterFx.AfterEffects.AfterEffectsStates;
 import Goom.FilterFx.AfterEffects.AfterEffectsTypes;
 import Goom.FilterFx.FilterEffects.ZoomAdjustmentEffect;
+import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.FilterSpeed;
@@ -24,6 +25,7 @@ import Goom.Lib.Point2d;
 import Goom.PluginInfo;
 
 using GOOM::FILTER_FX::FILTER_EFFECTS::IZoomAdjustmentEffect;
+using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuZoomFilterEffect;
 using GOOM::UTILS::NUM;
 using GOOM::UTILS::RuntimeEnumMap;
 using GOOM::UTILS::MATH::ConditionalWeights;
@@ -47,11 +49,20 @@ public:
   using CreateZoomAdjustmentEffectFunc = std::function<std::unique_ptr<IZoomAdjustmentEffect>(
       ZoomFilterMode filterMode, const GoomRand& goomRand, const std::string& resourcesDirectory)>;
   // TODO(glk) - Visual Studio doesn't like a trailing return type in above function definition.
+  struct GpuZoomFilterModeInfo
+  {
+    std::string_view name;
+    std::shared_ptr<IGpuZoomFilterEffect> gpuZoomFilterEffect;
+  };
+  using GpuFilterModeEnumMap          = RuntimeEnumMap<GpuZoomFilterMode, GpuZoomFilterModeInfo>;
+  using CreateGpuZoomFilterEffectFunc = std::function<std::unique_ptr<IGpuZoomFilterEffect>(
+      GpuZoomFilterMode gpuFilterMode, const GoomRand& goomRand)>;
 
   FilterSettingsService(const PluginInfo& goomInfo,
                         const GoomRand& goomRand,
                         const std::string& resourcesDirectory,
-                        const CreateZoomAdjustmentEffectFunc& createZoomAdjustmentEffect);
+                        const CreateZoomAdjustmentEffectFunc& createZoomAdjustmentEffect,
+                        const CreateGpuZoomFilterEffectFunc& createGpuZoomFilterEffect);
   FilterSettingsService(const FilterSettingsService&) noexcept = delete;
   FilterSettingsService(FilterSettingsService&&) noexcept      = delete;
   virtual ~FilterSettingsService() noexcept;
@@ -64,9 +75,15 @@ public:
   auto NotifyUpdatedFilterEffectsSettings() noexcept -> void;
   [[nodiscard]] auto HasFilterModeChangedSinceLastUpdate() const noexcept -> bool;
 
+  auto NotifyUpdatedGpuFilterEffectsSettings() noexcept -> void;
+  [[nodiscard]] auto HasGpuFilterModeChangedSinceLastUpdate() const noexcept -> bool;
+
   [[nodiscard]] auto GetCurrentFilterMode() const noexcept -> ZoomFilterMode;
   [[nodiscard]] auto GetCurrentFilterModeName() const noexcept -> const std::string_view&;
   [[nodiscard]] auto GetPreviousFilterModeName() const noexcept -> const std::string_view&;
+
+  [[nodiscard]] auto GetCurrentGpuFilterMode() const noexcept -> GpuZoomFilterMode;
+  [[nodiscard]] auto GetPreviousGPUFilterModeName() const noexcept -> const std::string_view&;
 
   [[nodiscard]] auto GetFilterSettings() const noexcept -> const FilterSettings&;
   [[nodiscard]] auto GetROVitesse() const noexcept -> const Vitesse&;
@@ -91,6 +108,7 @@ public:
 protected:
   [[nodiscard]] auto GetFilterSettings() noexcept -> FilterSettings&;
   auto SetFilterMode(ZoomFilterMode filterMode) noexcept -> void;
+  auto SetGpuFilterMode(GpuZoomFilterMode gpuFilterMode) noexcept -> void;
   [[nodiscard]] auto GetPluginInfo() const noexcept -> const PluginInfo&;
   [[nodiscard]] auto GetGoomRand() const noexcept -> const GoomRand&;
   virtual auto SetDefaultSettings() -> void;
@@ -112,6 +130,10 @@ private:
   ZoomFilterMode m_previousFilterMode     = ZoomFilterMode::NORMAL_MODE;
   ZoomFilterMode m_filterModeAtLastUpdate = ZoomFilterMode::NORMAL_MODE;
   FilterModeEnumMap m_filterModeData;
+
+  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_AMULET_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_AMULET_MODE;
+  GpuFilterModeEnumMap m_gpuFilterModeData;
 
   auto SetRandomSettingsForNewFilterMode() -> void;
 
@@ -135,7 +157,9 @@ private:
   FilterSettings m_filterSettings;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
   [[nodiscard]] auto GetNewRandomFilterMode() const -> ZoomFilterMode;
+  [[nodiscard]] auto GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode;
   [[nodiscard]] auto GetZoomAdjustmentEffect() -> std::shared_ptr<IZoomAdjustmentEffect>&;
+  [[nodiscard]] auto GetGpuZoomFilterEffect() -> std::shared_ptr<IGpuZoomFilterEffect>&;
   auto SetMaxZoomAdjustment() -> void;
   auto SetBaseZoomAdjustmentFactorMultiplier() noexcept -> void;
   auto SetAfterEffectsVelocityMultiplier() noexcept -> void;
@@ -208,6 +232,17 @@ inline auto FilterSettingsService::GetPreviousFilterModeName() const noexcept
   return m_filterModeData[m_previousFilterMode].name;
 }
 
+inline auto FilterSettingsService::GetPreviousGPUFilterModeName() const noexcept
+    -> const std::string_view&
+{
+  return m_gpuFilterModeData[m_previousGpuFilterMode].name;
+}
+
+inline auto FilterSettingsService::GetCurrentGpuFilterMode() const noexcept -> GpuZoomFilterMode
+{
+  return m_gpuFilterMode;
+}
+
 inline auto FilterSettingsService::GetPluginInfo() const noexcept -> const PluginInfo&
 {
   return *m_goomInfo;
@@ -223,6 +258,11 @@ inline auto FilterSettingsService::HasFilterModeChangedSinceLastUpdate() const n
   return m_filterModeAtLastUpdate != m_filterMode;
 }
 
+inline auto FilterSettingsService::HasGpuFilterModeChangedSinceLastUpdate() const noexcept -> bool
+{
+  return m_gpuFilterMode != m_previousGpuFilterMode;
+}
+
 inline auto FilterSettingsService::GetROVitesse() const noexcept -> const Vitesse&
 {
   return m_filterSettings.filterEffectsSettings.vitesse;
@@ -236,7 +276,8 @@ inline auto FilterSettingsService::GetRWVitesse() noexcept -> Vitesse&
 
 inline auto FilterSettingsService::ChangeMilieu() -> void
 {
-  m_filterSettings.filterEffectsSettingsHaveChanged = true;
+  m_filterSettings.filterEffectsSettingsHaveChanged    = true;
+  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
   SetMaxZoomAdjustment();
   ResetRandomFilterMultiplierEffect();
   SetBaseZoomAdjustmentFactorMultiplier();
@@ -253,10 +294,14 @@ inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
 
 inline auto FilterSettingsService::SetNewRandomFilter() -> void
 {
-  m_filterSettings.filterEffectsSettingsHaveChanged = true;
+  m_filterSettings.filterEffectsSettingsHaveChanged    = true;
+  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
 
   m_previousFilterMode = m_filterMode;
   m_filterMode         = GetNewRandomFilterMode();
+
+  m_previousGpuFilterMode = m_gpuFilterMode;
+  m_gpuFilterMode         = GetNewRandomGpuFilterMode();
 
   SetRandomSettingsForNewFilterMode();
 }

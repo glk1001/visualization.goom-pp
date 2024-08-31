@@ -207,6 +207,11 @@ set(GoomFilterFx_modules
     src/filter_fx/filter_utils/image_displacement.cppm
     src/filter_fx/filter_utils/image_displacement_list.cppm
     src/filter_fx/filter_utils/utils.cppm
+    src/filter_fx/gpu_filter_effects/amulet.cppm
+    src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect.cppm
+    src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cppm
+    src/filter_fx/gpu_filter_effects/vortex.cppm
+    src/filter_fx/gpu_filter_effects/wave.cppm
     src/filter_fx/common_types.cppm
     src/filter_fx/filter_buffers.cppm
     src/filter_fx/filter_consts.cppm
@@ -254,6 +259,10 @@ set(GoomFilterFx_source_files
     src/filter_fx/filter_effects/adjustment_effects/y_only.cpp
     src/filter_fx/filter_effects/zoom_adjustment_effect_factory.cpp
     src/filter_fx/filter_effects/zoom_vector_effects.cpp
+    src/filter_fx/gpu_filter_effects/amulet.cpp
+    src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cpp
+    src/filter_fx/gpu_filter_effects/vortex.cpp
+    src/filter_fx/gpu_filter_effects/wave.cpp
     src/filter_fx/filter_utils/image_displacement.cpp
     src/filter_fx/filter_utils/image_displacement_list.cpp
     src/filter_fx/filter_utils/utils.cpp
@@ -280,6 +289,7 @@ set(GoomUtils_modules
     src/utils/math/damping_functions.cppm
     src/utils/math/goom_rand.cppm
     src/utils/math/incremented_values.cppm
+    src/utils/math/lerper.cppm
     src/utils/math/misc.cppm
     src/utils/math/parametric_functions2d.cppm
     src/utils/math/paths.cppm

@@ -10,48 +10,28 @@ export namespace GOOM::FILTER_FX
 {
 
 template<typename T>
-struct Amplitude_t // NOLINT(readability-identifier-naming)
+struct XYPair_t // NOLINT(readability-identifier-naming)
 {
   T x;
   T y;
 };
-using Amplitude    = Amplitude_t<float>;
-using IntAmplitude = Amplitude_t<int32_t>;
-struct FrequencyFactor
+using Amplitude       = XYPair_t<float>;
+using IntAmplitude    = XYPair_t<int32_t>;
+using FrequencyFactor = XYPair_t<float>;
+using SqDistMult      = XYPair_t<float>;
+using SqDistOffset    = XYPair_t<float>;
+using FilterBase      = XYPair_t<float>;
+
+struct XYPairRange
 {
-  float x;
-  float y;
-};
-struct SqDistMult
-{
-  float x;
-  float y;
-};
-struct SqDistOffset
-{
-  float x;
-  float y;
+  UTILS::MATH::NumberRange<float> xRange;
+  UTILS::MATH::NumberRange<float> yRange;
 };
 
-struct AmplitudeRange
-{
-  UTILS::MATH::NumberRange<float> xRange;
-  UTILS::MATH::NumberRange<float> yRange;
-};
-struct FrequencyFactorRange
-{
-  UTILS::MATH::NumberRange<float> xRange;
-  UTILS::MATH::NumberRange<float> yRange;
-};
-struct SqDistMultRange
-{
-  UTILS::MATH::NumberRange<float> xRange;
-  UTILS::MATH::NumberRange<float> yRange;
-};
-struct SqDistOffsetRange
-{
-  UTILS::MATH::NumberRange<float> xRange;
-  UTILS::MATH::NumberRange<float> yRange;
-};
+using AmplitudeRange       = XYPairRange;
+using FrequencyFactorRange = XYPairRange;
+using SqDistMultRange      = XYPairRange;
+using SqDistOffsetRange    = XYPairRange;
+using FilterBaseRange      = XYPairRange;
 
 } // namespace GOOM::FILTER_FX

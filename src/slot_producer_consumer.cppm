@@ -1,12 +1,13 @@
 module;
 
+#undef NO_LOGGING
+
 #include "goom/goom_logger.h"
 
 #include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
-#include <format>
 #include <functional>
 #include <mutex>
 #include <queue>

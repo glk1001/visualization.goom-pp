@@ -21,6 +21,7 @@ module;
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 export module Goom.GoomVisualization:GlslProgram;
@@ -53,16 +54,22 @@ public:
   auto Use() const -> void;
   [[nodiscard]] auto IsInUse() const noexcept -> bool;
 
+  auto SetUniform(const std::string_view& name, int x, int y, int z) -> void;
   auto SetUniform(const std::string_view& name, float x, float y, float z) -> void;
+  auto SetUniform(const std::string_view& name, const glm::ivec2& vec) -> void;
+  auto SetUniform(const std::string_view& name, const glm::ivec3& vec) -> void;
+  auto SetUniform(const std::string_view& name, const glm::ivec4& vec) -> void;
   auto SetUniform(const std::string_view& name, const glm::vec2& vec) -> void;
   auto SetUniform(const std::string_view& name, const glm::vec3& vec) -> void;
   auto SetUniform(const std::string_view& name, const glm::vec4& vec) -> void;
-  auto SetUniform(const std::string_view& name, const glm::mat4& mat) -> void;
   auto SetUniform(const std::string_view& name, const glm::mat3& mat) -> void;
-  auto SetUniform(const std::string_view& name, float val) -> void;
+  auto SetUniform(const std::string_view& name, const glm::mat4& mat) -> void;
   auto SetUniform(const std::string_view& name, int val) -> void;
-  auto SetUniform(const std::string_view& name, bool val) -> void;
   auto SetUniform(const std::string_view& name, GLuint val) -> void;
+  auto SetUniform(const std::string_view& name, bool val) -> void;
+  auto SetUniform(const std::string_view& name, float val) -> void;
+  auto SetUniform(const std::string_view& name, const std::vector<int>& val) -> void;
+  auto SetUniform(const std::string_view& name, const std::vector<float>& val) -> void;
 
 private:
   GLuint m_handle = 0;
@@ -402,6 +409,13 @@ auto GlslProgram::IsLinked() const noexcept -> bool
   return m_linked;
 }
 
+auto GlslProgram::SetUniform(const std::string_view& name, const int x, const int y, const int z)
+    -> void
+{
+  const auto loc = GetUniformLocation(name);
+  glUniform3i(loc, x, y, z);
+}
+
 auto GlslProgram::SetUniform(const std::string_view& name,
                              const float x,
                              const float y,
@@ -409,6 +423,29 @@ auto GlslProgram::SetUniform(const std::string_view& name,
 {
   const auto loc = GetUniformLocation(name);
   glUniform3f(loc, x, y, z);
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const glm::ivec2& vec) -> void
+{
+  const auto loc = GetUniformLocation(name);
+  glUniform2i(loc, vec.x, vec.y); // NOLINT: union hard to fix here
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const glm::ivec3& vec) -> void
+{
+  SetUniform(name, vec.x, vec.y, vec.z); // NOLINT: union hard to fix here
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const glm::ivec4& vec) -> void
+{
+  const auto loc = GetUniformLocation(name);
+  glUniform4i(loc, vec.x, vec.y, vec.z, vec.w); // NOLINT: union hard to fix here
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const glm::vec2& vec) -> void
+{
+  const auto loc = GetUniformLocation(name);
+  glUniform2f(loc, vec.x, vec.y); // NOLINT: union hard to fix here
 }
 
 auto GlslProgram::SetUniform(const std::string_view& name, const glm::vec3& vec) -> void
@@ -422,28 +459,16 @@ auto GlslProgram::SetUniform(const std::string_view& name, const glm::vec4& vec)
   glUniform4f(loc, vec.x, vec.y, vec.z, vec.w); // NOLINT: union hard to fix here
 }
 
-auto GlslProgram::SetUniform(const std::string_view& name, const glm::vec2& vec) -> void
-{
-  const auto loc = GetUniformLocation(name);
-  glUniform2f(loc, vec.x, vec.y); // NOLINT: union hard to fix here
-}
-
-auto GlslProgram::SetUniform(const std::string_view& name, const glm::mat4& mat) -> void
-{
-  const auto loc = GetUniformLocation(name);
-  glUniformMatrix4fv(loc, 1, GL_FALSE, &mat[0][0]);
-}
-
 auto GlslProgram::SetUniform(const std::string_view& name, const glm::mat3& mat) -> void
 {
   const auto loc = GetUniformLocation(name);
   glUniformMatrix3fv(loc, 1, GL_FALSE, &mat[0][0]);
 }
 
-auto GlslProgram::SetUniform(const std::string_view& name, const float val) -> void
+auto GlslProgram::SetUniform(const std::string_view& name, const glm::mat4& mat) -> void
 {
   const auto loc = GetUniformLocation(name);
-  glUniform1f(loc, val);
+  glUniformMatrix4fv(loc, 1, GL_FALSE, &mat[0][0]);
 }
 
 auto GlslProgram::SetUniform(const std::string_view& name, const int val) -> void
@@ -462,6 +487,54 @@ auto GlslProgram::SetUniform(const std::string_view& name, const bool val) -> vo
 {
   const auto loc = GetUniformLocation(name);
   glUniform1i(loc, static_cast<GLint>(val));
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const float val) -> void
+{
+  const auto loc = GetUniformLocation(name);
+  glUniform1f(loc, val);
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const std::vector<int>& val) -> void
+{
+  switch (val.size())
+  {
+    case 1:
+      SetUniform(name, val.front());
+      break;
+    case 2:
+      SetUniform(name, glm::ivec2{val[0], val[1]});
+      break;
+    case 3:
+      SetUniform(name, val[0], val[1], val[2]);
+      break;
+    case 4:
+      SetUniform(name, glm::ivec4{val[0], val[1], val[2], val[3]});
+      break;
+    default:
+      std::unreachable();
+  }
+}
+
+auto GlslProgram::SetUniform(const std::string_view& name, const std::vector<float>& val) -> void
+{
+  switch (val.size())
+  {
+    case 1:
+      SetUniform(name, val.front());
+      break;
+    case 2:
+      SetUniform(name, glm::vec2{val[0], val[1]});
+      break;
+    case 3:
+      SetUniform(name, val[0], val[1], val[2]);
+      break;
+    case 4:
+      SetUniform(name, glm::vec4{val[0], val[1], val[2], val[3]});
+      break;
+    default:
+      std::unreachable();
+  }
 }
 
 auto GlslProgram::ValidateShader() const -> void

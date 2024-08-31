@@ -20,17 +20,21 @@ layout(binding = FILTER_DEST_POS_IMAGE_UNIT2, rg32f) uniform readonly image2D im
 in vec3 position;
 in vec2 texCoord;
 
-uniform float u_lerpFactor;  // For lerping between srce and dest buffers.
+uniform float u_srceDestLerpFactor;  // For lerping between srce and dest buffers.
 uniform float u_prevFrameTMix;
 uniform bool u_resetSrceFilterPosBuffers;
 uniform float u_pos1Pos2MixFreq;
-uniform uint u_time;
+uniform float u_time;
+uniform float u_filterLerpFactor;  // For lerping between gpu and srce and dest buffers.
 
 // For base multiplier, too close to 1, gives washed
 // out look, too far away and things get too dark.
 uniform float u_baseColorMultiplier;        // Used to factor this frames' buff2 color.
 uniform float u_mainColorMultiplier = 1.0F; // Used to factor this frames' main color.
 uniform float u_lowColorMultiplier  = 0.7F; // Used to factor this frames' low color.
+
+#include "pass1_gpu_filter_effects_consts.h"
+#include "pass1_gpu_filter_effects.fs"
 
 vec4 GetPosMappedFilterBuff2ColorValue(const vec2 uv, const ivec2 deviceXY);
 float GetBaseColorMultiplier(const vec3 color);
@@ -101,6 +105,27 @@ float GetColor1Color2TMix(const vec2 fromUV, const TexelPositions toTexelPositio
 
 vec4 GetPosMappedFilterBuff2ColorValue(const vec2 uv, const ivec2 deviceXY)
 {
+//   deviceXY = ivec2(deviceXY.x, HEIGHT - 1 - deviceXY.y);
+//
+//   const float xRatioDeviceToNormalizedCoord = FILTER_POS_COORD_WIDTH / float(WIDTH - 1);
+//   const float yRatioDeviceToNormalizedCoord = FILTER_POS_COORD_WIDTH / float(WIDTH - 1);
+//   const float X_MIN_COORD = FILTER_POS_MIN_COORD;
+//   const float Y_MIN_COORD = FILTER_POS_MIN_COORD;
+//
+//   vec2 pos = vec2(X_MIN_COORD + (xRatioDeviceToNormalizedCoord * float(deviceXY.x)),
+//                   Y_MIN_COORD + (yRatioDeviceToNormalizedCoord * float(deviceXY.y))
+//              );
+//
+//   float x = (pos.x - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+//   float y = (pos.y - FILTER_POS_MIN_COORD) / FILTER_POS_COORD_WIDTH;
+//   uv = vec2(x, 1 - (ASPECT_RATIO * y));
+//
+//   uv = GetTexelPos(pos);
+//   //uv = vec2(deviceXY.x/float(WIDTH-1), deviceXY.y/float(HEIGHT-1));
+//
+// //   return texture(tex_filterBuff2, uv);
+//   TexelPositions filterBuff2TexelPositions = TexelPositions(uv, uv);
+
   const TexelPositions filterBuff2TexelPositions = GetPosMappedFilterBuff2TexelPositions(deviceXY);
   const FilterBuffColors filterBuff2Colors       = GetFilterBuff2Colors(filterBuff2TexelPositions);
   return GetColorFromMixOfColor1AndColor2(
@@ -135,6 +160,10 @@ TexelPositions GetPosMappedFilterBuff2TexelPositions(ivec2 deviceXY)
   lerpedNormalizedPositions.pos1 += deltaAmp * delta;
   lerpedNormalizedPositions.pos2 -= deltaAmp * delta;
 
+  const vec2 GPUPos = GetGPUFilteredPosition(deviceXY);
+  lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GPUPos, u_filterLerpFactor);
+  lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GPUPos, u_filterLerpFactor);
+
   return GetTexelPositions(lerpedNormalizedPositions);
 }
 
@@ -162,8 +191,8 @@ LerpedNormalizedPositions GetLerpedNormalizedPositions(const ivec2 deviceXY)
         = GetSrceAndDestNormalizedPositions(deviceXY);
 
   return LerpedNormalizedPositions(
-             mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_lerpFactor),
-             mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_lerpFactor)
+             mix(normalizedPositions.srcePos1, normalizedPositions.destPos1, u_srceDestLerpFactor),
+             mix(normalizedPositions.srcePos2, normalizedPositions.destPos2, u_srceDestLerpFactor)
   );
 }
 

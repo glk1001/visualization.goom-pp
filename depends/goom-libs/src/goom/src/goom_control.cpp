@@ -43,6 +43,7 @@ import Goom.Control.StateAndFilterConsts;
 import Goom.Draw.GoomDrawToBuffer;
 import Goom.FilterFx.FilterEffects.ZoomAdjustmentEffectFactory;
 import Goom.FilterFx.FilterEffects.ZoomVectorEffects;
+import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffectFactory;
 import Goom.FilterFx.FilterBuffersService;
 import Goom.FilterFx.FilterSettingsService;
 import Goom.FilterFx.FilterZoomVector;
@@ -99,6 +100,7 @@ using FILTER_FX::FilterSettingsService;
 using FILTER_FX::FilterZoomVector;
 using FILTER_FX::NormalizedCoordsConverter;
 using FILTER_FX::FILTER_EFFECTS::CreateZoomAdjustmentEffect;
+using FILTER_FX::GPU_FILTER_EFFECTS::CreateGpuZoomFilterEffect;
 using UTILS::GetNumAvailablePoolThreads;
 using UTILS::GoomTime;
 using UTILS::Parallel;
@@ -249,6 +251,7 @@ private:
   auto UpdateFrameData() -> void;
   auto UpdateFrameDataPixelBuffers() noexcept -> void;
   auto UpdateFrameDataFilterPosArrays() noexcept -> void;
+  auto UpdateFrameDataGpuFilterData() noexcept -> void;
 
   static constexpr auto TIME_BETWEEN_POS1_POS2_MIX_FREQ_CHANGES_RANGE = NumberRange{100U, 1000U};
   Timer m_pos1Pos2MixFreqChangeTimer{
@@ -429,8 +432,11 @@ GoomControl::GoomControlImpl::GoomControlImpl(const GoomControl& parentGoomContr
                *m_goomRand,
                *m_goomLogger,
                m_blend2dDoubleGoomBuffers.GetBlend2dContexts()},
-    m_filterSettingsService{
-        m_goomInfo, *m_goomRand, resourcesDirectory, CreateZoomAdjustmentEffect},
+    m_filterSettingsService{m_goomInfo,
+                            *m_goomRand,
+                            resourcesDirectory,
+                            CreateZoomAdjustmentEffect,
+                            CreateGpuZoomFilterEffect},
     m_filterBuffersService{m_goomInfo,
                            m_normalizedCoordsConverter,
                            std::make_unique<FilterZoomVector>(m_goomInfo.GetDimensions().GetWidth(),
@@ -483,6 +489,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
   UpdateFrameDataPixelBuffers();
   UpdateFrameDataPos1Pos2MixFreq();
   UpdateFrameDataFilterPosArrays();
+  UpdateFrameDataGpuFilterData();
 }
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataPixelBuffers() noexcept -> void
@@ -518,6 +525,40 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterPosArrays() noexcept -> 
     m_filterBuffersService.CopyTransformBuffer(m_frameData->filterPosArrays.filterDestPos);
     m_frameData->filterPosArrays.filterDestPosNeedsUpdating = true;
     m_filterSettingsService.ResetTransformBufferLerpData();
+  }
+}
+
+auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> void
+{
+  m_frameData->gpuFilterEffectData->midpoint.Increment();
+
+  const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
+
+  // 'lerpFactor' is not controlled by the settings have changed flag.
+  m_frameData->gpuFilterEffectData->lerpFactor = 0.5F;
+
+  if (not filterSettings.gpuFilterEffectsSettingsHaveChanged)
+  {
+    m_frameData->gpuFilterEffectData->filterNeedsUpdating = false;
+  }
+  else
+  {
+    const auto& gpuZoomFilterEffect = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
+
+    m_frameData->gpuFilterEffectData->filterNeedsUpdating = true;
+    m_frameData->gpuFilterEffectData->filterMode =
+        m_filterSettingsService.GetCurrentGpuFilterMode();
+    m_frameData->gpuFilterEffectData->filterParams = &gpuZoomFilterEffect.GetGpuParams();
+    m_frameData->gpuFilterEffectData->maxTime      = 100.0F;
+
+    const auto& currentMidpoint = m_frameData->gpuFilterEffectData->midpoint();
+    const auto newMidpoint =
+        m_normalizedCoordsConverter
+            .OtherToNormalizedCoords(filterSettings.filterEffectsSettings.zoomMidpoint)
+            .GetFltCoords();
+    m_frameData->gpuFilterEffectData->midpoint.ResetValues(currentMidpoint, newMidpoint);
+
+    m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }
 }
 
