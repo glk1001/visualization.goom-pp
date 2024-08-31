@@ -14,6 +14,7 @@ import Goom.Utils.Math.TValues;
 import Goom.Lib.AssertUtils;
 import Goom.Lib.GoomTypes;
 
+// TODO(glk): How to avoid having to add these??
 export template<typename T>
 auto lerp(const T& val1, const T& val2, float t) noexcept -> T;
 export template<typename T>

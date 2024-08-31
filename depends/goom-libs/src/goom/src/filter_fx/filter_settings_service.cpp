@@ -55,6 +55,8 @@ namespace
 
 // For debugging:
 
+constexpr auto FORCED_GPU_FILTER_MODE = GpuZoomFilterMode::GPU_AMULET_MODE;
+
 //constexpr auto FORCED_FILTER_MODE = AMULET_MODE;
 //constexpr auto FORCED_FILTER_MODE = COMPLEX_RATIONAL_MODE;
 //constexpr auto FORCED_FILTER_MODE = CRYSTAL_BALL_MODE0;
@@ -664,13 +666,36 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
   return FilterSettingsService::FilterModeEnumMap::Make(std::move(filterModeVec));
 }
 
+[[nodiscard]] auto GetGpuFilterModeData(
+    const GoomRand& goomRand,
+    const FilterSettingsService::CreateGpuZoomFilterEffectFunc& createGpuZoomFilterEffect)
+    -> FilterSettingsService::GpuFilterModeEnumMap
+{
+  auto gpuFilterModeVec = std::vector<FilterSettingsService::GpuFilterModeEnumMap::KeyValue>{};
+
+  for (auto i = 0U; i < NUM<GpuZoomFilterMode>; ++i)
+  {
+    const auto gpuFilterMode = static_cast<GpuZoomFilterMode>(i);
+
+    gpuFilterModeVec.emplace_back(
+        gpuFilterMode,
+        FilterSettingsService::GpuZoomFilterModeInfo{
+            .name                = GetGpuFilterModeName(gpuFilterMode),
+            .gpuZoomFilterEffect = createGpuZoomFilterEffect(gpuFilterMode, goomRand)});
+  }
+
+  return FilterSettingsService::GpuFilterModeEnumMap::Make(std::move(gpuFilterModeVec));
+}
+
 } // namespace
 
 FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
                                              const GoomRand& goomRand,
                                              const std::string& resourcesDirectory,
                                              const CreateZoomAdjustmentEffectFunc&
-                                                 createZoomAdjustmentEffect)
+                                                 createZoomAdjustmentEffect,
+                                             const CreateGpuZoomFilterEffectFunc&
+                                                 createGpuZoomFilterEffect)
   : m_goomInfo{&goomInfo},
     m_goomRand{&goomRand},
     m_screenCentre{goomInfo.GetDimensions().GetCentrePoint()},
@@ -683,29 +708,31 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
     m_filterModeData{GetFilterModeData(goomRand,
                                        m_resourcesDirectory,
                                        createZoomAdjustmentEffect)},
+    m_gpuFilterModeData{GetGpuFilterModeData(goomRand, createGpuZoomFilterEffect)},
     m_filterSettings{
-        .filterEffectsSettingsHaveChanged=false,
-        .filterEffectsSettings={
-           .vitesse=Vitesse{},
-           .maxZoomAdjustment=DEFAULT_MAX_ZOOM_ADJUSTMENT,
-           .baseZoomAdjustmentFactorMultiplier=DEFAULT_BASE_ZOOM_ADJUSTMENT_FACTOR_MULTIPLIER,
-           .afterEffectsVelocityMultiplier=DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION,
-           .zoomAdjustmentEffect=nullptr,
-           .zoomMidpoint={.x=DEFAULT_ZOOM_MID_X, .y=DEFAULT_ZOOM_MID_Y},
-           .filterMultiplierEffectsSettings={
-               .isActive=DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE,
-               .xFreq=DEFAULT_MULTIPLIER_EFFECT_X_FREQ,
-               .yFreq=DEFAULT_MULTIPLIER_EFFECT_Y_FREQ,
-               .xAmplitude=DEFAULT_MULTIPLIER_EFFECT_X_AMPLITUDE,
-               .yAmplitude=DEFAULT_MULTIPLIER_EFFECT_Y_AMPLITUDE,
-               .lerpZoomAdjustmentToCoords=DEFAULT_LERP_ZOOM_ADJUSTMENT_TO_COORDS
+        .filterEffectsSettingsHaveChanged = false,
+        .filterEffectsSettings = {
+           .vitesse = Vitesse{},
+           .maxZoomAdjustment = DEFAULT_MAX_ZOOM_ADJUSTMENT,
+           .baseZoomAdjustmentFactorMultiplier = DEFAULT_BASE_ZOOM_ADJUSTMENT_FACTOR_MULTIPLIER,
+           .afterEffectsVelocityMultiplier = DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION,
+           .zoomAdjustmentEffect = nullptr,
+           .zoomMidpoint={.x = DEFAULT_ZOOM_MID_X, .y = DEFAULT_ZOOM_MID_Y},
+           .filterMultiplierEffectsSettings = {
+               .isActive = DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE,
+               .xFreq = DEFAULT_MULTIPLIER_EFFECT_X_FREQ,
+               .yFreq = DEFAULT_MULTIPLIER_EFFECT_Y_FREQ,
+               .xAmplitude = DEFAULT_MULTIPLIER_EFFECT_X_AMPLITUDE,
+               .yAmplitude = DEFAULT_MULTIPLIER_EFFECT_Y_AMPLITUDE,
+               .lerpZoomAdjustmentToCoords = DEFAULT_LERP_ZOOM_ADJUSTMENT_TO_COORDS
            },
-           .afterEffectsSettings={
-               .hypercosOverlayMode=HypercosOverlayMode::NONE,
-               .isActive=DEFAULT_AFTER_EFFECTS_STATES,
-               .rotationAdjustments=RotationAdjustments{},
+           .afterEffectsSettings = {
+               .hypercosOverlayMode = HypercosOverlayMode::NONE,
+               .isActive = DEFAULT_AFTER_EFFECTS_STATES,
+               .rotationAdjustments = RotationAdjustments{},
             }
         },
+        .gpuFilterEffectsSettingsHaveChanged = false,
         .transformBufferLerpData=GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
     },
     m_weightedFilterEvents{GetWeightedFilterEvents(goomRand)},
@@ -751,6 +778,15 @@ auto FilterSettingsService::GetNewRandomFilterMode() const -> ZoomFilterMode
   return m_weightedFilterEvents.GetRandomWeighted(m_filterMode);
 }
 
+auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode
+{
+  if constexpr (USE_FORCED_FILTER_MODE)
+  {
+    return FORCED_GPU_FILTER_MODE;
+  }
+  return GpuZoomFilterMode::GPU_VORTEX_MODE;
+}
+
 auto FilterSettingsService::Start() -> void
 {
   SetNewRandomFilter();
@@ -760,6 +796,12 @@ inline auto FilterSettingsService::GetZoomAdjustmentEffect()
     -> std::shared_ptr<IZoomAdjustmentEffect>&
 {
   return m_filterModeData[m_filterMode].zoomAdjustmentEffect;
+}
+
+inline auto FilterSettingsService::GetGpuZoomFilterEffect()
+    -> std::shared_ptr<IGpuZoomFilterEffect>&
+{
+  return m_gpuFilterModeData[m_gpuFilterMode].gpuZoomFilterEffect;
 }
 
 auto FilterSettingsService::NewCycle() noexcept -> void
@@ -775,11 +817,18 @@ auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() noexcept -> voi
   m_randomizedAfterEffects->CheckForPendingOffTimers();
 }
 
+auto FilterSettingsService::NotifyUpdatedGpuFilterEffectsSettings() noexcept -> void
+{
+  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = false;
+}
+
 auto FilterSettingsService::SetDefaultSettings() -> void
 {
   m_filterSettings.filterEffectsSettings.zoomAdjustmentEffect = GetZoomAdjustmentEffect();
   m_filterSettings.filterEffectsSettings.zoomMidpoint         = m_screenCentre;
   m_filterSettings.filterEffectsSettings.vitesse.SetDefault();
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect = GetGpuZoomFilterEffect();
 
   m_randomizedAfterEffects->SetDefaults();
 }
@@ -787,6 +836,7 @@ auto FilterSettingsService::SetDefaultSettings() -> void
 auto FilterSettingsService::SetFilterModeRandomEffects() -> void
 {
   m_filterSettings.filterEffectsSettings.zoomAdjustmentEffect->SetRandomParams();
+  m_filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect->SetRandomParams();
 }
 
 auto FilterSettingsService::SetFilterModeAfterEffects() -> void

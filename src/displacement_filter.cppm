@@ -13,6 +13,7 @@ module;
 #include <filesystem>
 #include <format>
 #include <functional>
+#include <glm/ext/vector_float2.hpp>
 #include <glm/ext/vector_float4.hpp>
 #include <span>
 #include <stdexcept>
@@ -32,17 +33,24 @@ class GoomLogger;
 
 export module Goom.GoomVisualization:DisplacementFilter;
 
-import Goom.GlCaller;
+import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
+import Goom.FilterFx.FilterModes;
+import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
 import Goom.Lib.FrameData;
 import Goom.Lib.GoomGraphic;
 import Goom.Lib.GoomTypes;
 import Goom.Lib.Point2d;
+import Goom.GlCaller;
 import :Gl2dTextures;
 import :GlRenderTypes;
 import :GlslProgram;
 import :GlslShaderFile;
 import :Scene;
+
+using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::UTILS::EnumToString;
+using GOOM::UTILS::NUM;
 
 export namespace GOOM::OPENGL
 {
@@ -79,18 +87,22 @@ public:
 protected:
   static constexpr auto DEFAULT_GAMMA = 1.5F;
 
-  static constexpr auto* UNIFORM_LERP_FACTOR           = "u_lerpFactor";
-  static constexpr auto* UNIFORM_BRIGHTNESS            = "u_brightness";
-  static constexpr auto* UNIFORM_BRIGHTNESS_ADJUST     = "u_brightnessAdjust";
-  static constexpr auto* UNIFORM_HUE_SHIFT             = "u_hueShift";
-  static constexpr auto* UNIFORM_CHROMA_FACTOR         = "u_chromaFactor";
-  static constexpr auto* UNIFORM_BASE_COLOR_MULTIPLIER = "u_baseColorMultiplier";
-  static constexpr auto* UNIFORM_PREV_FRAME_T_MIX      = "u_prevFrameTMix";
-  static constexpr auto* UNIFORM_LUMINANCE_PARAMS      = "u_params";
-  static constexpr auto* UNIFORM_GAMMA                 = "u_gamma";
-  static constexpr auto* UNIFORM_RESET_SRCE_FILTER_POS = "u_resetSrceFilterPosBuffers";
-  static constexpr auto* UNIFORM_POS1_POS2_MIX_FREQ    = "u_pos1Pos2MixFreq";
-  static constexpr auto* UNIFORM_TIME                  = "u_time";
+  static constexpr auto* UNIFORM_SRCE_DEST_LERP_FACTOR  = "u_srceDestLerpFactor";
+  static constexpr auto* UNIFORM_BRIGHTNESS             = "u_brightness";
+  static constexpr auto* UNIFORM_BRIGHTNESS_ADJUST      = "u_brightnessAdjust";
+  static constexpr auto* UNIFORM_HUE_SHIFT              = "u_hueShift";
+  static constexpr auto* UNIFORM_CHROMA_FACTOR          = "u_chromaFactor";
+  static constexpr auto* UNIFORM_BASE_COLOR_MULTIPLIER  = "u_baseColorMultiplier";
+  static constexpr auto* UNIFORM_PREV_FRAME_T_MIX       = "u_prevFrameTMix";
+  static constexpr auto* UNIFORM_LUMINANCE_PARAMS       = "u_params";
+  static constexpr auto* UNIFORM_GAMMA                  = "u_gamma";
+  static constexpr auto* UNIFORM_RESET_SRCE_FILTER_POS  = "u_resetSrceFilterPosBuffers";
+  static constexpr auto* UNIFORM_POS1_POS2_MIX_FREQ     = "u_pos1Pos2MixFreq";
+  static constexpr auto* UNIFORM_TIME                   = "u_time";
+  static constexpr auto* UNIFORM_GPU_FILTER_MODE        = "u_filterMode";
+  static constexpr auto* UNIFORM_GPU_FILTER_LERP_FACTOR = "u_filterLerpFactor";
+  static constexpr auto* UNIFORM_GPU_FILTER_MAX_TIME    = "u_filterMaxTime";
+  static constexpr auto* UNIFORM_GPU_MIDPOINT           = "u_filterMidpoint";
 
   // IMPORTANT - To make proper use of HDR (which is why we're using RGBA16), we
   //             must use a floating point internal format.
@@ -132,8 +144,19 @@ private:
   auto DoTheDraw() const -> void;
   auto WaitForRenderSync() noexcept -> void;
 
+  static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS = 500U;
+  GpuFilterEffectData m_gpuFilterEffectData{
+      .filterNeedsUpdating = false,
+      .filterMode          = GpuZoomFilterMode::GPU_AMULET_MODE,
+      .lerpFactor          = 0.0F,
+      .maxTime             = 0.0F,
+      .midpoint     = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
+      .filterParams = nullptr,
+  };
   size_t m_currentPboIndex = 0U;
   std::vector<FrameData> m_frameDataArray;
+  using IGpuParams = FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
+  IGpuParams::SetterFuncs m_pass1SetterFuncs;
   auto InitFrameDataArrayPointers(std::vector<FrameData>& frameDataArray) noexcept -> void;
   auto InitFrameDataArray() noexcept -> void;
   auto InitFrameDataArrayToGl() -> void;
@@ -167,6 +190,7 @@ private:
   auto UpdatePass4MiscDataToGl(size_t pboIndex) noexcept -> void;
   auto UpdateCurrentDestFilterPosBufferToGl() noexcept -> void;
   auto UpdateImageBuffersToGl(size_t pboIndex) -> void;
+  auto UpdatePass1GpuFilterEffectDataToGl() noexcept -> void;
 
   GlslProgram m_programPass1UpdateFilterBuff1AndBuff3;
 
@@ -464,7 +488,20 @@ DisplacementFilter::DisplacementFilter(
     m_shaderDir{shaderDir},
     m_buffSize{static_cast<size_t>(GetWidth()) * static_cast<size_t>(GetHeight())},
     m_aspectRatio{static_cast<float>(GetWidth()) / static_cast<float>(GetHeight())},
-    m_frameDataArray(NUM_PBOS)
+    m_frameDataArray(NUM_PBOS),
+    m_pass1SetterFuncs{
+        .setFloat = [this](const std::string_view& uniformName, const float value)
+        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+        .setInt = [this](const std::string_view& uniformName, const int32_t value)
+        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+        .setBool = [this](const std::string_view& uniformName, const bool value)
+        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+        .setFltVector = [this](const std::string_view& uniformName, const std::vector<float> value)
+        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+        .setIntVector =
+            [this](const std::string_view& uniformName, const std::vector<int32_t> value)
+        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+    }
 {
 }
 
@@ -510,6 +547,8 @@ auto DisplacementFilter::InitFrameDataArray() noexcept -> void
 {
   for (auto& frameData : m_frameDataArray)
   {
+    frameData.gpuFilterEffectData = &m_gpuFilterEffectData;
+
     InitMiscData(frameData.miscData);
     InitImageArrays(frameData.imageArrays);
     InitFilterPosArrays(frameData.filterPosArrays);
@@ -690,7 +729,7 @@ auto DisplacementFilter::SetupScreenBuffers() -> void
 
 auto DisplacementFilter::CompileAndLinkShaders() -> void
 {
-  const auto shaderMacros = std::unordered_map<std::string, std::string>{
+  auto shaderMacros = std::unordered_map<std::string, std::string>{
       {    "FILTER_BUFF1_IMAGE_UNIT",           std::to_string(FILTER_BUFF1_IMAGE_UNIT)},
       {    "FILTER_BUFF2_IMAGE_UNIT",           std::to_string(FILTER_BUFF2_IMAGE_UNIT)},
       {    "FILTER_BUFF3_IMAGE_UNIT",           std::to_string(FILTER_BUFF3_IMAGE_UNIT)},
@@ -700,11 +739,18 @@ auto DisplacementFilter::CompileAndLinkShaders() -> void
       {"FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
       {"FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
       { "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
+      {                      "WIDTH",                        std::to_string(GetWidth())},
       {                     "HEIGHT",                       std::to_string(GetHeight())},
       {               "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
       {       "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
       {     "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
   };
+
+  for (auto i = 0U; i < NUM<GpuZoomFilterMode>; ++i)
+  {
+    const auto enumName = EnumToString(static_cast<GpuZoomFilterMode>(i));
+    shaderMacros.emplace(std::pair{enumName, std::to_string(i)});
+  }
 
   try
   {
@@ -750,6 +796,7 @@ auto DisplacementFilter::CompileShaderFile(GlslProgram& program,
 {
   static constexpr auto* INCLUDE_DIR = "";
 
+  //  const auto tempDir        = std::string{"/home/greg/Prj/workdir"};
   const auto tempDir        = fs::temp_directory_path().string();
   const auto filename       = fs::path(filepath).filename().string();
   const auto tempShaderFile = tempDir + "/" + filename;
@@ -819,6 +866,7 @@ auto DisplacementFilter::Pass1UpdateFilterBuff1AndBuff3() noexcept -> void
   m_programPass1UpdateFilterBuff1AndBuff3.Use();
 
   UpdatePass1MiscDataToGl(m_currentPboIndex);
+  UpdatePass1GpuFilterEffectDataToGl();
 
   BindGlFilterBuffer2();
   BindGlImageBuffers();
@@ -1012,35 +1060,55 @@ auto DisplacementFilter::InitFrameDataArrayPointers(std::vector<FrameData>& fram
 
 auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept -> void
 {
+  const auto& filterPosArrays = m_frameDataArray.at(pboIndex).filterPosArrays;
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_SRCE_DEST_LERP_FACTOR,
+                                                     filterPosArrays.filterPosBuffersLerpFactor);
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_RESET_SRCE_FILTER_POS,
+                                                     filterPosArrays.filterDestPosNeedsUpdating);
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_POS1_POS2_MIX_FREQ,
+                                                     filterPosArrays.filterPos1Pos2FreqMixFreq);
+
+  const auto& miscData = m_frameDataArray.at(pboIndex).miscData;
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_BASE_COLOR_MULTIPLIER,
+                                                     miscData.baseColorMultiplier);
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_PREV_FRAME_T_MIX,
+                                                     miscData.prevFrameTMix);
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_TIME,
+                                                     static_cast<float>(miscData.goomTime));
+}
+
+auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
+{
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_LERP_FACTOR,
+                                                     m_gpuFilterEffectData.lerpFactor);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_LERP_FACTOR,
-      m_frameDataArray.at(pboIndex).filterPosArrays.filterPosBuffersLerpFactor);
+      UNIFORM_GPU_MIDPOINT,
+      glm::vec2{m_gpuFilterEffectData.midpoint().x, m_gpuFilterEffectData.midpoint().y});
+
+  if (not m_gpuFilterEffectData.filterNeedsUpdating)
+  {
+    return;
+  }
+
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_RESET_SRCE_FILTER_POS,
-      m_frameDataArray.at(pboIndex).filterPosArrays.filterDestPosNeedsUpdating);
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_POS1_POS2_MIX_FREQ,
-      m_frameDataArray.at(pboIndex).filterPosArrays.filterPos1Pos2FreqMixFreq);
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_BASE_COLOR_MULTIPLIER, m_frameDataArray.at(pboIndex).miscData.baseColorMultiplier);
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_PREV_FRAME_T_MIX, m_frameDataArray.at(pboIndex).miscData.prevFrameTMix);
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
-      UNIFORM_TIME, static_cast<uint32_t>(m_frameDataArray.at(pboIndex).miscData.goomTime));
+      UNIFORM_GPU_FILTER_MODE, static_cast<uint32_t>(m_gpuFilterEffectData.filterMode));
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_MAX_TIME,
+                                                     m_gpuFilterEffectData.maxTime);
+
+  m_gpuFilterEffectData.filterParams->OutputGpuParams(m_pass1SetterFuncs);
 }
 
 auto DisplacementFilter::UpdatePass4MiscDataToGl(const size_t pboIndex) noexcept -> void
 {
-  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(
-      UNIFORM_BRIGHTNESS, m_frameDataArray.at(pboIndex).miscData.brightness);
+  const auto& miscData = m_frameDataArray.at(pboIndex).miscData;
+
+  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(UNIFORM_BRIGHTNESS, miscData.brightness);
   m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(UNIFORM_BRIGHTNESS_ADJUST,
                                                           m_brightnessAdjust);
-  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(
-      UNIFORM_HUE_SHIFT, m_frameDataArray.at(pboIndex).miscData.hueShift);
-  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(
-      UNIFORM_CHROMA_FACTOR, m_frameDataArray.at(pboIndex).miscData.chromaFactor);
-  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(
-      UNIFORM_GAMMA, m_frameDataArray.at(pboIndex).miscData.gamma);
+  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(UNIFORM_HUE_SHIFT, miscData.hueShift);
+  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(UNIFORM_CHROMA_FACTOR,
+                                                          miscData.chromaFactor);
+  m_programPass4ResetFilterBuff2AndOutputBuff3.SetUniform(UNIFORM_GAMMA, miscData.gamma);
 }
 
 // NOLINTNEXTLINE(bugprone-exception-escape): Not sure what clang-tidy is on about

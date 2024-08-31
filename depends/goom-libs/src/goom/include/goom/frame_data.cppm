@@ -1,14 +1,21 @@
 module;
 
 #include <cstdint>
+#include <memory>
 #include <span>
 
 export module Goom.Lib.FrameData;
 
+import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
+import Goom.FilterFx.FilterModes;
 import Goom.Utils.Math.GoomRand;
+import Goom.Utils.Math.Lerper;
 import Goom.Lib.GoomGraphic;
 import Goom.Lib.Point2d;
 
+using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
+using GOOM::UTILS::MATH::Lerper;
 using GOOM::UTILS::MATH::NumberRange;
 
 export namespace GOOM
@@ -45,8 +52,18 @@ struct MiscData
   float gamma               = 1.0F;
   uint64_t goomTime         = 0U;
 };
+struct GpuFilterEffectData
+{
+  bool filterNeedsUpdating = false;
+  GpuZoomFilterMode filterMode{};
+  float lerpFactor = 0.0F;
+  float maxTime    = 0.0F;
+  Lerper<Point2dFlt> midpoint{};
+  const IGpuParams* filterParams = nullptr;
+};
 struct FrameData
 {
+  GpuFilterEffectData* gpuFilterEffectData{};
   MiscData miscData{};
   FilterPosArrays filterPosArrays{};
   ImageArrays imageArrays{};
