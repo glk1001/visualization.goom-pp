@@ -48,6 +48,7 @@ using UTILS::MATH::U_HALF;
 using UTILS::MATH::UNIT_RANGE;
 using UTILS::MATH::Weights;
 
+using enum GpuZoomFilterMode;
 using enum ZoomFilterMode;
 
 namespace
@@ -55,7 +56,7 @@ namespace
 
 // For debugging:
 
-constexpr auto FORCED_GPU_FILTER_MODE = GpuZoomFilterMode::GPU_AMULET_MODE;
+constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
 
 //constexpr auto FORCED_FILTER_MODE = AMULET_MODE;
 //constexpr auto FORCED_FILTER_MODE = COMPLEX_RATIONAL_MODE;
@@ -410,6 +411,31 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
   return filterWeights;
 }
 
+[[nodiscard]] auto GetWeightedGpuFilterEvents(const GoomRand& goomRand)
+    -> Weights<GpuZoomFilterMode>
+{
+  static constexpr auto GPU_AMULET_MODE_WEIGHT     = 10.0F;
+  static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
+  static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;
+  static constexpr auto GPU_REFLECTING_POOL_WEIGHT = 10.0F;
+  static constexpr auto GPU_BEAUTIFUL_FIELD_WEIGHT = 10.0F;
+
+  auto filterGpuWeights = Weights<GpuZoomFilterMode>{
+      goomRand,
+      {
+        {.key = GPU_AMULET_MODE, .weight = GPU_AMULET_MODE_WEIGHT},
+        {.key = GPU_WAVE_MODE, .weight = GPU_WAVE_WEIGHT},
+        {.key = GPU_VORTEX_MODE, .weight = GPU_VORTEX_WEIGHT},
+        {.key = GPU_REFLECTING_POOL_MODE, .weight = GPU_REFLECTING_POOL_WEIGHT},
+        {.key = GPU_BEAUTIFUL_FIELD_MODE, .weight = GPU_BEAUTIFUL_FIELD_WEIGHT},
+        },
+  };
+
+  Ensures(filterGpuWeights.GetNumSetWeights() == NUM<GpuZoomFilterMode>);
+
+  return filterGpuWeights;
+}
+
 // NOLINTBEGIN(readability-function-cognitive-complexity)
 
 [[nodiscard]] constexpr auto GetHypercosWeights(const ZoomFilterMode filterMode) noexcept
@@ -708,7 +734,9 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
     m_filterModeData{GetFilterModeData(goomRand,
                                        m_resourcesDirectory,
                                        createZoomAdjustmentEffect)},
+    m_weightedFilterEvents{GetWeightedFilterEvents(goomRand)},
     m_gpuFilterModeData{GetGpuFilterModeData(goomRand, createGpuZoomFilterEffect)},
+    m_weightedGpuFilterEvents{GetWeightedGpuFilterEvents(goomRand)},
     m_filterSettings{
         .filterEffectsSettingsHaveChanged = false,
         .filterEffectsSettings = {
@@ -735,7 +763,6 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
         .gpuFilterEffectsSettingsHaveChanged = false,
         .transformBufferLerpData=GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
     },
-    m_weightedFilterEvents{GetWeightedFilterEvents(goomRand)},
     m_zoomMidpointWeights{
       goomRand,
       {
@@ -784,7 +811,7 @@ auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMo
   {
     return FORCED_GPU_FILTER_MODE;
   }
-  return GpuZoomFilterMode::GPU_VORTEX_MODE;
+  return m_weightedGpuFilterEvents.GetRandomWeighted();
 }
 
 auto FilterSettingsService::Start() -> void
