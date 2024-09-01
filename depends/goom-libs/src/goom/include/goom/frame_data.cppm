@@ -56,8 +56,8 @@ struct GpuFilterEffectData
 {
   bool filterNeedsUpdating = false;
   GpuZoomFilterMode filterMode{};
-  float lerpFactor = 0.0F;
-  float maxTime    = 0.0F;
+  Lerper<float> lerpFactor{};
+  float maxTime = 0.0F;
   Lerper<Point2dFlt> midpoint{};
   const IGpuParams* filterParams = nullptr;
 };

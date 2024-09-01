@@ -535,7 +535,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
   const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
 
   // 'lerpFactor' is not controlled by the settings have changed flag.
-  m_frameData->gpuFilterEffectData->lerpFactor = 0.5F;
+  m_frameData->gpuFilterEffectData->lerpFactor.Increment();
 
   if (not filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {

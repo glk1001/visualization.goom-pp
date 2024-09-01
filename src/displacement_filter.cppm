@@ -35,6 +35,7 @@ export module Goom.GoomVisualization:DisplacementFilter;
 
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.FilterModes;
+import Goom.Utils.Math.Lerper;
 import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
 import Goom.Lib.FrameData;
@@ -51,6 +52,7 @@ import :Scene;
 using GOOM::FILTER_FX::GpuZoomFilterMode;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
+using GOOM::UTILS::MATH::Lerper;
 
 export namespace GOOM::OPENGL
 {
@@ -147,13 +149,14 @@ private:
   auto DoTheDraw() const -> void;
   auto WaitForRenderSync() noexcept -> void;
 
+  static constexpr auto NUM_GPU_LERP_FACTOR_STEPS   = 2500U;
   static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS = 500U;
   GpuFilterEffectData m_gpuFilterEffectData{
       .filterNeedsUpdating = false,
       .filterMode          = GpuZoomFilterMode::GPU_AMULET_MODE,
-      .lerpFactor          = 0.0F,
-      .maxTime             = 0.0F,
-      .midpoint     = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
+      .lerpFactor = {NUM_GPU_LERP_FACTOR_STEPS, 0.0F, 1.0F, Lerper<float>::LerperType::CONTINUOUS},
+      .maxTime    = 0.0F,
+      .midpoint   = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
       .filterParams = nullptr,
   };
   size_t m_currentPboIndex = 0U;
@@ -438,9 +441,6 @@ inline auto DisplacementFilter::BindFilterBuff3Texture() -> void
 namespace fs = std::filesystem;
 
 // TODO(glk) - Need to pass goomLogger
-//std_fmt::println("{}", __LINE__);
-
-//using FILTER_FX::NormalizedCoords;
 
 namespace
 {
@@ -1088,7 +1088,7 @@ auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept
 auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
 {
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_LERP_FACTOR,
-                                                     m_gpuFilterEffectData.lerpFactor);
+                                                     m_gpuFilterEffectData.lerpFactor());
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_MIDPOINT,
       glm::vec2{m_gpuFilterEffectData.midpoint().x, m_gpuFilterEffectData.midpoint().y});
