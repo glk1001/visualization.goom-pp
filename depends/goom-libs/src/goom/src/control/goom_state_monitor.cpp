@@ -121,10 +121,7 @@ inline auto GoomStateMonitor::GetFilterEffectsNameValueParams() const -> UTILS::
   const auto& filterEffectsSettings =
       m_filterSettingsService->GetFilterSettings().filterEffectsSettings;
   return {
-      GetPair(PARAM_GROUP,
-              "Midpoint",
-              Point2dInt{.x = filterEffectsSettings.zoomMidpoint.x,
-                         .y = filterEffectsSettings.zoomMidpoint.y}),
+      GetPair(PARAM_GROUP, "Midpoint", filterEffectsSettings.zoomMidpoint),
       GetPair(PARAM_GROUP, "After Mult", filterEffectsSettings.afterEffectsVelocityMultiplier),
   };
 }

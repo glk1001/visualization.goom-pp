@@ -130,10 +130,14 @@ private:
   ZoomFilterMode m_previousFilterMode     = ZoomFilterMode::NORMAL_MODE;
   ZoomFilterMode m_filterModeAtLastUpdate = ZoomFilterMode::NORMAL_MODE;
   FilterModeEnumMap m_filterModeData;
+  ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
   GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_AMULET_MODE;
   GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_AMULET_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
+  Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
+
+  FilterSettings m_filterSettings;
 
   auto SetRandomSettingsForNewFilterMode() -> void;
 
@@ -154,8 +158,6 @@ private:
   static constexpr auto PROB_ACTIVE_MULTIPLIER_EFFECT                  = 0.3F;
   static constexpr auto PROB_MULTIPLIER_EFFECT_FREQUENCIES_EQUAL       = 0.95F;
   static constexpr auto PROB_MULTIPLIER_EFFECT_AMPLITUDES_EQUAL        = 0.95F;
-  FilterSettings m_filterSettings;
-  ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
   [[nodiscard]] auto GetNewRandomFilterMode() const -> ZoomFilterMode;
   [[nodiscard]] auto GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode;
   [[nodiscard]] auto GetZoomAdjustmentEffect() -> std::shared_ptr<IZoomAdjustmentEffect>&;
