@@ -124,7 +124,7 @@ protected:
   static constexpr auto IMAGE_TEX_PIXEL_TYPE       = FILTER_BUFF_TEX_PIXEL_TYPE;
 
   [[nodiscard]] auto GetBuffSize() const noexcept -> size_t;
-  auto BindFilterBuff3Texture() -> void;
+  auto BindMainColorsBuffTexture() -> void;
   [[nodiscard]] auto GetLumAverage() const -> float;
 
   static constexpr auto PASS1_VERTEX_SHADER   = "filter.vs";
@@ -241,13 +241,13 @@ private:
   static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME   = "tex_mainColorImage";
   static constexpr auto LOW_IMAGE_TEX_SHADER_NAME    = "tex_lowColorImage";
 
-  static constexpr auto NULL_IMAGE_UNIT             = -1;
-  static constexpr auto FILTER_BUFF1_IMAGE_UNIT     = 0;
-  static constexpr auto FILTER_BUFF2_IMAGE_UNIT     = 1;
-  static constexpr auto FILTER_BUFF3_IMAGE_UNIT     = 2;
-  static constexpr auto LUM_AVG_IMAGE_UNIT          = 3;
-  static constexpr auto FILTER_SRCE_POS_IMAGE_UNITS = std::array{4, 5};
-  static constexpr auto FILTER_DEST_POS_IMAGE_UNITS = std::array{6, 7};
+  static constexpr auto NULL_IMAGE_UNIT                  = -1;
+  static constexpr auto LOW_COLORS_BUFF_IMAGE_UNIT       = 0;
+  static constexpr auto PERSISTED_COLORS_BUFF_IMAGE_UNIT = 1;
+  static constexpr auto MAIN_COLORS_BUFF_IMAGE_UNIT      = 2;
+  static constexpr auto LUM_AVG_IMAGE_UNIT               = 3;
+  static constexpr auto FILTER_SRCE_POS_IMAGE_UNITS      = std::array{4, 5};
+  static constexpr auto FILTER_DEST_POS_IMAGE_UNITS      = std::array{6, 7};
 
   GLuint m_histogramBufferName{};
   static constexpr auto HISTOGRAM_BUFFER_LENGTH    = 256U;
@@ -295,7 +295,9 @@ private:
   struct GlFilterBuffers
   {
     explicit GlFilterBuffers(const GlCaller& glCaller)
-      : filterBuff1Texture{glCaller}, filterBuff2Texture{glCaller}, filterBuff3Texture{glCaller}
+      : lowColorsBuffTexture{glCaller},
+        mainColorsBuffTexture{glCaller},
+        persistedColorsBuffTexture{glCaller}
     {
     }
     Gl2DTexture<PixelIntType,
@@ -305,15 +307,7 @@ private:
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
                 0>
-        filterBuff1Texture;
-    Gl2DTexture<PixelIntType,
-                NUM_FILTER_BUFF_TEXTURES,
-                FILTER_BUFF2_TEX_LOCATION,
-                FILTER_BUFF_TEX_FORMAT,
-                FILTER_BUFF_TEX_INTERNAL_FORMAT,
-                FILTER_BUFF_TEX_PIXEL_TYPE,
-                0>
-        filterBuff2Texture;
+        lowColorsBuffTexture;
     Gl2DTexture<PixelIntType,
                 NUM_FILTER_BUFF_TEXTURES,
                 FILTER_BUFF3_TEX_LOCATION,
@@ -321,7 +315,15 @@ private:
                 FILTER_BUFF_TEX_INTERNAL_FORMAT,
                 FILTER_BUFF_TEX_PIXEL_TYPE,
                 0>
-        filterBuff3Texture;
+        mainColorsBuffTexture;
+    Gl2DTexture<PixelIntType,
+                NUM_FILTER_BUFF_TEXTURES,
+                FILTER_BUFF2_TEX_LOCATION,
+                FILTER_BUFF_TEX_FORMAT,
+                FILTER_BUFF_TEX_INTERNAL_FORMAT,
+                FILTER_BUFF_TEX_PIXEL_TYPE,
+                0>
+        persistedColorsBuffTexture;
   };
   // NOLINTEND(misc-non-private-member-variables-in-classes)
   GlFilterBuffers m_glFilterBuffers{m_gl};
@@ -371,8 +373,8 @@ private:
                        std::span<Pixel> buffer,
                        float lumAverage = 0.0F) const -> void;
   auto SaveFilterPosBuffer(const std::string& filename, uint32_t textureIndex) -> void;
-  auto SaveFilterPosBuffer(const std::string& filename, std::span<FilterPosBuffersXY> buffer) const
-      -> void;
+  auto SaveFilterPosBuffer(const std::string& filename,
+                           std::span<FilterPosBuffersXY> buffer) const -> void;
 #endif
 };
 
@@ -433,9 +435,9 @@ inline auto DisplacementFilter::GetBuffSize() const noexcept -> size_t
   return m_buffSize;
 }
 
-inline auto DisplacementFilter::BindFilterBuff3Texture() -> void
+inline auto DisplacementFilter::BindMainColorsBuffTexture() -> void
 {
-  m_glFilterBuffers.filterBuff3Texture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterBuffers.mainColorsBuffTexture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 namespace fs = std::filesystem;
@@ -450,8 +452,8 @@ auto CopyBuffer(const std::span<const Point2dFlt> srce, std::span<Point2dFlt> de
 }
 
 // TODO(glk) - Move this into goom filters?
-auto InitFilterPosBuffer(const Dimensions& dimensions, std::span<Point2dFlt> tranBufferFlt) noexcept
-    -> void
+auto InitFilterPosBuffer(const Dimensions& dimensions,
+                         std::span<Point2dFlt> tranBufferFlt) noexcept -> void
 {
   Expects(dimensions.GetSize() == tranBufferFlt.size());
 
@@ -541,9 +543,9 @@ auto DisplacementFilter::DestroyScene() -> void
   m_glFilterPosBuffers.filterDestPosTexture.DeleteBuffers();
   m_glImageBuffers.mainImageTexture.DeleteBuffers();
   m_glImageBuffers.lowImageTexture.DeleteBuffers();
-  m_glFilterBuffers.filterBuff1Texture.DeleteBuffers();
-  m_glFilterBuffers.filterBuff2Texture.DeleteBuffers();
-  m_glFilterBuffers.filterBuff3Texture.DeleteBuffers();
+  m_glFilterBuffers.lowColorsBuffTexture.DeleteBuffers();
+  m_glFilterBuffers.persistedColorsBuffTexture.DeleteBuffers();
+  m_glFilterBuffers.mainColorsBuffTexture.DeleteBuffers();
 
   m_programPass1UpdateFilterBuff1AndBuff3.DeleteProgram();
   m_programPass2FilterBuff1LuminanceHistogram.DeleteProgram();
@@ -738,20 +740,20 @@ auto DisplacementFilter::SetupScreenBuffers() -> void
 auto DisplacementFilter::CompileAndLinkShaders() -> void
 {
   auto shaderMacros = std::unordered_map<std::string, std::string>{
-      {    "FILTER_BUFF1_IMAGE_UNIT",           std::to_string(FILTER_BUFF1_IMAGE_UNIT)},
-      {    "FILTER_BUFF2_IMAGE_UNIT",           std::to_string(FILTER_BUFF2_IMAGE_UNIT)},
-      {    "FILTER_BUFF3_IMAGE_UNIT",           std::to_string(FILTER_BUFF3_IMAGE_UNIT)},
-      {         "LUM_AVG_IMAGE_UNIT",                std::to_string(LUM_AVG_IMAGE_UNIT)},
-      {"FILTER_SRCE_POS_IMAGE_UNIT1", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
-      {"FILTER_SRCE_POS_IMAGE_UNIT2", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
-      {"FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
-      {"FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
-      { "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
-      {                      "WIDTH",                        std::to_string(GetWidth())},
-      {                     "HEIGHT",                       std::to_string(GetHeight())},
-      {               "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
-      {       "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
-      {     "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
+      {      "LOW_COLORS_BUFF_IMAGE_UNIT",        std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
+      {     "MAIN_COLORS_BUFF_IMAGE_UNIT",       std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
+      {"PERSISTED_COLORS_BUFF_IMAGE_UNIT",  std::to_string(PERSISTED_COLORS_BUFF_IMAGE_UNIT)},
+      {              "LUM_AVG_IMAGE_UNIT",                std::to_string(LUM_AVG_IMAGE_UNIT)},
+      {     "FILTER_SRCE_POS_IMAGE_UNIT1", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
+      {     "FILTER_SRCE_POS_IMAGE_UNIT2", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
+      {     "FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
+      {     "FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
+      {      "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
+      {                           "WIDTH",                        std::to_string(GetWidth())},
+      {                          "HEIGHT",                       std::to_string(GetHeight())},
+      {                    "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
+      {            "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
+      {          "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
   };
 
   for (auto i = 0U; i < NUM<GpuZoomFilterMode>; ++i)
@@ -1178,7 +1180,8 @@ auto DisplacementFilter::UpdateImageBuffersToGl(const size_t pboIndex) -> void
 
 auto DisplacementFilter::BindGlFilterBuffer2() -> void
 {
-  m_glFilterBuffers.filterBuff2Texture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterBuffers.persistedColorsBuffTexture.BindTextures(
+      m_programPass1UpdateFilterBuff1AndBuff3);
 }
 
 auto DisplacementFilter::BindGlImageBuffers() -> void
@@ -1189,12 +1192,12 @@ auto DisplacementFilter::BindGlImageBuffers() -> void
 
 auto DisplacementFilter::SetupGlFilterBuffers() -> void
 {
-  m_glFilterBuffers.filterBuff1Texture.Setup(
-      0, NULL_TEXTURE_NAME, FILTER_BUFF1_IMAGE_UNIT, GetWidth(), GetHeight());
-  m_glFilterBuffers.filterBuff2Texture.Setup(
-      0, FILTER_BUFF2_TEX_SHADER_NAME, FILTER_BUFF2_IMAGE_UNIT, GetWidth(), GetHeight());
-  m_glFilterBuffers.filterBuff3Texture.Setup(
-      0, NULL_TEXTURE_NAME, FILTER_BUFF3_IMAGE_UNIT, GetWidth(), GetHeight());
+  m_glFilterBuffers.lowColorsBuffTexture.Setup(
+      0, NULL_TEXTURE_NAME, LOW_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
+  m_glFilterBuffers.persistedColorsBuffTexture.Setup(
+      0, FILTER_BUFF2_TEX_SHADER_NAME, PERSISTED_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
+  m_glFilterBuffers.mainColorsBuffTexture.Setup(
+      0, NULL_TEXTURE_NAME, MAIN_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlFilterPosBuffers() -> void
@@ -1264,9 +1267,9 @@ auto DisplacementFilter::SetupGlLumAverageData() -> void
 
 auto DisplacementFilter::InitTextureBuffers() -> void
 {
-  m_glFilterBuffers.filterBuff1Texture.ZeroTextures();
-  m_glFilterBuffers.filterBuff2Texture.ZeroTextures();
-  m_glFilterBuffers.filterBuff3Texture.ZeroTextures();
+  m_glFilterBuffers.lowColorsBuffTexture.ZeroTextures();
+  m_glFilterBuffers.persistedColorsBuffTexture.ZeroTextures();
+  m_glFilterBuffers.mainColorsBuffTexture.ZeroTextures();
 
   m_glImageBuffers.mainImageTexture.ZeroTextures();
   m_glImageBuffers.lowImageTexture.ZeroTextures();
@@ -1297,7 +1300,7 @@ auto DisplacementFilter::SaveGlBuffersAfterPass4() -> void
 auto DisplacementFilter::SaveFilterBuffersAfterPass1() -> void
 {
   auto filterBuffer = std::vector<Pixel>(m_buffSize);
-  m_glFilterBuffers.filterBuff1Texture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
+  m_glFilterBuffers.lowColorsBuffTexture.BindTextures(m_programPass1UpdateFilterBuff1AndBuff3);
   m_gl.Call()(glGetTexImage,
               static_cast<GLenum>(GL_TEXTURE_2D),
               0,
@@ -1326,7 +1329,8 @@ auto DisplacementFilter::SaveFilterBuffersAfterPass4() -> void
   const auto lumAverage = GetLumAverage();
 
   auto filterBuffer = std::vector<Pixel>(m_buffSize);
-  m_glFilterBuffers.filterBuff3Texture.BindTextures(m_programPass4ResetFilterBuff2AndOutputBuff3);
+  m_glFilterBuffers.mainColorsBuffTexture.BindTextures(
+      m_programPass4ResetFilterBuff2AndOutputBuff3);
   m_gl.Call()(glGetTexImage,
               static_cast<GLenum>(GL_TEXTURE_2D),
               0,

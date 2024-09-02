@@ -24,8 +24,8 @@ uniform vec4 u_params;
 
 // @formatter:off
 // clang-format off
-layout(binding=FILTER_BUFF1_IMAGE_UNIT,    rgba16f) uniform readonly image2D img_input;
-layout(binding=LUM_HISTOGRAM_BUFFER_INDEX,  std430)                  buffer  buff_histogram
+layout(binding=LOW_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform readonly image2D img_input;
+layout(binding=LUM_HISTOGRAM_BUFFER_INDEX, std430)                   buffer  buff_histogram
 // clang-format on
 // @formatter:on
 {
