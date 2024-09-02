@@ -5,12 +5,13 @@
 
 layout(location = 0) out vec4 fragColor;
 
-// Stores this frames' buff2 value (including current low color). Persisted to 'filterBuff2'.
-layout(binding=FILTER_BUFF1_IMAGE_UNIT, rgba16f) uniform readonly image2D img_filterBuff1;
-layout(binding=FILTER_BUFF2_IMAGE_UNIT, rgba16f) uniform          image2D img_filterBuff2;
+// 'img_lowColorsBuff' has this frames' mapped color and current low color,
+// which is persisted to 'img_persistedColorsBuff'.
+layout(binding=LOW_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform readonly image2D img_lowColorsBuff;
+layout(binding=PERSISTED_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform image2D img_persistedColorsBuff;
 
-// Stores this frames' buff2 value and main color. Not persisted.
-layout(binding=FILTER_BUFF3_IMAGE_UNIT, rgba16f) uniform readonly image2D img_filterBuff3;
+// 'img_mainColorsBuff' has this frames' mapped color and current main color. Not persisted.
+layout(binding=MAIN_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform readonly image2D img_mainColorsBuff;
 
 // Luminance values for exposure correction.
 layout(binding=LUM_AVG_IMAGE_UNIT, r16f) uniform readonly image2D img_lumAvg;
@@ -31,12 +32,12 @@ void main()
   const ivec2 deviceXY = ivec2(gl_FragCoord.xy);
 
   // Get the hdr color to work with.
-  const vec4 filterBuff3Val = imageLoad(img_filterBuff3, deviceXY);
+  const vec4 filterBuff3Val = imageLoad(img_mainColorsBuff, deviceXY);
   const vec4 hdrColor       = filterBuff3Val;
 
   // Copy filter buff1 to filter buff2 ready for the next frame.
-  const vec4 filterBuff1Val = imageLoad(img_filterBuff1, deviceXY);
-  imageStore(img_filterBuff2, deviceXY, filterBuff1Val);
+  const vec4 filterBuff1Val = imageLoad(img_lowColorsBuff, deviceXY);
+  imageStore(img_persistedColorsBuff, deviceXY, filterBuff1Val);
 
   // Convert to HCY.
   vec3 hcy = RGBtoHCY(hdrColor.rgb);
