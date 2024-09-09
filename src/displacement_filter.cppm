@@ -246,18 +246,18 @@ private:
 
   static constexpr auto LUM_AVG_TEX_LOCATION = LOW_IMAGE_TEX_LOCATION + NUM_IMAGE_TEXTURES;
 
-  static constexpr auto NULL_TEXTURE_NAME            = "";
-  static constexpr auto FILTER_BUFF2_TEX_SHADER_NAME = "tex_filterBuff2";
-  static constexpr auto MAIN_IMAGE_TEX_SHADER_NAME   = "tex_mainColorImage";
-  static constexpr auto LOW_IMAGE_TEX_SHADER_NAME    = "tex_lowColorImage";
+  static constexpr auto NULL_TEXTURE_NAME                    = "";
+  static constexpr auto MAIN_COLORS_IMAGE_TEXTURE_NAME       = "tex_mainColorImage";
+  static constexpr auto LOW_COLORS_IMAGE_TEXTURE_NAME        = "tex_lowColorImage";
+  static constexpr auto PERSISTENT_COLORS_IMAGE_TEXTURE_NAME = "tex_persistentColorsImage";
 
-  static constexpr auto NULL_IMAGE_UNIT                  = -1;
-  static constexpr auto LOW_COLORS_BUFF_IMAGE_UNIT       = 0;
-  static constexpr auto PERSISTED_COLORS_BUFF_IMAGE_UNIT = 1;
-  static constexpr auto MAIN_COLORS_BUFF_IMAGE_UNIT      = 2;
-  static constexpr auto LUM_AVG_IMAGE_UNIT               = 3;
-  static constexpr auto FILTER_SRCE_POS_IMAGE_UNITS      = std::array{4, 5};
-  static constexpr auto FILTER_DEST_POS_IMAGE_UNITS      = std::array{6, 7};
+  static constexpr auto NULL_IMAGE_UNIT                   = -1;
+  static constexpr auto LOW_COLORS_BUFF_IMAGE_UNIT        = 0;
+  static constexpr auto PERSISTENT_COLORS_BUFF_IMAGE_UNIT = 1;
+  static constexpr auto MAIN_COLORS_BUFF_IMAGE_UNIT       = 2;
+  static constexpr auto LUM_AVG_IMAGE_UNIT                = 3;
+  static constexpr auto FILTER_SRCE_POS_IMAGE_UNITS       = std::array{4, 5};
+  static constexpr auto FILTER_DEST_POS_IMAGE_UNITS       = std::array{6, 7};
 
   GLuint m_histogramBufferName{};
   static constexpr auto HISTOGRAM_BUFFER_LENGTH    = 256U;
@@ -750,20 +750,20 @@ auto DisplacementFilter::SetupScreenBuffers() -> void
 auto DisplacementFilter::CompileAndLinkShaders() -> void
 {
   auto shaderMacros = std::unordered_map<std::string, std::string>{
-      {      "LOW_COLORS_BUFF_IMAGE_UNIT",        std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
-      {     "MAIN_COLORS_BUFF_IMAGE_UNIT",       std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
-      {"PERSISTED_COLORS_BUFF_IMAGE_UNIT",  std::to_string(PERSISTED_COLORS_BUFF_IMAGE_UNIT)},
-      {              "LUM_AVG_IMAGE_UNIT",                std::to_string(LUM_AVG_IMAGE_UNIT)},
-      {     "FILTER_SRCE_POS_IMAGE_UNIT1", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
-      {     "FILTER_SRCE_POS_IMAGE_UNIT2", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
-      {     "FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
-      {     "FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
-      {      "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
-      {                           "WIDTH",                        std::to_string(GetWidth())},
-      {                          "HEIGHT",                       std::to_string(GetHeight())},
-      {                    "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
-      {            "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
-      {          "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
+      {       "LOW_COLORS_BUFF_IMAGE_UNIT",        std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
+      {      "MAIN_COLORS_BUFF_IMAGE_UNIT",       std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
+      {"PERSISTENT_COLORS_BUFF_IMAGE_UNIT", std::to_string(PERSISTENT_COLORS_BUFF_IMAGE_UNIT)},
+      {               "LUM_AVG_IMAGE_UNIT",                std::to_string(LUM_AVG_IMAGE_UNIT)},
+      {      "FILTER_SRCE_POS_IMAGE_UNIT1", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
+      {      "FILTER_SRCE_POS_IMAGE_UNIT2", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
+      {      "FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
+      {      "FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
+      {       "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
+      {                            "WIDTH",                        std::to_string(GetWidth())},
+      {                           "HEIGHT",                       std::to_string(GetHeight())},
+      {                     "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
+      {             "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
+      {           "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
   };
 
   for (auto i = 0U; i < NUM<GpuZoomFilterMode>; ++i)
@@ -1209,8 +1209,11 @@ auto DisplacementFilter::SetupGlFilterBuffers() -> void
 {
   m_glFilterBuffers.lowColorsBuffTexture.Setup(
       0, NULL_TEXTURE_NAME, LOW_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
-  m_glFilterBuffers.persistedColorsBuffTexture.Setup(
-      0, FILTER_BUFF2_TEX_SHADER_NAME, PERSISTED_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
+  m_glFilterBuffers.persistedColorsBuffTexture.Setup(0,
+                                                     PERSISTENT_COLORS_IMAGE_TEXTURE_NAME,
+                                                     PERSISTENT_COLORS_BUFF_IMAGE_UNIT,
+                                                     GetWidth(),
+                                                     GetHeight());
   m_glFilterBuffers.mainColorsBuffTexture.Setup(
       0, NULL_TEXTURE_NAME, MAIN_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
 }
@@ -1229,9 +1232,9 @@ auto DisplacementFilter::SetupGlFilterPosBuffers() -> void
 auto DisplacementFilter::SetupGlImageBuffers() -> void
 {
   m_glImageBuffers.mainImageTexture.Setup(
-      0, MAIN_IMAGE_TEX_SHADER_NAME, NULL_IMAGE_UNIT, GetWidth(), GetHeight());
+      0, MAIN_COLORS_IMAGE_TEXTURE_NAME, NULL_IMAGE_UNIT, GetWidth(), GetHeight());
   m_glImageBuffers.lowImageTexture.Setup(
-      0, LOW_IMAGE_TEX_SHADER_NAME, NULL_IMAGE_UNIT, GetWidth(), GetHeight());
+      0, LOW_COLORS_IMAGE_TEXTURE_NAME, NULL_IMAGE_UNIT, GetWidth(), GetHeight());
 }
 
 auto DisplacementFilter::SetupGlLumHistogramBuffer() -> void
