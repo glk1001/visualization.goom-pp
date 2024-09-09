@@ -55,11 +55,14 @@ struct MiscData
 struct GpuFilterEffectData
 {
   bool filterNeedsUpdating = false;
-  GpuZoomFilterMode filterMode{};
-  Lerper<float> lerpFactor{};
+  GpuZoomFilterMode srceFilterMode{};
+  GpuZoomFilterMode destFilterMode{};
+  const IGpuParams* srceFilterParams = nullptr;
+  const IGpuParams* destFilterParams = nullptr;
+  Lerper<float> srceDestLerpFactor{};
+  Lerper<float> gpuLerpFactor{};
   float maxTime = 0.0F;
   Lerper<Point2dFlt> midpoint{};
-  const IGpuParams* filterParams = nullptr;
 };
 struct FrameData
 {
