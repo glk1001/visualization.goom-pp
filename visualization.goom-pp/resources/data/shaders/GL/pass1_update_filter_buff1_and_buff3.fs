@@ -108,8 +108,16 @@ vec4 GetPosMappedFilterBuff2ColorValue(const vec2 uv, const ivec2 deviceXY)
   const TexelPositions filterBuff2TexelPositions = GetPosMappedFilterBuff2TexelPositions(deviceXY);
   const FilterBuffColors filterBuff2Colors       = GetFilterBuff2Colors(filterBuff2TexelPositions);
 
-  return GetColorFromMixOfColor1AndColor2(filterBuff2Colors,
-                                          GetColor1Color2TMix(uv, filterBuff2TexelPositions));
+  const vec2 GPUPos = GetFinalGPUFilteredPosition(deviceXY);
+  const vec2 GPUTextPos = GetTexelPos(GPUPos);
+  const vec4 GPUColor = texture(tex_filterBuff2, GPUTextPos);
+
+  const vec4 color1Color2Mix = GetColorFromMixOfColor1AndColor2(
+                 filterBuff2Colors, GetColor1Color2TMix(uv, filterBuff2TexelPositions));
+
+  const vec4 colorGPUColorMix = mix(color1Color2Mix, GPUColor, u_gpuFilterLerpFactor);
+
+  return colorGPUColorMix;
 }
 
 
@@ -140,9 +148,9 @@ TexelPositions GetPosMappedFilterBuff2TexelPositions(ivec2 deviceXY)
   lerpedNormalizedPositions.pos1 += deltaAmp * delta;
   lerpedNormalizedPositions.pos2 -= deltaAmp * delta;
 
-  const vec2 GPUPos = GetFinalGPUFilteredPosition(deviceXY);
-  lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GPUPos, u_gpuFilterLerpFactor);
-  lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GPUPos, u_gpuFilterLerpFactor);
+//  const vec2 GPUPos = GetFinalGPUFilteredPosition(deviceXY);
+//  lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GPUPos, 0.5*u_gpuFilterLerpFactor);
+//  lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GPUPos, 0.5*u_gpuFilterLerpFactor);
 
   return GetTexelPositions(lerpedNormalizedPositions);
 }
