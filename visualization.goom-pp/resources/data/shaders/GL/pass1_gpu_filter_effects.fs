@@ -1,11 +1,12 @@
 // Assumes:
 //
 // uniform float u_time;
-// uniform uint u_filterMode;
 
-uniform uint u_filterMode;
-uniform float u_filterMaxTime;
-uniform vec2 u_filterMidpoint;
+uniform uint u_gpuSrceFilterMode;
+uniform uint u_gpuDestFilterMode;
+uniform float u_gpuSrceDestFilterLerpFactor;
+uniform float u_gpuFilterMaxTime;
+uniform vec2 u_gpuFilterMidpoint;
 
 uniform float u_amuletXAmplitude;
 uniform float u_amuletYAmplitude;
@@ -128,17 +129,17 @@ const float RATIO_DEV_TO_NORMALIZED_COORD = FILTER_POS_COORD_WIDTH / float(WIDTH
 //                            FILTER_POS_MIN_COORD + (RATIO_DEV_TO_NORMALIZED_COORD * float(HEIGHT/2))
 //            );
 
-vec2 GetGPUFilteredPosition(const ivec2 deviceXY)
+vec2 GetGPUFilteredPosition(const uint gpuFilterMode, const ivec2 deviceXY)
 {
   const vec2 pos = vec2(FILTER_POS_MIN_COORD + (RATIO_DEV_TO_NORMALIZED_COORD * float(deviceXY.x)),
                         FILTER_POS_MIN_COORD + (RATIO_DEV_TO_NORMALIZED_COORD * float(deviceXY.y)));
 
-  const vec2 centredPos = pos - u_filterMidpoint;
+  const vec2 centredPos = pos - u_gpuFilterMidpoint;
   //const vec2 centredPos = pos - MIDPOINT;
 
   vec2 velocity = vec2(0.0);
 
-  switch (u_filterMode)
+  switch (gpuFilterMode)
   {
     case GPU_AMULET_MODE:
       velocity = GetAmuletVelocity(centredPos);
@@ -160,5 +161,18 @@ vec2 GetGPUFilteredPosition(const ivec2 deviceXY)
   }
 
   //return (centredPos + velocity) + MIDPOINT;
-  return (centredPos + velocity) + u_filterMidpoint;
+  return (centredPos + velocity) + u_gpuFilterMidpoint;
+}
+
+vec2 GetFinalGPUFilteredPosition(const ivec2 deviceXY)
+{
+  if ((u_gpuSrceFilterMode == u_gpuDestFilterMode) || (u_gpuSrceDestFilterLerpFactor >= 1.0F))
+  {
+    return GetGPUFilteredPosition(u_gpuDestFilterMode, deviceXY);
+  }
+
+  const vec2 srceFilterPostion = GetGPUFilteredPosition(u_gpuSrceFilterMode, deviceXY);
+  const vec2 destFilterPostion = GetGPUFilteredPosition(u_gpuDestFilterMode, deviceXY);
+
+  return mix(srceFilterPostion, destFilterPostion, u_gpuSrceDestFilterLerpFactor);
 }

@@ -534,8 +534,9 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 
   const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
 
-  // 'lerpFactor' is not controlled by the settings have changed flag.
-  m_frameData->gpuFilterEffectData->lerpFactor.Increment();
+  // 'gpu lerp factors' are not controlled by the settings 'have changed' flag.
+  m_frameData->gpuFilterEffectData->gpuLerpFactor.Increment();
+  m_frameData->gpuFilterEffectData->srceDestLerpFactor.Increment();
 
   if (not filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {
@@ -546,10 +547,17 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
     const auto& gpuZoomFilterEffect = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
 
     m_frameData->gpuFilterEffectData->filterNeedsUpdating = true;
-    m_frameData->gpuFilterEffectData->filterMode =
+
+    m_frameData->gpuFilterEffectData->srceFilterMode =
+        m_frameData->gpuFilterEffectData->destFilterMode;
+    m_frameData->gpuFilterEffectData->srceFilterParams =
+        m_frameData->gpuFilterEffectData->destFilterParams;
+    m_frameData->gpuFilterEffectData->destFilterMode =
         m_filterSettingsService.GetCurrentGpuFilterMode();
-    m_frameData->gpuFilterEffectData->filterParams = &gpuZoomFilterEffect.GetGpuParams();
-    m_frameData->gpuFilterEffectData->maxTime      = 100.0F;
+    m_frameData->gpuFilterEffectData->destFilterParams = &gpuZoomFilterEffect.GetGpuParams();
+    m_frameData->gpuFilterEffectData->srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+
+    m_frameData->gpuFilterEffectData->maxTime = 100.0F;
 
     const auto& currentMidpoint = m_frameData->gpuFilterEffectData->midpoint();
     const auto newMidpoint =

@@ -25,7 +25,7 @@ uniform float u_prevFrameTMix;
 uniform bool u_resetSrceFilterPosBuffers;
 uniform float u_pos1Pos2MixFreq;
 uniform float u_time;
-uniform float u_filterLerpFactor;  // For lerping between gpu and srce and dest buffers.
+uniform float u_gpuFilterLerpFactor;  // For lerping between gpu and srce and dest buffers.
 
 // For base multiplier, too close to 1, gives washed
 // out look, too far away and things get too dark.
@@ -140,9 +140,9 @@ TexelPositions GetPosMappedFilterBuff2TexelPositions(ivec2 deviceXY)
   lerpedNormalizedPositions.pos1 += deltaAmp * delta;
   lerpedNormalizedPositions.pos2 -= deltaAmp * delta;
 
-  const vec2 GPUPos = GetGPUFilteredPosition(deviceXY);
-  lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GPUPos, u_filterLerpFactor);
-  lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GPUPos, u_filterLerpFactor);
+  const vec2 GPUPos = GetFinalGPUFilteredPosition(deviceXY);
+  lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GPUPos, u_gpuFilterLerpFactor);
+  lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GPUPos, u_gpuFilterLerpFactor);
 
   return GetTexelPositions(lerpedNormalizedPositions);
 }
