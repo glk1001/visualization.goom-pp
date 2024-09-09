@@ -93,7 +93,7 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float timeFreq = 0.025;
+    const float timeFreq = 0.01;
     const float t = 5.0 * sin(timeFreq * u_time);
     const float A = 1.5;
 

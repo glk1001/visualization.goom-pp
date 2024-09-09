@@ -26,6 +26,9 @@ uniform bool u_resetSrceFilterPosBuffers;
 uniform float u_pos1Pos2MixFreq;
 uniform float u_time;
 uniform float u_gpuFilterLerpFactor;  // For lerping between gpu and srce and dest buffers.
+uniform float u_maxGpuFilterLerpFactor = 0.5F;
+uniform float u_maxGpuColorMixFactor   = 0.75F;
+uniform bool u_useGpuFilterPositionsToGetColor = true;
 
 // For base multiplier, too close to 1, gives a washed out look,
 // too far away and things look too dark.
@@ -112,14 +115,20 @@ vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY)
     const TexelPositions mappedTexelPositions = GetFilterBuffPosMappedTexelPositions(deviceXY);
     const FilterBuffColors persistentColors   = GetPersistentColors(mappedTexelPositions);
 
-    const vec2 GpuPos      = GetFinalGpuFilteredPosition(deviceXY);
-    const vec2 GpuTexelPos = GetTexelPos(GpuPos);
-    const vec4 GpuColor    = texture(tex_persistentColorsImage, GpuTexelPos);
-
     const vec4 color1Color2Mix = GetColorFromMixOfColor1AndColor2(
-                   persistentColors, GetColor1Color2TMix(uv, mappedTexelPositions));
+        persistentColors, GetColor1Color2TMix(uv, mappedTexelPositions));
 
-    const vec4 colorGpuColorMix = mix(color1Color2Mix, GpuColor, u_gpuFilterLerpFactor);
+    if (!u_useGpuFilterPositionsToGetColor)
+    {
+        return color1Color2Mix;
+    }
+
+    // Use Gpu filter position to directly get color.
+    const float gpuLerpFactor = u_maxGpuColorMixFactor * u_gpuFilterLerpFactor;
+    const vec2 GpuPos           = GetFinalGpuFilteredPosition(deviceXY);
+    const vec2 GpuTexelPos      = GetTexelPos(GpuPos);
+    const vec4 GpuColor         = texture(tex_persistentColorsImage, GpuTexelPos);
+    const vec4 colorGpuColorMix = mix(color1Color2Mix, GpuColor, gpuLerpFactor);
 
     return colorGpuColorMix;
 }
@@ -143,18 +152,22 @@ TexelPositions GetFilterBuffPosMappedTexelPositions(ivec2 deviceXY)
 
     if (u_resetSrceFilterPosBuffers)
     {
-      ResetImageSrceFilterBuffPositions(deviceXY, lerpedNormalizedPositions);
+        ResetImageSrceFilterBuffPositions(deviceXY, lerpedNormalizedPositions);
     }
 
-    const float deltaAmp  = 0.01F;
+    const float deltaAmp = 0.01F;
     const float deltaFreq = 0.05F;
-    const vec2 delta      = vec2(cos(deltaFreq * u_time), sin(deltaFreq * u_time));
+    const vec2 delta = vec2(cos(deltaFreq * u_time), sin(deltaFreq * u_time));
     lerpedNormalizedPositions.pos1 += deltaAmp * delta;
     lerpedNormalizedPositions.pos2 -= deltaAmp * delta;
 
-//    const vec2 GpuPos = GetFinalGpuFilteredPosition(deviceXY);
-//    lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GpuPos, u_gpuFilterLerpFactor);
-//    lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GpuPos, u_gpuFilterLerpFactor);
+    if (!u_useGpuFilterPositionsToGetColor)
+    {
+        const vec2 GpuPos              = GetFinalGpuFilteredPosition(deviceXY);
+        const float gpuLerpFactor      = u_maxGpuFilterLerpFactor * u_gpuFilterLerpFactor;
+        lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GpuPos, gpuLerpFactor);
+        lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GpuPos, gpuLerpFactor);
+    }
 
     return GetTexelPositions(lerpedNormalizedPositions);
 }
