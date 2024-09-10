@@ -1,7 +1,11 @@
 module;
 
+#undef NO_LOGGING
+#include "goom/goom_logger.h"
+
 #include <functional>
 #include <memory>
+#include <print>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -16,6 +20,7 @@ import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.FilterSpeed;
+import Goom.Utils.DebuggingLogger;
 import Goom.Utils.EnumUtils;
 import Goom.Utils.Math.GoomRand;
 import Goom.Lib.AssertUtils;
@@ -84,6 +89,7 @@ public:
 
   [[nodiscard]] auto GetCurrentGpuFilterMode() const noexcept -> GpuZoomFilterMode;
   [[nodiscard]] auto GetPreviousGPUFilterModeName() const noexcept -> const std::string_view&;
+  auto PutBackGpuFilterMode(GpuZoomFilterMode gpuFilterMode) noexcept -> void;
 
   [[nodiscard]] auto GetFilterSettings() const noexcept -> const FilterSettings&;
   [[nodiscard]] auto GetROVitesse() const noexcept -> const Vitesse&;
@@ -132,8 +138,9 @@ private:
   FilterModeEnumMap m_filterModeData;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
-  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_gpuFilterMode              = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_savedPreviousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 
@@ -302,10 +309,34 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> void
   m_previousFilterMode = m_filterMode;
   m_filterMode         = GetNewRandomFilterMode();
 
-  m_previousGpuFilterMode = m_gpuFilterMode;
-  m_gpuFilterMode         = GetNewRandomGpuFilterMode();
+  m_savedPreviousGpuFilterMode = m_previousGpuFilterMode;
+  m_previousGpuFilterMode      = m_gpuFilterMode;
+  m_gpuFilterMode              = GetNewRandomGpuFilterMode();
+  // std::println("Setting new gpu filter {} (prev = {}).",
+  //              UTILS::EnumToString(m_gpuFilterMode),
+  //              UTILS::EnumToString(m_previousGpuFilterMode));
+
+  if (m_gpuFilterMode == m_previousGpuFilterMode)
+  {
+    // std::println("ERROR: Wrong weighted filter returned. Should not be same as previous: '{}'.",
+    //              UTILS::EnumToString(m_gpuFilterMode));
+    LogWarn(UTILS::GetGoomLogger(),
+            "Wrong weighted filter returned. Should not be same as previous: '{}'.",
+            UTILS::EnumToString(m_gpuFilterMode));
+  }
 
   SetRandomSettingsForNewFilterMode();
+}
+
+inline auto FilterSettingsService::PutBackGpuFilterMode(
+    const GpuZoomFilterMode gpuFilterMode) noexcept -> void
+{
+  m_previousGpuFilterMode = m_savedPreviousGpuFilterMode;
+  m_gpuFilterMode         = gpuFilterMode;
+  // std::println("Put back gpu filter {}", UTILS::EnumToString(m_gpuFilterMode));
+
+  // No need to run 'SetRandomSettingsForNewFilterMode()'
+  // -- just use whatever happened before put back.
 }
 
 inline auto FilterSettingsService::SetRandomSettingsForNewFilterMode() -> void

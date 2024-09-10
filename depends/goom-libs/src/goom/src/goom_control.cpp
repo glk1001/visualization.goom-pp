@@ -13,6 +13,10 @@
 module;
 
 //#define DO_GOOM_STATE_DUMP
+#define DEBUG_GPU_FILTERS 1
+#ifdef DEBUG_GPU_FILTERS
+#include <print>
+#endif
 
 #undef NO_LOGGING // NOLINT: This maybe be defined on command line.
 
@@ -49,6 +53,7 @@ import Goom.FilterFx.FilterSettingsService;
 import Goom.FilterFx.FilterZoomVector;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.DebuggingLogger;
+import Goom.Utils.EnumUtils;
 import Goom.Utils.GoomTime;
 import Goom.Utils.Parallel;
 import Goom.Utils.Stopwatch;
@@ -530,28 +535,52 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterPosArrays() noexcept -> 
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> void
 {
-  m_frameData->gpuFilterEffectData->midpoint.Increment();
+  const auto& filterSettings    = std::as_const(m_filterSettingsService).GetFilterSettings();
+  const auto& gpuFilterSettings = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
+  auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
 
-  const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
-
-  // 'gpu lerp factors' are not controlled by the settings 'have changed' flag.
-  m_frameData->gpuFilterEffectData->gpuLerpFactor.Increment();
-  m_frameData->gpuFilterEffectData->srceDestLerpFactor.Increment();
+  // Always increment irrespective of whether settings have changed.
+  gpuFilterEffectData.midpoint.Increment();
+  gpuFilterEffectData.gpuLerpFactor.Increment();
+  gpuFilterEffectData.srceDestLerpFactor.Increment();
 
   if (not filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {
-    m_frameData->gpuFilterEffectData->filterNeedsUpdating = false;
+    gpuFilterEffectData.filterNeedsUpdating = false;
   }
   else
   {
-    const auto& gpuFilterSettings = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
-    auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
-
     gpuFilterEffectData.filterNeedsUpdating = true;
 
+#ifdef DEBUG_GPU_FILTERS
+    std::println("gpuFilterEffectData need updating:");
+    std::println("  gpuFilterEffectData.srceFilterMode = {}",
+                 UTILS::EnumToString(gpuFilterEffectData.srceFilterMode));
+    std::println("  gpuFilterEffectData.destFilterMode = {}",
+                 UTILS::EnumToString(gpuFilterEffectData.destFilterMode));
+    std::println("  m_filterSettingsService.GetCurrentGpuFilterMode() = {}",
+                 UTILS::EnumToString(m_filterSettingsService.GetCurrentGpuFilterMode()));
+    std::println("  gpuFilterEffectData.srceDestLerpFactor = {}",
+                 gpuFilterEffectData.srceDestLerpFactor());
+#endif
+
     if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
-        gpuFilterEffectData.destFilterMode != nextGpuFilterMode)
+        not OkToSwitchGpuFilterMode(gpuFilterEffectData, nextGpuFilterMode))
     {
+      if (nextGpuFilterMode != gpuFilterEffectData.destFilterMode)
+      {
+#ifdef DEBUG_GPU_FILTERS
+        std::println("Put back gpu filter '{}'", UTILS::EnumToString(nextGpuFilterMode));
+#endif
+        m_filterSettingsService.PutBackGpuFilterMode(nextGpuFilterMode);
+      }
+    }
+    else
+    {
+#ifdef DEBUG_GPU_FILTERS
+      std::println("  gpuFilterEffectData: switching srce and dest");
+#endif
+
       gpuFilterEffectData.srceFilterMode   = gpuFilterEffectData.destFilterMode;
       gpuFilterEffectData.srceFilterParams = gpuFilterEffectData.destFilterParams;
 
@@ -559,6 +588,15 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
       gpuFilterEffectData.destFilterParams = &gpuFilterSettings.GetGpuParams();
 
       gpuFilterEffectData.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+
+#ifdef DEBUG_GPU_FILTERS
+      std::println("  NOW gpuFilterEffectData.srceFilterMode = {}",
+                   UTILS::EnumToString(gpuFilterEffectData.srceFilterMode));
+      std::println("  NOW gpuFilterEffectData.destFilterMode = {}",
+                   UTILS::EnumToString(gpuFilterEffectData.destFilterMode));
+      std::println("  NOW gpuFilterEffectData.srceDestLerpFactor = {}",
+                   gpuFilterEffectData.srceDestLerpFactor());
+#endif
     }
 
     gpuFilterEffectData.maxTime = 100.0F;
