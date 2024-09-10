@@ -32,8 +32,8 @@ using AFTER_EFFECTS::AfterEffectsStates;
 using AFTER_EFFECTS::AfterEffectsTypes;
 using AFTER_EFFECTS::HypercosOverlayMode;
 using AFTER_EFFECTS::RotationAdjustments;
+using FILTER_EFFECTS::IZoomAdjustmentEffect;
 using FILTER_EFFECTS::ZoomVectorEffects;
-using FILTER_FX::FILTER_EFFECTS::IZoomAdjustmentEffect;
 using FILTER_UTILS::GoomLerpData;
 using UTILS::EnumMap;
 using UTILS::GetFilledEnumMap;
@@ -780,7 +780,7 @@ auto FilterSettingsService::GetNewRandomFilterMode() const -> ZoomFilterMode
 
 auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode
 {
-  if constexpr (USE_FORCED_FILTER_MODE)
+  if constexpr (USE_FORCED_GPU_FILTER_MODE)
   {
     return FORCED_GPU_FILTER_MODE;
   }
