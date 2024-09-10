@@ -113,13 +113,10 @@ public:
   [[nodiscard]] auto GetSumOfWeightsUpTo(const E& lastVal) const noexcept -> float;
 
   [[nodiscard]] auto GetRandomWeighted() const noexcept -> E;
+  [[nodiscard]] auto GetRandomWeighted(const E& given) const noexcept -> E;
   [[nodiscard]] auto GetRandomWeightedUpTo(const E& upToThisEvent) const noexcept -> E;
 
 private:
-  template<EnumType F>
-  friend class ConditionalWeights;
-  [[nodiscard]] auto GetRandomWeighted(const E& given) const noexcept -> E;
-
   const GoomRand* m_goomRand = nullptr;
   using WeightArray          = std::array<float, NUM<E>>;
   struct WeightData
@@ -461,27 +458,10 @@ auto Weights<E>::GetSumOfWeightsUpTo(const E& lastVal) const noexcept -> float
 template<EnumType E>
 auto Weights<E>::GetRandomWeighted(const E& given) const noexcept -> E
 {
-  Expects(NUM<E> == m_weightData.weightArray.size());
+  auto newWeights = *this;
+  newWeights.SetWeightToZero(given);
 
-  const auto sumOfWeights =
-      GetSumOfWeights() - m_weightData.weightArray[static_cast<size_t>(given)];
-
-  auto randVal = m_goomRand->GetRandInRange(NumberRange{0.0F, sumOfWeights});
-
-  for (auto i = 0U; i < m_weightData.weightArray.size(); ++i)
-  {
-    if (static_cast<E>(i) == given)
-    {
-      continue;
-    }
-    if (randVal < m_weightData.progressiveWeightSumArray[i])
-    {
-      return static_cast<E>(i);
-    }
-    randVal -= m_weightData.weightArray[i];
-  }
-
-  std::unreachable();
+  return newWeights.GetRandomWeighted();
 }
 
 template<EnumType E>
