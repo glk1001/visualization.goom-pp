@@ -819,7 +819,7 @@ auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMo
   {
     return FORCED_GPU_FILTER_MODE;
   }
-  return m_weightedGpuFilterEvents.GetRandomWeighted();
+  return m_weightedGpuFilterEvents.GetRandomWeighted(m_gpuFilterMode);
 }
 
 auto FilterSettingsService::Start() -> void
