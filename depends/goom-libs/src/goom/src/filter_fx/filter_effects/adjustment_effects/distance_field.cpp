@@ -301,7 +301,7 @@ inline auto DistanceField::FindNearestGridPointsWithCentres(
     if (distanceSq < minDistanceSq)
     {
       minDistanceSq     = distanceSq;
-      minDistancePoints = GridCentresList{1, centrePoint};
+      minDistancePoints = GridCentresList{centrePoint};
     }
     else if (distanceSq == minDistanceSq)
     {
@@ -384,7 +384,7 @@ inline auto DistanceField::GetNearsetGridPointsWithCentres(
 {
   if (m_params.gridType == GridType::FULL)
   {
-    return GridCentresList{1, gridPoint};
+    return {gridPoint};
   }
 
   const auto x = static_cast<uint32_t>(gridPoint.x);
