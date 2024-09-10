@@ -415,7 +415,7 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
 [[nodiscard]] auto GetWeightedGpuFilterEvents(const GoomRand& goomRand)
     -> Weights<GpuZoomFilterMode>
 {
-  static constexpr auto GPU_NONE_MODE_WEIGHT       = 1.0F;
+  static constexpr auto GPU_NONE_MODE_WEIGHT       = 10.0F;
   static constexpr auto GPU_AMULET_MODE_WEIGHT     = 10.0F;
   static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
   static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;

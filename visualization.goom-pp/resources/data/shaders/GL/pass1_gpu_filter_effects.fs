@@ -173,11 +173,16 @@ vec2 GetFinalGpuFilteredPosition(const ivec2 deviceXY)
 {
     if (u_gpuSrceFilterMode == GPU_NONE_MODE)
     {
-        return GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
+        return u_gpuSrceDestFilterLerpFactor <= 0.001F
+            ? vec2(0.0F)
+            : u_gpuSrceDestFilterLerpFactor * GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
     }
     if (u_gpuDestFilterMode == GPU_NONE_MODE)
     {
-        return GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
+        const float srceFactor = 1.0F - u_gpuSrceDestFilterLerpFactor;
+        return srceFactor < 0.001F
+            ? vec2(0.0F)
+            : srceFactor * GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
     }
     if ((u_gpuSrceFilterMode == u_gpuDestFilterMode) || (u_gpuSrceDestFilterLerpFactor >= 1.0F))
     {

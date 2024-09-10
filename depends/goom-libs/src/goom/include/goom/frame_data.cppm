@@ -72,4 +72,24 @@ struct FrameData
   ImageArrays imageArrays{};
 };
 
+[[nodiscard]] auto OkToSwitchGpuFilterMode(const GpuFilterEffectData& filterEffectData,
+                                           GpuZoomFilterMode newGpuFilterMode) -> bool;
+
+} // namespace GOOM
+
+namespace GOOM
+{
+
+inline auto OkToSwitchGpuFilterMode(const GpuFilterEffectData& gpuFilterEffectData,
+                                    const GpuZoomFilterMode newGpuFilterMode) -> bool
+{
+  if (gpuFilterEffectData.destFilterMode == newGpuFilterMode)
+  {
+    return false;
+  }
+
+  static constexpr auto LERP_CUTOFF = 0.95F;
+  return gpuFilterEffectData.srceDestLerpFactor() > LERP_CUTOFF;
+}
+
 } // namespace GOOM

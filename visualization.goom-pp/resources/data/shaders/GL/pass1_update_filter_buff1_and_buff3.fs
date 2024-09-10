@@ -27,7 +27,7 @@ uniform float u_pos1Pos2MixFreq;
 uniform float u_time;
 
 uniform float u_gpuFilterLerpFactor;  // For lerping between gpu and srce and dest buffers.
-uniform float u_maxGpuFilterLerpFactor = 1.0F;
+uniform float u_maxGpuFilterLerpFactor = 0.6F;
 uniform float u_maxGpuColorMixFactor   = 0.75F;
 uniform bool u_useGpuFilterPositionsToGetColor = false;
 
