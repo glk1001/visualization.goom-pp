@@ -56,6 +56,7 @@ namespace
 
 // For debugging:
 
+//constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
 constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
 
 //constexpr auto FORCED_FILTER_MODE = AMULET_MODE;
@@ -414,6 +415,7 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
 [[nodiscard]] auto GetWeightedGpuFilterEvents(const GoomRand& goomRand)
     -> Weights<GpuZoomFilterMode>
 {
+  static constexpr auto GPU_NONE_MODE_WEIGHT       = 1.0F;
   static constexpr auto GPU_AMULET_MODE_WEIGHT     = 10.0F;
   static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
   static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;
@@ -423,6 +425,7 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
   auto filterGpuWeights = Weights<GpuZoomFilterMode>{
       goomRand,
       {
+        {.key = GPU_NONE_MODE, .weight = GPU_NONE_MODE_WEIGHT},
         {.key = GPU_AMULET_MODE, .weight = GPU_AMULET_MODE_WEIGHT},
         {.key = GPU_WAVE_MODE, .weight = GPU_WAVE_WEIGHT},
         {.key = GPU_VORTEX_MODE, .weight = GPU_VORTEX_WEIGHT},
@@ -676,17 +679,22 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
   {
     const auto filterMode = static_cast<ZoomFilterMode>(i);
 
+    // clang-format off
     filterModeVec.emplace_back(
         filterMode,
         FilterSettingsService::ZoomFilterModeInfo{
             .name = GetFilterModeName(filterMode),
-            .zoomAdjustmentEffect =
-                createZoomAdjustmentEffect(filterMode, goomRand, resourcesDirectory),
-            .afterEffectsProbabilities = {.hypercosModeWeights =
-                                              Weights<HypercosOverlayMode>{
-                                                  goomRand, GetHypercosWeights(filterMode)},
-                                          .probabilities = GetAfterEffectsProbability(filterMode)},
-    });
+            .zoomAdjustmentEffect      = createZoomAdjustmentEffect(filterMode,
+                                                                    goomRand,
+                                                                    resourcesDirectory),
+            .afterEffectsProbabilities = {
+                .hypercosModeWeights = Weights<HypercosOverlayMode>{goomRand,
+                                                                    GetHypercosWeights(filterMode)},
+                .probabilities       = GetAfterEffectsProbability(filterMode)
+            }
+        }
+    );
+    // clang-format on
   }
 
   return FilterSettingsService::FilterModeEnumMap::Make(std::move(filterModeVec));

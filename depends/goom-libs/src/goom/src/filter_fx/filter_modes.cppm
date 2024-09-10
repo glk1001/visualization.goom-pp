@@ -12,6 +12,7 @@ export namespace GOOM::FILTER_FX
 
 enum class GpuZoomFilterMode : UnderlyingEnumType
 {
+  GPU_NONE_MODE,
   GPU_AMULET_MODE,
   GPU_WAVE_MODE,
   GPU_VORTEX_MODE,
@@ -67,6 +68,7 @@ inline auto GetGpuFilterModeName(const GpuZoomFilterMode gpuFilterMode) noexcept
 {
   using enum GpuZoomFilterMode;
   static constexpr auto GPU_FILTER_MODE_NAMES = EnumMap<GpuZoomFilterMode, std::string_view>{{{
+      {GPU_NONE_MODE, "GPU None"},
       {GPU_AMULET_MODE, "GPU Amulet"},
       {GPU_WAVE_MODE, "GPU Wave"},
       {GPU_VORTEX_MODE, "GPU Vortex"},

@@ -25,10 +25,11 @@ uniform float u_prevFrameTMix;
 uniform bool u_resetSrceFilterPosBuffers;
 uniform float u_pos1Pos2MixFreq;
 uniform float u_time;
+
 uniform float u_gpuFilterLerpFactor;  // For lerping between gpu and srce and dest buffers.
-uniform float u_maxGpuFilterLerpFactor = 0.5F;
+uniform float u_maxGpuFilterLerpFactor = 1.0F;
 uniform float u_maxGpuColorMixFactor   = 0.75F;
-uniform bool u_useGpuFilterPositionsToGetColor = true;
+uniform bool u_useGpuFilterPositionsToGetColor = false;
 
 // For base multiplier, too close to 1, gives a washed out look,
 // too far away and things look too dark.
@@ -118,7 +119,7 @@ vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY)
     const vec4 color1Color2Mix = GetColorFromMixOfColor1AndColor2(
         persistentColors, GetColor1Color2TMix(uv, mappedTexelPositions));
 
-    if (!u_useGpuFilterPositionsToGetColor)
+    if (!u_useGpuFilterPositionsToGetColor || AllGpuFilterModesAreNone())
     {
         return color1Color2Mix;
     }
@@ -128,7 +129,8 @@ vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY)
     const vec2 GpuPos           = GetFinalGpuFilteredPosition(deviceXY);
     const vec2 GpuTexelPos      = GetTexelPos(GpuPos);
     const vec4 GpuColor         = texture(tex_persistentColorsImage, GpuTexelPos);
-    const vec4 colorGpuColorMix = mix(color1Color2Mix, GpuColor, gpuLerpFactor);
+    // const vec4 colorGpuColorMix = mix(color1Color2Mix, GpuColor, gpuLerpFactor);
+    const vec4 colorGpuColorMix = color1Color2Mix + (0.1 * gpuLerpFactor * GpuColor);
 
     return colorGpuColorMix;
 }

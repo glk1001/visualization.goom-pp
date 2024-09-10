@@ -544,27 +544,31 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
   }
   else
   {
-    const auto& gpuZoomFilterEffect = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
+    const auto& gpuFilterSettings = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
+    auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
 
-    m_frameData->gpuFilterEffectData->filterNeedsUpdating = true;
+    gpuFilterEffectData.filterNeedsUpdating = true;
 
-    m_frameData->gpuFilterEffectData->srceFilterMode =
-        m_frameData->gpuFilterEffectData->destFilterMode;
-    m_frameData->gpuFilterEffectData->srceFilterParams =
-        m_frameData->gpuFilterEffectData->destFilterParams;
-    m_frameData->gpuFilterEffectData->destFilterMode =
-        m_filterSettingsService.GetCurrentGpuFilterMode();
-    m_frameData->gpuFilterEffectData->destFilterParams = &gpuZoomFilterEffect.GetGpuParams();
-    m_frameData->gpuFilterEffectData->srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+    if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
+        gpuFilterEffectData.destFilterMode != nextGpuFilterMode)
+    {
+      gpuFilterEffectData.srceFilterMode   = gpuFilterEffectData.destFilterMode;
+      gpuFilterEffectData.srceFilterParams = gpuFilterEffectData.destFilterParams;
 
-    m_frameData->gpuFilterEffectData->maxTime = 100.0F;
+      gpuFilterEffectData.destFilterMode   = nextGpuFilterMode;
+      gpuFilterEffectData.destFilterParams = &gpuFilterSettings.GetGpuParams();
 
-    const auto& currentMidpoint = m_frameData->gpuFilterEffectData->midpoint();
+      gpuFilterEffectData.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+    }
+
+    gpuFilterEffectData.maxTime = 100.0F;
+
+    const auto& currentMidpoint = gpuFilterEffectData.midpoint();
     const auto newMidpoint =
         m_normalizedCoordsConverter
             .OtherToNormalizedCoords(filterSettings.filterEffectsSettings.zoomMidpoint)
             .GetFltCoords();
-    m_frameData->gpuFilterEffectData->midpoint.ResetValues(currentMidpoint, newMidpoint);
+    gpuFilterEffectData.midpoint.ResetValues(currentMidpoint, newMidpoint);
 
     m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }

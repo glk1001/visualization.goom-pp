@@ -1,3 +1,4 @@
+const uint GPU_NONE_MODE            = $GPU_NONE_MODE;
 const uint GPU_AMULET_MODE          = $GPU_AMULET_MODE;
 const uint GPU_WAVE_MODE            = $GPU_WAVE_MODE;
 const uint GPU_VORTEX_MODE          = $GPU_VORTEX_MODE;

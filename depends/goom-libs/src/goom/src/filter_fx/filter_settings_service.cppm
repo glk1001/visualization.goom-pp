@@ -132,8 +132,8 @@ private:
   FilterModeEnumMap m_filterModeData;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
-  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_AMULET_MODE;
-  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_AMULET_MODE;
+  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 

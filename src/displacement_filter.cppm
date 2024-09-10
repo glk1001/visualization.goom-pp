@@ -34,6 +34,7 @@ class GoomLogger;
 export module Goom.GoomVisualization:DisplacementFilter;
 
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
+import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.FilterModes;
 import Goom.Utils.Math.Lerper;
 import Goom.Utils.EnumUtils;
@@ -50,6 +51,7 @@ import :GlslShaderFile;
 import :Scene;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
 using GOOM::UTILS::MATH::Lerper;
@@ -156,10 +158,10 @@ private:
   static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
   GpuFilterEffectData m_gpuFilterEffectData{
       .filterNeedsUpdating = false,
-      .srceFilterMode      = GpuZoomFilterMode::GPU_AMULET_MODE,
-      .destFilterMode      = GpuZoomFilterMode::GPU_AMULET_MODE,
-      .srceFilterParams    = nullptr,
-      .destFilterParams    = nullptr,
+      .srceFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
+      .destFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
+      .srceFilterParams    = &None::GetEmptyGpuParams(),
+      .destFilterParams    = &None::GetEmptyGpuParams(),
       .srceDestLerpFactor  = {NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
                               0.0F, 1.0F,
                               Lerper<float>::LerperType::SINGLE},
