@@ -6,6 +6,7 @@ module Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffectFactory;
 
 import Goom.FilterFx.GpuFilterEffects.Amulet;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
+import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.GpuFilterEffects.Vortex;
 import Goom.FilterFx.GpuFilterEffects.Wave;
 import Goom.FilterFx.FilterModes;
@@ -18,12 +19,13 @@ using UTILS::MATH::GoomRand;
 
 using enum GpuZoomFilterMode;
 
-
 auto CreateGpuZoomFilterEffect(const GpuZoomFilterMode gpuFilterMode, const GoomRand& goomRand)
     -> std::unique_ptr<IGpuZoomFilterEffect>
 {
   switch (gpuFilterMode)
   {
+    case GPU_NONE_MODE:
+      return std::make_unique<None>();
     case GPU_AMULET_MODE:
       return std::make_unique<Amulet>(goomRand);
     case GPU_WAVE_MODE:

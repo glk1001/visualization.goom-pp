@@ -210,6 +210,7 @@ set(GoomFilterFx_modules
     src/filter_fx/gpu_filter_effects/amulet.cppm
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect.cppm
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cppm
+    src/filter_fx/gpu_filter_effects/none.cppm
     src/filter_fx/gpu_filter_effects/vortex.cppm
     src/filter_fx/gpu_filter_effects/wave.cppm
     src/filter_fx/common_types.cppm

@@ -164,15 +164,28 @@ vec2 GetGpuFilteredPosition(const uint gpuFilterMode, const ivec2 deviceXY)
     return (centredPos + velocity) + u_gpuFilterMidpoint;
 }
 
+bool AllGpuFilterModesAreNone()
+{
+    return (u_gpuSrceFilterMode == GPU_NONE_MODE) && (u_gpuDestFilterMode == GPU_NONE_MODE);
+}
+
 vec2 GetFinalGpuFilteredPosition(const ivec2 deviceXY)
 {
+    if (u_gpuSrceFilterMode == GPU_NONE_MODE)
+    {
+        return GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
+    }
+    if (u_gpuDestFilterMode == GPU_NONE_MODE)
+    {
+        return GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
+    }
     if ((u_gpuSrceFilterMode == u_gpuDestFilterMode) || (u_gpuSrceDestFilterLerpFactor >= 1.0F))
     {
         return GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
     }
 
-    const vec2 srceFilterPostion = GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
-    const vec2 destFilterPostion = GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
+    const vec2 srceFilterPosition = GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
+    const vec2 destFilterPosition = GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
 
-    return mix(srceFilterPostion, destFilterPostion, u_gpuSrceDestFilterLerpFactor);
+    return mix(srceFilterPosition, destFilterPosition, u_gpuSrceDestFilterLerpFactor);
 }
