@@ -38,7 +38,7 @@ uniform float u_mainColorMultiplier = 1.0F; // Used to factor this frames' main 
 uniform float u_lowColorMultiplier  = 0.7F; // Used to factor this frames' low color.
 
 #include "pass1_gpu_filter_effects_consts.h"
-#include "pass1_gpu_filter_effects.fs"
+#include "pass1_gpu_filter_effects.frag"
 
 vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY);
 float GetBaseColorMultiplier(const vec3 color);

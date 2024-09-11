@@ -131,8 +131,8 @@ protected:
   auto BindMainColorsBuffTexture() -> void;
   [[nodiscard]] auto GetLumAverage() const -> float;
 
-  static constexpr auto PASS1_VERTEX_SHADER   = "filter.vs";
-  static constexpr auto PASS1_FRAGMENT_SHADER = "pass1_update_filter_buff1_and_buff3.fs";
+  static constexpr auto PASS1_VERTEX_SHADER   = "filter.vert";
+  static constexpr auto PASS1_FRAGMENT_SHADER = "pass1_update_filter_buff1_and_buff3.frag";
   virtual auto Pass1UpdateFilterBuff1AndBuff3() noexcept -> void;
 
   [[nodiscard]] auto GetCurrentFrameData() const noexcept -> const FrameData&;
@@ -197,16 +197,16 @@ private:
   GlslProgram m_programPass1UpdateFilterBuff1AndBuff3;
 
   GlslProgram m_programPass2FilterBuff1LuminanceHistogram;
-  static constexpr auto PASS2_SHADER = "pass2_lum_histogram.cs";
+  static constexpr auto PASS2_SHADER = "pass2_lum_histogram.comp";
   auto Pass2FilterBuff3LuminanceHistogram() noexcept -> void;
 
   GlslProgram m_programPass3FilterBuff1LuminanceAverage;
-  static constexpr auto PASS3_SHADER = "pass3_lum_avg.cs";
+  static constexpr auto PASS3_SHADER = "pass3_lum_avg.comp";
   auto Pass3FilterBuff3LuminanceAverage() noexcept -> void;
 
   GlslProgram m_programPass4ResetFilterBuff2AndOutputBuff3;
-  static constexpr auto PASS4_VERTEX_SHADER   = "filter.vs";
-  static constexpr auto PASS4_FRAGMENT_SHADER = "pass4_reset_filter_buff2_and_output_buff3.fs";
+  static constexpr auto PASS4_VERTEX_SHADER   = "filter.vert";
+  static constexpr auto PASS4_FRAGMENT_SHADER = "pass4_reset_filter_buff2_and_output_buff3.frag";
   auto Pass4UpdateFilterBuff2AndOutputBuff3() noexcept -> void;
 
   auto Pass5OutputToScreen() -> void;
