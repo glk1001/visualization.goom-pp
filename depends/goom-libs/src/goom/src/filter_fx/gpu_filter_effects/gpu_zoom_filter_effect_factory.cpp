@@ -5,8 +5,10 @@ module;
 module Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffectFactory;
 
 import Goom.FilterFx.GpuFilterEffects.Amulet;
+import Goom.FilterFx.GpuFilterEffects.BeautifulField;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
+import Goom.FilterFx.GpuFilterEffects.ReflectingPool;
 import Goom.FilterFx.GpuFilterEffects.Vortex;
 import Goom.FilterFx.GpuFilterEffects.Wave;
 import Goom.FilterFx.FilterModes;
@@ -33,9 +35,9 @@ auto CreateGpuZoomFilterEffect(const GpuZoomFilterMode gpuFilterMode, const Goom
     case GPU_VORTEX_MODE:
       return std::make_unique<Vortex>(goomRand);
     case GPU_REFLECTING_POOL_MODE:
-      return std::make_unique<Amulet>(goomRand);
+      return std::make_unique<ReflectingPool>(goomRand);
     case GPU_BEAUTIFUL_FIELD_MODE:
-      return std::make_unique<Amulet>(goomRand);
+      return std::make_unique<BeautifulField>(goomRand);
   }
 }
 

@@ -81,44 +81,68 @@ vec2 GetVortexVelocity(const vec2 position)
     const float t = sqrt(u_vortexRFactor * r) + theta + (u_vortexFreq * u_time);
 
     vec2 v = vec2(p.y, -p.x) / r;
+
     v *= sin(t);
-    v.x *= u_vortexXAmplitude * length(v.x);
-    v.y *= u_vortexYAmplitude * length(v.y);
-    v += u_vortexPositionFactor * p;
+
+    const float vLength = length(v);
+    v.x *= u_vortexXAmplitude * vLength;
+    v.y *= u_vortexYAmplitude * vLength;
+
+    v += vec2(u_vortexXBase, u_vortexYBase) + u_vortexPositionFactor * p;
 
     return v;
 }
+
+uniform float u_reflectingPoolXAmplitude;
+uniform float u_reflectingPoolYAmplitude;
+uniform float u_reflectingPoolXBase;
+uniform float u_reflectingPoolYBase;
+uniform float u_reflectingPoolXInnerSinFreq;
+uniform float u_reflectingPoolYInnerSinFreq;
+uniform float u_reflectingPoolXFreq;
+uniform float u_reflectingPoolYFreq;
+uniform float u_reflectingPoolInnerPosXFactor;
+uniform float u_reflectingPoolInnerPosYFactor;
 
 vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float timeFreq = 0.01;
-    const float t = 5.0 * sin(timeFreq * u_time);
-    const float A = 1.5;
+    const float xT = u_reflectingPoolXFreq * sin(u_reflectingPoolXInnerSinFreq * u_time);
+    const float yT = u_reflectingPoolYFreq * sin(u_reflectingPoolYInnerSinFreq * u_time);
 
-    const vec2 v = vec2(A * sin((t * p.y) + p.x),
-                        A * cos((t * p.x) - p.y));
+    const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
+    const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
+
+    const vec2 v = vec2(u_reflectingPoolXBase + (u_reflectingPoolXAmplitude * vX),
+                        u_reflectingPoolYBase + (u_reflectingPoolYAmplitude * vY));
 
     return v;
 }
+
+uniform float u_beautifulFieldXAmplitude;
+uniform float u_beautifulFieldYAmplitude;
+uniform float u_beautifulFieldXBase;
+uniform float u_beautifulFieldYBase;
+uniform float u_beautifulFieldXInnerSinFreq;
+uniform float u_beautifulFieldYInnerSinFreq;
+uniform float u_beautifulFieldXFreq;
+uniform float u_beautifulFieldYFreq;
 
 vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float frame = 150.0 * sin(0.01 * u_time);
+    const float TWO_PI = 2.0F * 3.14159F;
 
-    const float PI = 3.14;
-    const float dt = 0.01;
+    const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXInnerSinFreq * u_time);
+    const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYInnerSinFreq * u_time);
+    const float w  = TWO_PI / 5.0;
 
-    const float t = frame * dt;
-    const float w = 2.0 * (PI / 5.0);
-    const float A = 5.0;
+    const float d = length(p);
 
-    const float d = sqrt((p.x * p.x) + (p.y * p.y));
-
-    const vec2 v = vec2(A * cos((w * t) / d), A * sin((w * t) / d));
+    const vec2 v = vec2(u_beautifulFieldXBase + (u_beautifulFieldXAmplitude * cos((w * xT) / d)),
+                        u_beautifulFieldYBase + (u_beautifulFieldYAmplitude * sin((w * yT) / d)));
 
     return v;
 }
