@@ -98,22 +98,19 @@ namespace
 
 // NOLINTNEXTLINE(cert-err58-cpp)
 const std::unordered_map<std::string, int32_t> EXTENSIONS = {
-    {       ".vs",          GL_VERTEX_SHADER},
     {     ".vert",          GL_VERTEX_SHADER},
     {"_vert.glsl",          GL_VERTEX_SHADER},
     {".vert.glsl",          GL_VERTEX_SHADER},
-    {       ".gs",        GL_GEOMETRY_SHADER},
     {     ".geom",        GL_GEOMETRY_SHADER},
     {".geom.glsl",        GL_GEOMETRY_SHADER},
     {      ".tcs",    GL_TESS_CONTROL_SHADER},
     { ".tcs.glsl",    GL_TESS_CONTROL_SHADER},
     {      ".tes", GL_TESS_EVALUATION_SHADER},
     { ".tes.glsl", GL_TESS_EVALUATION_SHADER},
-    {       ".fs",        GL_FRAGMENT_SHADER},
     {     ".frag",        GL_FRAGMENT_SHADER},
     {"_frag.glsl",        GL_FRAGMENT_SHADER},
     {".frag.glsl",        GL_FRAGMENT_SHADER},
-    {       ".cs",         GL_COMPUTE_SHADER},
+    {     ".comp",         GL_COMPUTE_SHADER},
     {  ".cs.glsl",         GL_COMPUTE_SHADER}
 };
 
