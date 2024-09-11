@@ -14,6 +14,7 @@ uniform float u_amuletXBase;
 uniform float u_amuletYBase;
 uniform float u_amuletXFreq;
 uniform float u_amuletYFreq;
+uniform float u_amuletSpinSign;
 
 vec2 GetAmuletVelocity(const vec2 position)
 {
@@ -23,9 +24,10 @@ vec2 GetAmuletVelocity(const vec2 position)
 
     const float sinT = sin(u_amuletXFreq * u_time);
     const float cosT = cos(u_amuletYFreq * u_time);
+
     const float x = p.x;
-    p.x = p.x * cosT - p.y * sinT;
-    p.y = p.y * cosT + x * sinT;
+    p.x = p.x * cosT - (u_amuletSpinSign * p.y * sinT);
+    p.y = p.y * cosT + (u_amuletSpinSign * x * sinT);
 
     const float baseX = u_amuletXBase;
     const float baseY = u_amuletYBase;

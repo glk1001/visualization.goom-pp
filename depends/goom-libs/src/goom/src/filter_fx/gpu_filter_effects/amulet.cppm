@@ -31,7 +31,8 @@ public:
     GpuParams(const Viewport& viewport,
               const Amplitude& amplitude,
               const FilterBase& filterBase,
-              const FrequencyFactor& frequencyFactor) noexcept;
+              const FrequencyFactor& frequencyFactor,
+              float amuletSpinSign) noexcept;
     auto OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
@@ -39,6 +40,7 @@ public:
     Amplitude m_amplitude{};
     FilterBase m_filterBase{};
     FrequencyFactor m_frequencyFactor{};
+    float m_amuletSpinSign = 1.0F;
   };
 
 private:

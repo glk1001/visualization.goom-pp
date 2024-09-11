@@ -13,9 +13,9 @@ using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 
-static constexpr auto AMPLITUDE_RANGE = NumberRange{0.1F, 1.51F};
-static constexpr auto BASE_RANGE      = NumberRange{0.1F, 0.3F};
-static constexpr auto FREQUENCY_RANGE = NumberRange{0.01F, 0.1F};
+static constexpr auto AMPLITUDE_RANGE = NumberRange{1.5F, 4.5F};
+static constexpr auto BASE_RANGE      = NumberRange{0.01F, 0.3F};
+static constexpr auto FREQUENCY_RANGE = NumberRange{0.001F, 0.03F};
 
 static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
     .minSideLength       = 0.1F,
@@ -28,6 +28,7 @@ static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
 static constexpr auto PROB_XY_AMPLITUDES_EQUAL  = 0.98F;
 static constexpr auto PROB_XY_BASES_EQUAL       = 0.98F;
 static constexpr auto PROB_XY_FREQUENCIES_EQUAL = 0.98F;
+static constexpr auto PROB_NEGATIVE_SPIN_SIGN   = 0.50F;
 static constexpr auto PROB_NO_VIEWPORT          = 0.5F;
 
 Amulet::Amulet(const GoomRand& goomRand) noexcept
@@ -57,11 +58,14 @@ auto Amulet::GetRandomParams() const noexcept -> GpuParams
                          ? xFreq
                          : m_goomRand->GetRandInRange<FREQUENCY_RANGE>();
 
+  const auto amuletSpinSign = m_goomRand->ProbabilityOf(PROB_NEGATIVE_SPIN_SIGN) ? -1.0F : +1.0F;
+
   return GpuParams{
       viewport,
       {xAmplitude, yAmplitude},
       {     xBase,      yBase},
       {     xFreq,      yFreq},
+      amuletSpinSign,
   };
 }
 
@@ -73,11 +77,13 @@ auto Amulet::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValue
 Amulet::GpuParams::GpuParams(const Viewport& viewport,
                              const Amplitude& amplitude,
                              const FilterBase& filterBase,
-                             const FrequencyFactor& frequencyFactor) noexcept
+                             const FrequencyFactor& frequencyFactor,
+                             const float amuletSpinSign) noexcept
   : m_viewport{viewport},
     m_amplitude{amplitude},
     m_filterBase{filterBase},
-    m_frequencyFactor{frequencyFactor}
+    m_frequencyFactor{frequencyFactor},
+    m_amuletSpinSign{amuletSpinSign}
 {
 }
 
@@ -89,6 +95,7 @@ auto Amulet::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const no
   setterFuncs.setFloat("u_amuletYBase", m_filterBase.y);
   setterFuncs.setFloat("u_amuletXFreq", m_frequencyFactor.x);
   setterFuncs.setFloat("u_amuletYFreq", m_frequencyFactor.y);
+  setterFuncs.setFloat("u_amuletSpinSign", m_amuletSpinSign);
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
