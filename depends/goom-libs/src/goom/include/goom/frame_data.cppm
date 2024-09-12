@@ -59,9 +59,9 @@ struct GpuFilterEffectData
   GpuZoomFilterMode destFilterMode{};
   const IGpuParams* srceFilterParams = nullptr;
   const IGpuParams* destFilterParams = nullptr;
+  IGpuParams::FilterTimingInfo filterTimingInfo{};
   Lerper<float> srceDestLerpFactor{};
   Lerper<float> gpuLerpFactor{};
-  float maxTime = 0.0F;
   Lerper<Point2dFlt> midpoint{};
 };
 struct FrameData

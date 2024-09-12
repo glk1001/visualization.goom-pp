@@ -100,7 +100,7 @@ public:
   [[nodiscard]] auto GetROVitesse() const noexcept -> const Vitesse&;
   [[nodiscard]] auto GetRWVitesse() noexcept -> Vitesse&;
 
-  auto SetNewRandomFilter() -> void;
+  auto SetNewRandomFilter(int32_t maxTimeToNextFilterChange) -> void;
 
   auto ResetRandomFilterMultiplierEffect() -> void;
   auto ResetRandomAfterEffects() -> void;
@@ -307,17 +307,18 @@ inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
       m_goomRand->GetRandInRange<SPEED_FACTOR_RANGE>() * MAX_MAX_ZOOM_ADJUSTMENT;
 }
 
-inline auto FilterSettingsService::SetNewRandomFilter() -> void
+inline auto FilterSettingsService::SetNewRandomFilter(const int32_t maxTimeToNextFilterModeChange)
+    -> void
 {
-  m_filterSettings.filterEffectsSettingsHaveChanged    = true;
-  m_previousFilterMode = m_filterMode;
-  m_filterMode         = GetNewRandomFilterMode();
+  m_filterSettings.filterEffectsSettingsHaveChanged = true;
+  m_previousFilterMode                              = m_filterMode;
+  m_filterMode                                      = GetNewRandomFilterMode();
   SetRandomSettingsForNewFilterMode();
 
   m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
-  m_savedPreviousGpuFilterMode = m_previousGpuFilterMode;
-  m_previousGpuFilterMode      = m_gpuFilterMode;
-  m_gpuFilterMode              = GetNewRandomGpuFilterMode();
+  m_savedPreviousGpuFilterMode                         = m_previousGpuFilterMode;
+  m_previousGpuFilterMode                              = m_gpuFilterMode;
+  m_gpuFilterMode                                      = GetNewRandomGpuFilterMode();
 
 #ifdef DEBUG_GPU_FILTERS
   std::println("Setting new gpu filter {} (prev = {}).",
@@ -325,14 +326,19 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> void
                UTILS::EnumToString(m_previousGpuFilterMode));
 #endif
 
+  auto& gpuFilterEffectsSettings = m_filterSettings.gpuFilterEffectsSettings;
+
   if constexpr (USE_FORCED_GPU_FILTER_MODE)
   {
     SetDefaultGpuFilterSettings();
     if (m_gpuFilterMode != m_previousGpuFilterMode)
     {
+      gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
       SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
-      std::println("Set new filter params for '{}'.", UTILS::EnumToString(m_gpuFilterMode));
+      std::println("Set new filter params for '{}'. Max filter time = {}.",
+                   UTILS::EnumToString(m_gpuFilterMode),
+                   maxTimeToNextFilterModeChange);
 #endif
     }
   }
@@ -349,9 +355,12 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> void
               UTILS::EnumToString(m_gpuFilterMode));
     }
 
+    gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
     SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
-    std::println("Set new filter params for '{}'.", UTILS::EnumToString(m_gpuFilterMode));
+    std::println("Set new filter params for '{}'. Max filter time = {}.",
+                 UTILS::EnumToString(m_gpuFilterMode),
+                 maxTimeToNextFilterModeChange);
 #endif
   }
 }

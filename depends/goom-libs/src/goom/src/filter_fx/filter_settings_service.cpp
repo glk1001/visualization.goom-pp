@@ -57,8 +57,8 @@ namespace
 // For debugging:
 
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
-//constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
-constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
+constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
+//constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_VORTEX_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_WAVE_MODE;
@@ -828,7 +828,8 @@ auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMo
 
 auto FilterSettingsService::Start() -> void
 {
-  SetNewRandomFilter();
+  static constexpr auto APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES = 300;
+  SetNewRandomFilter(APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES);
 }
 
 auto FilterSettingsService::NewCycle() noexcept -> void

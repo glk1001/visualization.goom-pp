@@ -106,9 +106,12 @@ ReflectingPool::GpuParams::GpuParams(const Viewport& viewport,
 {
 }
 
-auto ReflectingPool::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept
+auto ReflectingPool::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                                                const SetterFuncs& setterFuncs) const noexcept
     -> void
 {
+  setterFuncs.setFloat("u_reflectingPoolStartTime", filterTimingInfo.startTime);
+  setterFuncs.setFloat("u_reflectingPoolMaxTime", filterTimingInfo.maxTime);
   setterFuncs.setFloat("u_reflectingPoolXAmplitude", m_amplitude.x);
   setterFuncs.setFloat("u_reflectingPoolYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_reflectingPoolXBase", m_filterBase.x);

@@ -33,7 +33,8 @@ public:
               const FilterBase& filterBase,
               const FrequencyFactor& frequencyFactor,
               float amuletSpinSign) noexcept;
-    auto OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void override;
+    auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                         const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
     Viewport m_viewport;

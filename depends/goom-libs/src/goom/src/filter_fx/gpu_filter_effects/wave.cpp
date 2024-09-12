@@ -93,8 +93,11 @@ Wave::GpuParams::GpuParams(const Viewport& viewport,
 {
 }
 
-auto Wave::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void
+auto Wave::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                                      const SetterFuncs& setterFuncs) const noexcept -> void
 {
+  setterFuncs.setFloat("u_waveStartTime", filterTimingInfo.startTime);
+  setterFuncs.setFloat("u_waveMaxTime", filterTimingInfo.maxTime);
   setterFuncs.setFloat("u_waveXAmplitude", m_amplitude.x);
   setterFuncs.setFloat("u_waveYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_waveXBase", m_filterBase.x);

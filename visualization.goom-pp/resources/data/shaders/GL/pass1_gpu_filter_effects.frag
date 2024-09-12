@@ -2,12 +2,15 @@
 //
 // uniform float u_time;
 
+const float TWO_PI = 2.0F * 3.14159F;
+
 uniform uint u_gpuSrceFilterMode;
 uniform uint u_gpuDestFilterMode;
 uniform float u_gpuSrceDestFilterLerpFactor;
-uniform float u_gpuFilterMaxTime;
 uniform vec2 u_gpuFilterMidpoint;
 
+uniform float u_amuletStartTime;
+uniform float u_amuletMaxTime;
 uniform float u_amuletXAmplitude;
 uniform float u_amuletYAmplitude;
 uniform float u_amuletXBase;
@@ -20,24 +23,27 @@ vec2 GetAmuletVelocity(const vec2 position)
 {
     vec2 p = position;
 
-    const float sqDistFromZero = (p.x * p.x) + (p.y * p.y);
+    const float NUM_CYCLES   = 2.0F;
+    const float elapsedTime  = u_time - u_amuletStartTime;
+    const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
 
-    const float sinT = sin(u_amuletXFreq * u_time);
-    const float cosT = cos(u_amuletYFreq * u_time);
+    const float sinT = sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float cosT = cos(NUM_CYCLES * timeToGoFrac * TWO_PI);
 
     const float x = p.x;
     p.x = p.x * cosT - (u_amuletSpinSign * p.y * sinT);
     p.y = p.y * cosT + (u_amuletSpinSign * x * sinT);
 
-    const float baseX = u_amuletXBase;
-    const float baseY = u_amuletYBase;
+    const float sqDistFromZero = (p.x * p.x) + (p.y * p.y);
 
-    const vec2 v = vec2(baseX + (u_amuletXAmplitude * sqDistFromZero),
-                        baseY + (u_amuletYAmplitude * sqDistFromZero));
+    const vec2 v = vec2(u_amuletXBase + (u_amuletXAmplitude * sqDistFromZero),
+                        u_amuletYBase + (u_amuletYAmplitude * sqDistFromZero));
 
     return -p * v;
 }
 
+uniform float u_waveStartTime;
+uniform float u_waveMaxTime;
 uniform float u_waveXAmplitude;
 uniform float u_waveYAmplitude;
 uniform float u_waveXBase;
@@ -66,6 +72,8 @@ vec2 GetWaveVelocity(const vec2 position)
     return -p * v;
 }
 
+uniform float u_vortexStartTime;
+uniform float u_vortexMaxTime;
 uniform float u_vortexXAmplitude;
 uniform float u_vortexYAmplitude;
 uniform float u_vortexXBase;
@@ -95,6 +103,8 @@ vec2 GetVortexVelocity(const vec2 position)
     return v;
 }
 
+uniform float u_reflectingPoolStartTime;
+uniform float u_reflectingPoolMaxTime;
 uniform float u_reflectingPoolXAmplitude;
 uniform float u_reflectingPoolYAmplitude;
 uniform float u_reflectingPoolXBase;
@@ -110,8 +120,12 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float xT = u_reflectingPoolXFreq * sin(u_reflectingPoolXInnerSinFreq * u_time);
-    const float yT = u_reflectingPoolYFreq * sin(u_reflectingPoolYInnerSinFreq * u_time);
+    const float NUM_CYCLES   = 2.0F;
+    const float elapsedTime  = u_time - u_amuletStartTime;
+    const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
+
+    const float xT = u_reflectingPoolXFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float yT = u_reflectingPoolYFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
 
     const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
     const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
@@ -122,6 +136,8 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
     return v;
 }
 
+uniform float u_beautifulFieldStartTime;
+uniform float u_beautifulFieldMaxTime;
 uniform float u_beautifulFieldXAmplitude;
 uniform float u_beautifulFieldYAmplitude;
 uniform float u_beautifulFieldXBase;
@@ -135,10 +151,12 @@ vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float TWO_PI = 2.0F * 3.14159F;
+    const float NUM_CYCLES   = 2.0F;
+    const float elapsedTime  = u_time - u_beautifulFieldStartTime;
+    const float timeToGoFrac = elapsedTime / u_beautifulFieldMaxTime;
 
-    const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXInnerSinFreq * u_time);
-    const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYInnerSinFreq * u_time);
+    const float xT = u_beautifulFieldXFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float yT = u_beautifulFieldYFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
     const float w  = TWO_PI / 5.0;
 
     const float d = length(p);

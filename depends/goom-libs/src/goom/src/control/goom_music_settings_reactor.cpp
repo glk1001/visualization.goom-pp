@@ -1,6 +1,5 @@
 module;
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <format>
@@ -109,7 +108,7 @@ public:
 
   auto UpdateSettings() -> void;
 
-  [[nodiscard]] auto GetNameValueParams() const -> UTILS::NameValuePairs;
+  [[nodiscard]] auto GetNameValueParams() const -> NameValuePairs;
 
 private:
   const PluginInfo* m_goomInfo;
@@ -122,7 +121,7 @@ private:
   static constexpr auto MAX_TIME_BETWEEN_FILTER_SETTINGS_CHANGE_RANGE = NumberRange{300, 500};
   int32_t m_maxTimeBetweenFilterSettingsChange = MAX_TIME_BETWEEN_FILTER_SETTINGS_CHANGE_RANGE.min;
   int32_t m_numUpdatesSinceLastFilterSettingsChange = 0;
-  uint32_t m_previousZoomSpeed                      = FILTER_FX::Vitesse::STOP_SPEED;
+  uint32_t m_previousZoomSpeed                      = Vitesse::STOP_SPEED;
 
   static constexpr auto MAX_NUM_STATE_SELECTIONS_BLOCKED = 3U;
   uint32_t m_stateSelectionBlocker                       = MAX_NUM_STATE_SELECTIONS_BLOCKED;
@@ -427,7 +426,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::Start() -> void
   m_timeInState                             = 0;
   m_numUpdatesSinceLastFilterSettingsChange = 0;
   m_maxTimeBetweenFilterSettingsChange      = MAX_TIME_BETWEEN_FILTER_SETTINGS_CHANGE_RANGE.min;
-  m_previousZoomSpeed                       = FILTER_FX::Vitesse::STOP_SPEED;
+  m_previousZoomSpeed                       = Vitesse::STOP_SPEED;
 
   ClearChangeEventData();
   PreUpdateChangeEventData();
@@ -516,7 +515,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::BigBreakIfMusicIsCa
   static constexpr auto CALM_CYCLES      = 16U;
 
   if ((m_goomInfo->GetSoundEvents().GetSoundInfo().GetSpeed() > CALM_SOUND_SPEED) or
-      (not m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::CALM_SPEED)) or
+      (not m_filterSettingsService->GetROVitesse().IsFasterThan(Vitesse::CALM_SPEED)) or
       ((m_goomInfo->GetTime().GetCurrentTime() % CALM_CYCLES) != 0))
   {
     return;
@@ -539,7 +538,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::LowerTheSpeedMaybe(
 {
   if (static constexpr auto LOWER_SPEED_CYCLES = 73U;
       ((m_goomInfo->GetTime().GetCurrentTime() % LOWER_SPEED_CYCLES) != 0) or
-      (not m_filterSettingsService->GetROVitesse().IsFasterThan(FILTER_FX::Vitesse::FAST_SPEED)))
+      (not m_filterSettingsService->GetROVitesse().IsFasterThan(Vitesse::FAST_SPEED)))
   {
     return;
   }
@@ -613,12 +612,12 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeStopSpeedsMay
   if (m_goomRand->ProbabilityOf<PROB_FILTER_VITESSE_STOP_SPEED_MINUS_1>())
   {
     LogChangeEvent(SET_SLOW_SPEED);
-    m_filterSettingsService->GetRWVitesse().SetVitesse(FILTER_FX::Vitesse::SLOWEST_SPEED);
+    m_filterSettingsService->GetRWVitesse().SetVitesse(Vitesse::SLOWEST_SPEED);
   }
   else if (m_goomRand->ProbabilityOf<PROB_FILTER_VITESSE_STOP_SPEED>())
   {
     LogChangeEvent(SET_STOP_SPEED);
-    m_filterSettingsService->GetRWVitesse().SetVitesse(FILTER_FX::Vitesse::STOP_SPEED);
+    m_filterSettingsService->GetRWVitesse().SetVitesse(Vitesse::STOP_SPEED);
   }
 }
 
@@ -719,7 +718,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoMegaLentUpdate() 
   m_lock.IncreaseLockTime(MEGA_LENT_LOCK_TIME_INCREASE);
 
   m_visualFx->ChangeAllFxColorMaps();
-  m_filterSettingsService->GetRWVitesse().SetVitesse(FILTER_FX::Vitesse::SLOWEST_SPEED);
+  m_filterSettingsService->GetRWVitesse().SetVitesse(Vitesse::SLOWEST_SPEED);
 
   DoSetTransformBufferLerpToEnd();
 }
@@ -739,7 +738,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeFilterMode(
 {
   LogChangeEvent(CHANGE_FILTER_MODE);
 
-  m_filterSettingsService->SetNewRandomFilter();
+  m_filterSettingsService->SetNewRandomFilter(m_maxTimeBetweenFilterSettingsChange);
 
   if (UpdateFilterSettingsNow())
   {
@@ -811,7 +810,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeSpeedSlowAn
   LogChangeEvent(SET_SLOWER_SPEED_AND_SPEED_FORWARD);
 
   m_filterSettingsService->GetRWVitesse().SetReverseVitesse(false);
-  m_filterSettingsService->GetRWVitesse().SetVitesse(FILTER_FX::Vitesse::SLOW_SPEED);
+  m_filterSettingsService->GetRWVitesse().SetVitesse(Vitesse::SLOW_SPEED);
   m_lock.SetLockTime(SLOWER_SPEED_AND_SPEED_FORWARD_LOCK_TIME);
 }
 

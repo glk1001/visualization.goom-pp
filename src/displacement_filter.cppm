@@ -107,7 +107,6 @@ protected:
   static constexpr auto* UNIFORM_GPU_DEST_FILTER_MODE      = "u_gpuDestFilterMode";
   static constexpr auto* UNIFORM_GPU_SRCE_DEST_LERP_FACTOR = "u_gpuSrceDestFilterLerpFactor";
   static constexpr auto* UNIFORM_GPU_FILTER_LERP_FACTOR    = "u_gpuFilterLerpFactor";
-  static constexpr auto* UNIFORM_GPU_FILTER_MAX_TIME       = "u_gpuFilterMaxTime";
   static constexpr auto* UNIFORM_GPU_MIDPOINT              = "u_gpuFilterMidpoint";
 
   // IMPORTANT - To make proper use of HDR (which is why we're using RGBA16), we
@@ -567,13 +566,13 @@ auto DisplacementFilter::GetInitialGpuFilterEffectData() noexcept -> GpuFilterEf
       .destFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
       .srceFilterParams    = &None::GetEmptyGpuParams(),
       .destFilterParams    = &None::GetEmptyGpuParams(),
+      .filterTimingInfo    = {.startTime = 0.0F, .maxTime = 1.0F},
       .srceDestLerpFactor  = {NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
                               1.0F, 1.0F,
                               Lerper<float>::LerperType::SINGLE},
       .gpuLerpFactor       = {NUM_GPU_LERP_FACTOR_STEPS,
                               0.0F, 1.0F,
                               Lerper<float>::LerperType::CONTINUOUS},
-      .maxTime             = 0.0F,
       .midpoint = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
   };
 }
@@ -1113,8 +1112,6 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
     return;
   }
 
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_MAX_TIME,
-                                                     m_gpuFilterEffectData.maxTime);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_SRCE_FILTER_MODE, static_cast<uint32_t>(m_gpuFilterEffectData.srceFilterMode));
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
@@ -1122,8 +1119,10 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_SRCE_DEST_LERP_FACTOR,
                                                      m_gpuFilterEffectData.srceDestLerpFactor());
 
-  m_gpuFilterEffectData.srceFilterParams->OutputGpuParams(m_pass1SetterFuncs);
-  m_gpuFilterEffectData.destFilterParams->OutputGpuParams(m_pass1SetterFuncs);
+  m_gpuFilterEffectData.srceFilterParams->OutputGpuParams(m_gpuFilterEffectData.filterTimingInfo,
+                                                          m_pass1SetterFuncs);
+  m_gpuFilterEffectData.destFilterParams->OutputGpuParams(m_gpuFilterEffectData.filterTimingInfo,
+                                                          m_pass1SetterFuncs);
 }
 
 auto DisplacementFilter::UpdatePass4MiscDataToGl(const size_t pboIndex) noexcept -> void

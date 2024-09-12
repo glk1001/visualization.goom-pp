@@ -34,7 +34,8 @@ public:
               const FrequencyFactor& frequencyFactor,
               float reducerCoeff,
               float sqDistPower) noexcept;
-    auto OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void override;
+    auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                         const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
     Viewport m_viewport;
