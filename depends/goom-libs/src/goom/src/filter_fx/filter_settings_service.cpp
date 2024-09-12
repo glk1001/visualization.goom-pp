@@ -56,8 +56,8 @@ namespace
 
 // For debugging:
 
-constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
-//constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
+//constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
+constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_VORTEX_MODE;
@@ -419,7 +419,7 @@ constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsTypes, u
 [[nodiscard]] auto GetWeightedGpuFilterEvents(const GoomRand& goomRand)
     -> Weights<GpuZoomFilterMode>
 {
-  static constexpr auto GPU_NONE_MODE_WEIGHT       = 10.0F;
+  static constexpr auto GPU_NONE_MODE_WEIGHT       = 20.0F;
   static constexpr auto GPU_AMULET_MODE_WEIGHT     = 10.0F;
   static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
   static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;
