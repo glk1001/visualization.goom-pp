@@ -39,11 +39,6 @@ public:
                     uint32_t consumeWaitForProducerMs,
                     const TextureBufferDimensions& textureBufferDimensions,
                     std::unique_ptr<OPENGL::DisplacementFilter>&& glScene);
-  GoomVisualization(const GoomVisualization&) noexcept = delete;
-  GoomVisualization(GoomVisualization&&) noexcept      = delete;
-  ~GoomVisualization() noexcept;
-  auto operator=(const GoomVisualization&) -> GoomVisualization& = delete;
-  auto operator=(GoomVisualization&&) -> GoomVisualization&      = delete;
 
   static auto SetRandomSeed(uint64_t seed) noexcept -> void;
   auto SetWindowDimensions(const WindowDimensions& windowDimensions) noexcept -> void;
@@ -80,7 +75,7 @@ private:
   std::unique_ptr<OPENGL::DisplacementFilter> m_glScene;
   auto InitSceneFrameData() -> void;
 
-  std::unique_ptr<GoomControl> m_goomControl;
+  GoomControl m_goomControl;
   auto InitGoomControl() noexcept -> void;
 
   SlotProducerConsumer<AudioSamples> m_slotProducerConsumer;

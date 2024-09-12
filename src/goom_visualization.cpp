@@ -65,10 +65,10 @@ GoomVisualization::GoomVisualization(GoomLogger& goomLogger,
     m_consumeWaitForProducerMs{consumeWaitForProducerMs},
     m_glScene{
         std::make_unique<DisplacementFilter>(*m_goomLogger, shaderDir, textureBufferDimensions)},
-    m_goomControl{std::make_unique<GoomControl>(
+    m_goomControl{
         Dimensions{textureBufferDimensions.width, textureBufferDimensions.height},
         resourcesDir,
-        *m_goomLogger)},
+        *m_goomLogger},
     m_slotProducerConsumer{*m_goomLogger,
                            MAX_BUFFER_QUEUE_LEN,
                            GOOM_BUFFER_PRODUCER_CONSUMER,
@@ -82,14 +82,14 @@ GoomVisualization::GoomVisualization(GoomLogger& goomLogger,
                                      const std::string& resourcesDir,
                                      const uint32_t consumeWaitForProducerMs,
                                      const TextureBufferDimensions& textureBufferDimensions,
-                                     std::unique_ptr<OPENGL::DisplacementFilter>&& glScene)
+                                     std::unique_ptr<DisplacementFilter>&& glScene)
   : m_goomLogger{&goomLogger},
     m_consumeWaitForProducerMs{consumeWaitForProducerMs},
     m_glScene{std::move(glScene)},
-    m_goomControl{std::make_unique<GoomControl>(
+    m_goomControl{
         Dimensions{textureBufferDimensions.width, textureBufferDimensions.height},
         resourcesDir,
-        *m_goomLogger)},
+        *m_goomLogger},
     m_slotProducerConsumer{*m_goomLogger,
                            MAX_BUFFER_QUEUE_LEN,
                            GOOM_BUFFER_PRODUCER_CONSUMER,
@@ -117,8 +117,6 @@ auto GoomVisualization::InitConstructor() noexcept -> void
   LogDebug(*m_goomLogger, "Created Goom visualizationGoom object.");
 }
 
-GoomVisualization::~GoomVisualization() noexcept = default;
-
 auto GoomVisualization::SetRandomSeed(const uint64_t seed) noexcept -> void
 {
   SetRandSeed(seed);
@@ -132,17 +130,17 @@ auto GoomVisualization::SetWindowDimensions(const WindowDimensions& windowDimens
 
 auto GoomVisualization::SetShowSongTitle(const ShowSongTitleType showMusicTitleType) -> void
 {
-  m_goomControl->SetShowSongTitle(showMusicTitleType);
+  m_goomControl.SetShowSongTitle(showMusicTitleType);
 }
 
 auto GoomVisualization::SetShowGoomState(const bool value) -> void
 {
-  m_goomControl->SetShowGoomState(value);
+  m_goomControl.SetShowGoomState(value);
 }
 
 auto GoomVisualization::SetDumpDirectory(const std::string& dumpDirectory) -> void
 {
-  m_goomControl->SetDumpDirectory(dumpDirectory);
+  m_goomControl.SetDumpDirectory(dumpDirectory);
 }
 
 auto GoomVisualization::SetBrightnessAdjust(const float value) -> void
@@ -156,16 +154,13 @@ auto GoomVisualization::Start(const int numChannels) -> void
 
   LogInfo(*m_goomLogger, "Starting visualization.");
 
-  Expects(m_goomControl != nullptr);
-  Expects(not m_started);
-
   LogInfo(*m_goomLogger, "Goom Vis: Build Time     : {}.", GetGoomVisualizationBuildTime());
   LogInfo(*m_goomLogger, "Goom: Version            : {}.", GetGoomLibVersionInfo());
   LogInfo(*m_goomLogger, "Goom: Compiler           : {}.", GetCompilerVersion());
   LogInfo(*m_goomLogger, "Goom Library: Compiler   : {}.", GetGoomLibCompilerVersion());
   LogInfo(*m_goomLogger, "Goom Library: Build Time : {}.", GetGoomLibBuildTime());
   LogInfo(*m_goomLogger, "Random seed              : {}.", GetRandSeed());
-  LogInfo(*m_goomLogger, "Num pool threads         : {}.", m_goomControl->GetNumPoolThreads());
+  LogInfo(*m_goomLogger, "Num pool threads         : {}.", m_goomControl.GetNumPoolThreads());
   LogInfo(*m_goomLogger,
           "Texture width, height    : {}, {}.",
           m_glScene->GetWidth(),
@@ -176,13 +171,13 @@ auto GoomVisualization::Start(const int numChannels) -> void
           m_glScene->GetFramebufferHeight());
   LogInfo(*m_goomLogger, "Shader Dir               : '{}'.", m_glScene->GetShaderDir());
   LogInfo(*m_goomLogger, "Brightness Adjust        : {:.2f}.", m_glScene->GetBrightnessAdjust());
-  LogInfo(*m_goomLogger, "Dump directory           : {}.", m_goomControl->GetDumpDirectory());
+  LogInfo(*m_goomLogger, "Dump directory           : {}.", m_goomControl.GetDumpDirectory());
 
   InitAudioValues(numChannels);
   InitSceneFrameData();
   InitGoomControl();
 
-  m_goomControl->Start();
+  m_goomControl.Start();
   m_slotProducerConsumer.Start();
 
   m_totalProductionTimeInMs = 0.0;
@@ -213,7 +208,7 @@ auto GoomVisualization::Stop() -> void
   m_slotProducerConsumerThread.join();
   LogInfo(*m_goomLogger, "Slot producer consumer thread stopped.");
 
-  m_goomControl->Finish();
+  m_goomControl.Finish();
 
   m_glScene->DestroyScene();
 
@@ -258,7 +253,7 @@ auto GoomVisualization::InitSceneFrameData() -> void
 
 auto GoomVisualization::InitGoomControl() noexcept -> void
 {
-  m_goomControl->SetFrameData(m_glScene->GetFrameData(0));
+  m_goomControl.SetFrameData(m_glScene->GetFrameData(0));
 }
 
 auto GoomVisualization::AddAudioSample(const std::span<const float> audioSample) -> bool
@@ -291,7 +286,7 @@ auto GoomVisualization::UpdateTrack(const TrackInfo& track) -> void
   LogInfo(*m_goomLogger, "Current Title = '{}'", currentSongName);
   LogInfo(*m_goomLogger, "Genre = '{}', Duration = {}", track.genre, track.duration);
 
-  m_goomControl->SetSongInfo(
+  m_goomControl.SetSongInfo(
       {.title = currentSongName, .genre = track.genre, .duration = track.duration});
 
 #ifdef SAVE_AUDIO_BUFFERS
@@ -324,8 +319,13 @@ auto GoomVisualization::ProduceItem(const size_t slot, const AudioSamples& audio
 
   auto& frameData = m_glScene->GetFrameData(slot);
 
-  m_goomControl->SetFrameData(frameData);
-  m_goomControl->UpdateGoomBuffers(audioSamples);
+  m_goomControl.SetFrameData(frameData);
+  m_goomControl.UpdateGoomBuffers(audioSamples);
+
+#ifdef GOOM_RUNNER_TOO_FAST_BUG
+  static constexpr auto SLOWDOWN_MS = 5U;
+  std::this_thread::sleep_for(std::chrono::milliseconds(SLOWDOWN_MS));
+#endif
 
   const auto duration = std::chrono::system_clock::now() - startTime;
   m_totalProductionTimeInMs +=
