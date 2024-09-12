@@ -31,6 +31,7 @@ public:
     GpuParams(const Viewport& viewport,
               const Amplitude& amplitude,
               const FilterBase& filterBase,
+              const FrequencyFactor& cycleFrequency,
               const FrequencyFactor& frequencyFactor,
               float reducerCoeff,
               float sqDistPower) noexcept;
@@ -41,6 +42,7 @@ public:
     Viewport m_viewport;
     Amplitude m_amplitude{};
     FilterBase m_filterBase{};
+    FrequencyFactor m_cycleFrequency{};
     FrequencyFactor m_frequencyFactor{};
     float m_reducerCoeff{};
     float m_sqDistPower{};
