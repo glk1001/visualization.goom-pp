@@ -58,7 +58,7 @@ constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
 constexpr auto PROB_XY_AMPLITUDES_EQUAL   = 0.98F;
 constexpr auto PROB_LERP_TO_ONE_T_S_EQUAL = 0.95F;
 constexpr auto PROB_ESCAPE_POINT_IS_ZERO  = 0.5F;
-constexpr auto PROB_MULTIPLY_VELOCITY     = 0.2F;
+constexpr auto PROB_MULTIPLY_VELOCITY     = 0.9F;
 
 // NOLINTBEGIN(readability-identifier-length,bugprone-easily-swappable-parameters)
 constexpr auto StdJuliaFunc(const std::complex<float>& z, const std::complex<float>& c)
@@ -150,14 +150,15 @@ auto Julia::GetVelocity(const Vec2dFlt& baseZoomAdjustment,
 {
   const auto viewportCoords = m_params.viewport.GetViewportCoords(coords);
 
-  const auto viewportTrapPoint = m_params.viewport.GetViewportCoords(
-      NormalizedCoords{m_params.trapPoint.real(), m_params.trapPoint.imag()});
   const auto viewportC =
       m_params.viewport.GetViewportCoords(NormalizedCoords{m_params.c.real(), m_params.c.imag()});
+  const auto viewportTrapPoint = m_params.viewport.GetViewportCoords(
+      NormalizedCoords{m_params.trapPoint.real(), m_params.trapPoint.imag()});
+
   // NOLINTNEXTLINE(readability-identifier-length)
-  const auto trapPoint = std::complex<float>{viewportTrapPoint.GetX(), viewportTrapPoint.GetY()};
   const auto c         = std::complex<float>{viewportC.GetX(), viewportC.GetY()};
   const auto z0        = std::complex<float>{viewportCoords.GetX(), viewportCoords.GetY()};
+  const auto trapPoint = std::complex<float>{viewportTrapPoint.GetX(), viewportTrapPoint.GetY()};
 
   const auto z = GetJuliaPoint(trapPoint, c, z0);
 
