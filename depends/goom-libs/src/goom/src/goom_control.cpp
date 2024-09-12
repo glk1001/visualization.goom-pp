@@ -13,7 +13,7 @@
 module;
 
 //#define DO_GOOM_STATE_DUMP
-#define DEBUG_GPU_FILTERS 1
+#define DEBUG_GPU_FILTERS
 #ifdef DEBUG_GPU_FILTERS
 #include <print>
 #endif
