@@ -1,5 +1,6 @@
 module;
 
+#include <cstdint>
 #include <memory>
 
 export module Goom.FilterFx.FilterSettings;
@@ -47,6 +48,7 @@ struct FilterEffectsSettings
 struct GpuFilterEffectsSettings
 {
   std::shared_ptr<IGpuZoomFilterEffect> gpuZoomFilterEffect;
+  int32_t maxTimeToNextFilterModeChange;
 };
 
 struct FilterSettings

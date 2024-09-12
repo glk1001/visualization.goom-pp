@@ -22,7 +22,8 @@ public:
   class GpuParams : public IGpuParams
   {
   public:
-    auto OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void override;
+    auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                         const SetterFuncs& setterFuncs) const noexcept -> void override;
   };
 
 private:
@@ -49,7 +50,9 @@ inline auto None::SetRandomParams() noexcept -> void
   // Does nothing.
 }
 
-inline auto None::GpuParams::OutputGpuParams([[maybe_unused]] const SetterFuncs& setterFuncs) const noexcept -> void
+inline auto None::GpuParams::OutputGpuParams(
+    [[maybe_unused]] const FilterTimingInfo& filterTimingInfo,
+    [[maybe_unused]] const SetterFuncs& setterFuncs) const noexcept -> void
 {
   // Does nothing.
 }

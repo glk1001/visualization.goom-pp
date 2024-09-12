@@ -92,9 +92,12 @@ BeautifulField::GpuParams::GpuParams(const Viewport& viewport,
 {
 }
 
-auto BeautifulField::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept
+auto BeautifulField::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                                                const SetterFuncs& setterFuncs) const noexcept
     -> void
 {
+  setterFuncs.setFloat("u_beautifulFieldStartTime", filterTimingInfo.startTime);
+  setterFuncs.setFloat("u_beautifulFieldMaxTime", filterTimingInfo.maxTime);
   setterFuncs.setFloat("u_beautifulFieldXAmplitude", m_amplitude.x);
   setterFuncs.setFloat("u_beautifulFieldYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_beautifulFieldXBase", m_filterBase.x);

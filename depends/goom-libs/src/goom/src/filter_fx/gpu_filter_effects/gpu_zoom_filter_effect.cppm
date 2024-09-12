@@ -22,6 +22,11 @@ public:
   auto operator=(const IGpuParams&) -> IGpuParams& = default;
   auto operator=(IGpuParams&&) -> IGpuParams&      = default;
 
+  struct FilterTimingInfo
+  {
+    float startTime;
+    float maxTime;
+  };
   struct SetterFuncs
   {
     std::function<void(const std::string_view& name, float value)> setFloat;
@@ -32,7 +37,8 @@ public:
         setIntVector;
   };
 
-  virtual auto OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void = 0;
+  virtual auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                               const SetterFuncs& setterFuncs) const noexcept -> void = 0;
 };
 
 class IGpuZoomFilterEffect

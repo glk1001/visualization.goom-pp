@@ -88,8 +88,11 @@ Vortex::GpuParams::GpuParams(const Viewport& viewport,
 {
 }
 
-auto Vortex::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void
+auto Vortex::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                                        const SetterFuncs& setterFuncs) const noexcept -> void
 {
+  setterFuncs.setFloat("u_vortexStartTime", filterTimingInfo.startTime);
+  setterFuncs.setFloat("u_vortexMaxTime", filterTimingInfo.maxTime);
   setterFuncs.setFloat("u_vortexXAmplitude", m_amplitude.x);
   setterFuncs.setFloat("u_vortexYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_vortexXBase", m_filterBase.x);

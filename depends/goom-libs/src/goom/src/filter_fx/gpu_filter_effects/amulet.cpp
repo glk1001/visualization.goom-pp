@@ -87,8 +87,11 @@ Amulet::GpuParams::GpuParams(const Viewport& viewport,
 {
 }
 
-auto Amulet::GpuParams::OutputGpuParams(const SetterFuncs& setterFuncs) const noexcept -> void
+auto Amulet::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
+                                        const SetterFuncs& setterFuncs) const noexcept -> void
 {
+  setterFuncs.setFloat("u_amuletStartTime", filterTimingInfo.startTime);
+  setterFuncs.setFloat("u_amuletMaxTime", filterTimingInfo.maxTime);
   setterFuncs.setFloat("u_amuletXAmplitude", m_amplitude.x);
   setterFuncs.setFloat("u_amuletYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_amuletXBase", m_filterBase.x);

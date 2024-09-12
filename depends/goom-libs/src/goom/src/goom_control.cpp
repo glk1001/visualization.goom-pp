@@ -536,7 +536,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterPosArrays() noexcept -> 
 auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> void
 {
   const auto& filterSettings    = std::as_const(m_filterSettingsService).GetFilterSettings();
-  const auto& gpuFilterSettings = *filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect;
+  const auto& gpuFilterSettings = filterSettings.gpuFilterEffectsSettings;
   auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
 
   // Always increment irrespective of whether settings have changed.
@@ -585,7 +585,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
       gpuFilterEffectData.srceFilterParams = gpuFilterEffectData.destFilterParams;
 
       gpuFilterEffectData.destFilterMode   = nextGpuFilterMode;
-      gpuFilterEffectData.destFilterParams = &gpuFilterSettings.GetGpuParams();
+      gpuFilterEffectData.destFilterParams = &gpuFilterSettings.gpuZoomFilterEffect->GetGpuParams();
 
       gpuFilterEffectData.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
 
@@ -599,7 +599,9 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 #endif
     }
 
-    gpuFilterEffectData.maxTime = 100.0F;
+    gpuFilterEffectData.filterTimingInfo = {
+        .startTime = static_cast<float>(m_goomTime.GetCurrentTime()),
+        .maxTime   = static_cast<float>(gpuFilterSettings.maxTimeToNextFilterModeChange)};
 
     const auto& currentMidpoint = gpuFilterEffectData.midpoint();
     const auto newMidpoint =
