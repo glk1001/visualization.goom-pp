@@ -153,24 +153,8 @@ private:
   auto DoTheDraw() const -> void;
   auto WaitForRenderSync() noexcept -> void;
 
-  static constexpr auto NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
-  static constexpr auto NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 500U;
-  static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
-  GpuFilterEffectData m_gpuFilterEffectData{
-      .filterNeedsUpdating = false,
-      .srceFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
-      .destFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
-      .srceFilterParams    = &None::GetEmptyGpuParams(),
-      .destFilterParams    = &None::GetEmptyGpuParams(),
-      .srceDestLerpFactor  = {NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
-                              0.0F, 1.0F,
-                              Lerper<float>::LerperType::SINGLE},
-      .gpuLerpFactor       = {NUM_GPU_LERP_FACTOR_STEPS,
-                              0.0F, 1.0F,
-                              Lerper<float>::LerperType::CONTINUOUS},
-      .maxTime             = 0.0F,
-      .midpoint = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
-  };
+  GpuFilterEffectData m_gpuFilterEffectData = GetInitialGpuFilterEffectData();
+  [[nodiscard]] auto GetInitialGpuFilterEffectData() noexcept -> GpuFilterEffectData;
   size_t m_currentPboIndex = 0U;
   std::vector<FrameData> m_frameDataArray;
   using IGpuParams = FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
@@ -567,6 +551,8 @@ auto DisplacementFilter::DestroyScene() -> void
 
 auto DisplacementFilter::InitFrameDataArray() noexcept -> void
 {
+  m_gpuFilterEffectData = GetInitialGpuFilterEffectData();
+
   for (auto& frameData : m_frameDataArray)
   {
     frameData.gpuFilterEffectData = &m_gpuFilterEffectData;
@@ -575,6 +561,29 @@ auto DisplacementFilter::InitFrameDataArray() noexcept -> void
     InitImageArrays(frameData.imageArrays);
     InitFilterPosArrays(frameData.filterPosArrays);
   }
+};
+
+auto DisplacementFilter::GetInitialGpuFilterEffectData() noexcept -> GpuFilterEffectData
+{
+  static constexpr auto NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
+  static constexpr auto NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 250U;
+  static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
+
+  return {
+      .filterNeedsUpdating = false,
+      .srceFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
+      .destFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE,
+      .srceFilterParams    = &None::GetEmptyGpuParams(),
+      .destFilterParams    = &None::GetEmptyGpuParams(),
+      .srceDestLerpFactor  = {NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
+                              1.0F, 1.0F,
+                              Lerper<float>::LerperType::SINGLE},
+      .gpuLerpFactor       = {NUM_GPU_LERP_FACTOR_STEPS,
+                              0.0F, 1.0F,
+                              Lerper<float>::LerperType::CONTINUOUS},
+      .maxTime             = 0.0F,
+      .midpoint = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
+  };
 }
 
 auto DisplacementFilter::InitMiscData(MiscData& miscData) noexcept -> void
