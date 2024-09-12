@@ -57,8 +57,8 @@ namespace
 // For debugging:
 
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
-constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
-//constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
+//constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
+constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_VORTEX_MODE;
 //constexpr auto FORCED_GPU_FILTER_MODE = GPU_WAVE_MODE;
@@ -831,18 +831,6 @@ auto FilterSettingsService::Start() -> void
   SetNewRandomFilter();
 }
 
-inline auto FilterSettingsService::GetZoomAdjustmentEffect()
-    -> std::shared_ptr<IZoomAdjustmentEffect>&
-{
-  return m_filterModeData[m_filterMode].zoomAdjustmentEffect;
-}
-
-inline auto FilterSettingsService::GetGpuZoomFilterEffect()
-    -> std::shared_ptr<IGpuZoomFilterEffect>&
-{
-  return m_gpuFilterModeData[m_gpuFilterMode].gpuZoomFilterEffect;
-}
-
 auto FilterSettingsService::NewCycle() noexcept -> void
 {
   m_filterModeAtLastUpdate = m_filterMode;
@@ -861,20 +849,29 @@ auto FilterSettingsService::NotifyUpdatedGpuFilterEffectsSettings() noexcept -> 
   m_filterSettings.gpuFilterEffectsSettingsHaveChanged = false;
 }
 
-auto FilterSettingsService::SetDefaultSettings() -> void
+auto FilterSettingsService::SetDefaultFilterSettings() -> void
 {
-  m_filterSettings.filterEffectsSettings.zoomAdjustmentEffect = GetZoomAdjustmentEffect();
-  m_filterSettings.filterEffectsSettings.zoomMidpoint         = m_screenCentre;
+  m_filterSettings.filterEffectsSettings.zoomAdjustmentEffect =
+      m_filterModeData[m_filterMode].zoomAdjustmentEffect;
+  m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
   m_filterSettings.filterEffectsSettings.vitesse.SetDefault();
 
-  m_filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect = GetGpuZoomFilterEffect();
-
   m_randomizedAfterEffects->SetDefaults();
+}
+
+auto FilterSettingsService::SetDefaultGpuFilterSettings() -> void
+{
+  m_filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect =
+      m_gpuFilterModeData[m_gpuFilterMode].gpuZoomFilterEffect;
 }
 
 auto FilterSettingsService::SetFilterModeRandomEffects() -> void
 {
   m_filterSettings.filterEffectsSettings.zoomAdjustmentEffect->SetRandomParams();
+}
+
+auto FilterSettingsService::SetGpuFilterModeRandomEffects() -> void
+{
   m_filterSettings.gpuFilterEffectsSettings.gpuZoomFilterEffect->SetRandomParams();
 }
 

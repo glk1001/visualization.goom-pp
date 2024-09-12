@@ -122,9 +122,11 @@ protected:
   auto SetGpuFilterMode(GpuZoomFilterMode gpuFilterMode) noexcept -> void;
   [[nodiscard]] auto GetPluginInfo() const noexcept -> const PluginInfo&;
   [[nodiscard]] auto GetGoomRand() const noexcept -> const GoomRand&;
-  virtual auto SetDefaultSettings() -> void;
+  virtual auto SetDefaultFilterSettings() -> void;
+  virtual auto SetDefaultGpuFilterSettings() -> void;
   virtual auto SetRandomZoomMidpoint() -> void;
   virtual auto SetFilterModeRandomEffects() -> void;
+  virtual auto SetGpuFilterModeRandomEffects() -> void;
   virtual auto SetFilterModeAfterEffects() -> void;
   virtual auto SetRandomizedAfterEffects() -> void;
   virtual auto SetWaveModeAfterEffects() -> void;
@@ -152,6 +154,7 @@ private:
   FilterSettings m_filterSettings;
 
   auto SetRandomSettingsForNewFilterMode() -> void;
+  auto SetRandomSettingsForNewGpuFilterMode() -> void;
 
   static constexpr auto DEFAULT_ZOOM_MID_X                             = 16U;
   static constexpr auto DEFAULT_ZOOM_MID_Y                             = 1U;
@@ -172,8 +175,6 @@ private:
   static constexpr auto PROB_MULTIPLIER_EFFECT_AMPLITUDES_EQUAL        = 0.95F;
   [[nodiscard]] auto GetNewRandomFilterMode() const -> ZoomFilterMode;
   [[nodiscard]] auto GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode;
-  [[nodiscard]] auto GetZoomAdjustmentEffect() -> std::shared_ptr<IZoomAdjustmentEffect>&;
-  [[nodiscard]] auto GetGpuZoomFilterEffect() -> std::shared_ptr<IGpuZoomFilterEffect>&;
   auto SetMaxZoomAdjustment() -> void;
   auto SetBaseZoomAdjustmentFactorMultiplier() noexcept -> void;
   auto SetAfterEffectsVelocityMultiplier() noexcept -> void;
@@ -309,11 +310,11 @@ inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
 inline auto FilterSettingsService::SetNewRandomFilter() -> void
 {
   m_filterSettings.filterEffectsSettingsHaveChanged    = true;
-  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
-
   m_previousFilterMode = m_filterMode;
   m_filterMode         = GetNewRandomFilterMode();
+  SetRandomSettingsForNewFilterMode();
 
+  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
   m_savedPreviousGpuFilterMode = m_previousGpuFilterMode;
   m_previousGpuFilterMode      = m_gpuFilterMode;
   m_gpuFilterMode              = GetNewRandomGpuFilterMode();
@@ -326,9 +327,10 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> void
 
   if constexpr (USE_FORCED_GPU_FILTER_MODE)
   {
+    SetDefaultGpuFilterSettings();
     if (m_gpuFilterMode != m_previousGpuFilterMode)
     {
-      SetRandomSettingsForNewFilterMode();
+      SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
       std::println("Set new filter params for '{}'.", UTILS::EnumToString(m_gpuFilterMode));
 #endif
@@ -347,7 +349,7 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> void
               UTILS::EnumToString(m_gpuFilterMode));
     }
 
-    SetRandomSettingsForNewFilterMode();
+    SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
     std::println("Set new filter params for '{}'.", UTILS::EnumToString(m_gpuFilterMode));
 #endif
@@ -370,12 +372,18 @@ inline auto FilterSettingsService::PutBackGpuFilterMode(
 
 inline auto FilterSettingsService::SetRandomSettingsForNewFilterMode() -> void
 {
-  SetDefaultSettings();
+  SetDefaultFilterSettings();
   SetRandomZoomMidpoint();
   SetFilterModeRandomEffects();
   ResetRandomFilterMultiplierEffect();
   SetFilterModeAfterEffects();
   UpdateFilterSettingsFromAfterEffects();
+}
+
+inline auto FilterSettingsService::SetRandomSettingsForNewGpuFilterMode() -> void
+{
+  SetDefaultGpuFilterSettings();
+  SetGpuFilterModeRandomEffects();
 }
 
 inline auto FilterSettingsService::TurnOffRotation() noexcept -> void
