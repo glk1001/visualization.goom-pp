@@ -11,6 +11,8 @@ uniform vec2 u_gpuFilterMidpoint;
 
 uniform float u_amuletStartTime;
 uniform float u_amuletMaxTime;
+uniform float u_amuletXCycleFreq;
+uniform float u_amuletYCycleFreq;
 uniform float u_amuletXAmplitude;
 uniform float u_amuletYAmplitude;
 uniform float u_amuletXBase;
@@ -23,12 +25,11 @@ vec2 GetAmuletVelocity(const vec2 position)
 {
     vec2 p = position;
 
-    const float NUM_CYCLES   = 2.0F;
     const float elapsedTime  = u_time - u_amuletStartTime;
     const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
 
-    const float sinT = sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
-    const float cosT = cos(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float sinT = sin(u_amuletXCycleFreq * timeToGoFrac * TWO_PI);
+    const float cosT = cos(u_amuletYCycleFreq * timeToGoFrac * TWO_PI);
 
     const float x = p.x;
     p.x = p.x * cosT - (u_amuletSpinSign * p.y * sinT);
@@ -44,6 +45,8 @@ vec2 GetAmuletVelocity(const vec2 position)
 
 uniform float u_waveStartTime;
 uniform float u_waveMaxTime;
+uniform float u_waveXCycleFreq;
+uniform float u_waveYCycleFreq;
 uniform float u_waveXAmplitude;
 uniform float u_waveYAmplitude;
 uniform float u_waveXBase;
@@ -74,6 +77,8 @@ vec2 GetWaveVelocity(const vec2 position)
 
 uniform float u_vortexStartTime;
 uniform float u_vortexMaxTime;
+uniform float u_vortexXCycleFreq;
+uniform float u_vortexYCycleFreq;
 uniform float u_vortexXAmplitude;
 uniform float u_vortexYAmplitude;
 uniform float u_vortexXBase;
@@ -105,6 +110,8 @@ vec2 GetVortexVelocity(const vec2 position)
 
 uniform float u_reflectingPoolStartTime;
 uniform float u_reflectingPoolMaxTime;
+uniform float u_reflectingPoolXCycleFreq;
+uniform float u_reflectingPoolYCycleFreq;
 uniform float u_reflectingPoolXAmplitude;
 uniform float u_reflectingPoolYAmplitude;
 uniform float u_reflectingPoolXBase;
@@ -120,12 +127,11 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float NUM_CYCLES   = 2.0F;
     const float elapsedTime  = u_time - u_amuletStartTime;
     const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
 
-    const float xT = u_reflectingPoolXFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
-    const float yT = u_reflectingPoolYFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float xT = u_reflectingPoolXFreq * sin(u_reflectingPoolXCycleFreq * timeToGoFrac * TWO_PI);
+    const float yT = u_reflectingPoolYFreq * sin(u_reflectingPoolYCycleFreq * timeToGoFrac * TWO_PI);
 
     const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
     const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
@@ -138,6 +144,8 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 
 uniform float u_beautifulFieldStartTime;
 uniform float u_beautifulFieldMaxTime;
+uniform float u_beautifulFieldXCycleFreq;
+uniform float u_beautifulFieldYCycleFreq;
 uniform float u_beautifulFieldXAmplitude;
 uniform float u_beautifulFieldYAmplitude;
 uniform float u_beautifulFieldXBase;
@@ -151,12 +159,11 @@ vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float NUM_CYCLES   = 2.0F;
     const float elapsedTime  = u_time - u_beautifulFieldStartTime;
     const float timeToGoFrac = elapsedTime / u_beautifulFieldMaxTime;
 
-    const float xT = u_beautifulFieldXFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
-    const float yT = u_beautifulFieldYFreq * sin(NUM_CYCLES * timeToGoFrac * TWO_PI);
+    const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXCycleFreq * timeToGoFrac * TWO_PI);
+    const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYCycleFreq * timeToGoFrac * TWO_PI);
     const float w  = TWO_PI / 5.0;
 
     const float d = length(p);

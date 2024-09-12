@@ -31,7 +31,7 @@ public:
     GpuParams(const Viewport& viewport,
               const Amplitude& amplitude,
               const FilterBase& filterBase,
-              const FrequencyFactor& innerSinFrequencyFactor,
+              const FrequencyFactor& cycleFrequency,
               const FrequencyFactor& frequencyFactor) noexcept;
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
@@ -40,7 +40,7 @@ public:
     Viewport m_viewport;
     Amplitude m_amplitude{};
     FilterBase m_filterBase{};
-    FrequencyFactor m_innerSinFrequencyFactor{};
+    FrequencyFactor m_cycleFrequency{};
     FrequencyFactor m_frequencyFactor{};
   };
 

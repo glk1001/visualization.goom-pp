@@ -310,6 +310,8 @@ inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
 inline auto FilterSettingsService::SetNewRandomFilter(const int32_t maxTimeToNextFilterModeChange)
     -> void
 {
+  Expects(maxTimeToNextFilterModeChange > 0);
+
   m_filterSettings.filterEffectsSettingsHaveChanged = true;
   m_previousFilterMode                              = m_filterMode;
   m_filterMode                                      = GetNewRandomFilterMode();

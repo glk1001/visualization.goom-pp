@@ -13,11 +13,11 @@ using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 
-static constexpr auto AMPLITUDE_RANGE           = NumberRange{0.05F, 2.5F};
-static constexpr auto BASE_RANGE                = NumberRange{0.00F, 0.03F};
-static constexpr auto INNER_SIN_FREQUENCY_RANGE = NumberRange{0.005F, 0.05F};
-static constexpr auto FREQUENCY_RANGE           = NumberRange{2.0F, 8.0F};
-static constexpr auto INNER_POS_FACTOR          = NumberRange{0.1F, 1.5F};
+static constexpr auto AMPLITUDE_RANGE       = NumberRange{0.05F, 2.5F};
+static constexpr auto BASE_RANGE            = NumberRange{0.00F, 0.03F};
+static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{1.0F, 3.0F};
+static constexpr auto FREQUENCY_RANGE       = NumberRange{2.0F, 8.0F};
+static constexpr auto INNER_POS_FACTOR      = NumberRange{0.1F, 1.5F};
 
 static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
     .minSideLength       = 0.1F,
@@ -29,7 +29,7 @@ static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
 
 static constexpr auto PROB_XY_AMPLITUDES_EQUAL           = 0.98F;
 static constexpr auto PROB_XY_BASES_EQUAL                = 0.98F;
-static constexpr auto PROB_XY_INNER_FREQUENCIES_EQUAL    = 0.98F;
+static constexpr auto PROB_XY_CYCLE_FREQUENCIES_EQUAL    = 0.98F;
 static constexpr auto PROB_XY_FREQUENCIES_EQUAL          = 0.98F;
 static constexpr auto PROB_XY_INNER_POS_FACTORS_EQUAL    = 0.98F;
 static constexpr auto PROB_XY_INNER_POS_FACTORS_NEGATIVE = 0.50F;
@@ -57,11 +57,10 @@ auto ReflectingPool::GetRandomParams() const noexcept -> GpuParams
                          ? xBase
                          : m_goomRand->GetRandInRange<BASE_RANGE>();
 
-  const auto xInnerSinFrequencyFactor = m_goomRand->GetRandInRange<INNER_SIN_FREQUENCY_RANGE>();
-  const auto yInnerSinFrequencyFactor =
-      m_goomRand->ProbabilityOf<PROB_XY_INNER_FREQUENCIES_EQUAL>()
-          ? xInnerSinFrequencyFactor
-          : m_goomRand->GetRandInRange<INNER_SIN_FREQUENCY_RANGE>();
+  const auto xCycleFreq = m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
+  const auto yCycleFreq = m_goomRand->ProbabilityOf<PROB_XY_CYCLE_FREQUENCIES_EQUAL>()
+                              ? xCycleFreq
+                              : m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
 
   const auto xFreq = m_goomRand->GetRandInRange<FREQUENCY_RANGE>();
   const auto yFreq = m_goomRand->ProbabilityOf<PROB_XY_FREQUENCIES_EQUAL>()
@@ -78,11 +77,11 @@ auto ReflectingPool::GetRandomParams() const noexcept -> GpuParams
 
   return GpuParams{
       viewport,
-      {              xAmplitude,               yAmplitude},
-      {                   xBase,                    yBase},
-      {xInnerSinFrequencyFactor, yInnerSinFrequencyFactor},
-      {                   xFreq,                    yFreq},
-      {         xInnerPosFactor,          yInnerPosFactor},
+      {     .x = xAmplitude,      .y = yAmplitude},
+      {          .x = xBase,           .y = yBase},
+      {     .x = xCycleFreq,      .y = yCycleFreq},
+      {          .x = xFreq,           .y = yFreq},
+      {.x = xInnerPosFactor, .y = yInnerPosFactor},
   };
 }
 
@@ -94,13 +93,13 @@ auto ReflectingPool::GetGpuZoomFilterEffectNameValueParams() const noexcept -> N
 ReflectingPool::GpuParams::GpuParams(const Viewport& viewport,
                                      const Amplitude& amplitude,
                                      const FilterBase& filterBase,
-                                     const FrequencyFactor& innerSinFrequencyFactor,
+                                     const FrequencyFactor& cycleFrequency,
                                      const FrequencyFactor& frequencyFactor,
                                      const FrequencyFactor& innerPosFactor) noexcept
   : m_viewport{viewport},
     m_amplitude{amplitude},
     m_filterBase{filterBase},
-    m_innerSinFrequencyFactor{innerSinFrequencyFactor},
+    m_cycleFrequency{cycleFrequency},
     m_frequencyFactor{frequencyFactor},
     m_innerPosFactor{innerPosFactor}
 {
@@ -116,8 +115,8 @@ auto ReflectingPool::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTi
   setterFuncs.setFloat("u_reflectingPoolYAmplitude", m_amplitude.y);
   setterFuncs.setFloat("u_reflectingPoolXBase", m_filterBase.x);
   setterFuncs.setFloat("u_reflectingPoolYBase", m_filterBase.y);
-  setterFuncs.setFloat("u_reflectingPoolXInnerSinFreq", m_innerSinFrequencyFactor.x);
-  setterFuncs.setFloat("u_reflectingPoolYInnerSinFreq", m_innerSinFrequencyFactor.y);
+  setterFuncs.setFloat("u_reflectingPoolXCycleFreq", m_cycleFrequency.x);
+  setterFuncs.setFloat("u_reflectingPoolYCycleFreq", m_cycleFrequency.y);
   setterFuncs.setFloat("u_reflectingPoolXFreq", m_frequencyFactor.x);
   setterFuncs.setFloat("u_reflectingPoolYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_reflectingPoolInnerPosXFactor", m_innerPosFactor.x);
