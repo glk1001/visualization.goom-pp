@@ -127,8 +127,8 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
-    const float elapsedTime  = u_time - u_amuletStartTime;
-    const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
+    const float elapsedTime  = u_time - u_reflectingPoolStartTime;
+    const float timeToGoFrac = elapsedTime / u_reflectingPoolMaxTime;
 
     const float xT = u_reflectingPoolXFreq * sin(u_reflectingPoolXCycleFreq * timeToGoFrac * TWO_PI);
     const float yT = u_reflectingPoolYFreq * sin(u_reflectingPoolYCycleFreq * timeToGoFrac * TWO_PI);
