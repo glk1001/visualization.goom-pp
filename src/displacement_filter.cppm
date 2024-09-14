@@ -1,6 +1,10 @@
 module;
 
 //#define SAVE_FILTER_BUFFERS
+//#define DEBUG_GPU_FILTERS
+#ifdef DEBUG_GPU_FILTERS
+#include <print>
+#endif
 
 #include "goom/goom_logger.h"
 #include "goom_gl.h"
@@ -36,6 +40,7 @@ export module Goom.GoomVisualization:DisplacementFilter;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.FilterModes;
+import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.Math.Lerper;
 import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
@@ -51,6 +56,7 @@ import :GlslShaderFile;
 import :Scene;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::FILTER_FX::NormalizedCoordsConverter;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
@@ -153,7 +159,8 @@ private:
   auto WaitForRenderSync() noexcept -> void;
 
   GpuFilterEffectData m_gpuFilterEffectData = GetInitialGpuFilterEffectData();
-  [[nodiscard]] auto GetInitialGpuFilterEffectData() noexcept -> GpuFilterEffectData;
+  [[nodiscard]] auto GetInitialGpuFilterEffectData() const noexcept -> GpuFilterEffectData;
+  [[nodiscard]] auto GetCentreZoomMidpoint() const noexcept -> Point2dFlt;
   size_t m_currentPboIndex = 0U;
   std::vector<FrameData> m_frameDataArray;
   using IGpuParams = FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
@@ -562,11 +569,13 @@ auto DisplacementFilter::InitFrameDataArray() noexcept -> void
   }
 };
 
-auto DisplacementFilter::GetInitialGpuFilterEffectData() noexcept -> GpuFilterEffectData
+auto DisplacementFilter::GetInitialGpuFilterEffectData() const noexcept -> GpuFilterEffectData
 {
   static constexpr auto NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
   static constexpr auto NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 250U;
   static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
+
+  const auto centreMidpoint = GetCentreZoomMidpoint();
 
   return {
       .filterNeedsUpdating = false,
@@ -581,8 +590,19 @@ auto DisplacementFilter::GetInitialGpuFilterEffectData() noexcept -> GpuFilterEf
       .gpuLerpFactor       = {NUM_GPU_LERP_FACTOR_STEPS,
                               0.0F, 1.0F,
                               Lerper<float>::LerperType::CONTINUOUS},
-      .midpoint = {NUM_GPU_MIDPOINT_LERP_STEPS, Point2dFlt{0.0F, 0.0F}, Point2dFlt{0.0F, 0.0F}},
+      .midpoint            = {NUM_GPU_MIDPOINT_LERP_STEPS, centreMidpoint, centreMidpoint},
   };
+}
+
+auto DisplacementFilter::GetCentreZoomMidpoint() const noexcept -> Point2dFlt
+{
+  const auto textureDimensions =
+      Dimensions{static_cast<uint32_t>(GetWidth()), static_cast<uint32_t>(GetHeight())};
+  const auto textureCentrePoint = textureDimensions.GetCentrePoint();
+  const auto coordsConverter    = NormalizedCoordsConverter{textureDimensions};
+  const auto centreCoords       = coordsConverter.OtherToNormalizedCoords(textureCentrePoint);
+
+  return centreCoords.GetFltCoords();
 }
 
 auto DisplacementFilter::InitMiscData(MiscData& miscData) noexcept -> void

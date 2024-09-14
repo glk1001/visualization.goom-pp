@@ -13,7 +13,7 @@
 module;
 
 //#define DO_GOOM_STATE_DUMP
-//#define DEBUG_GPU_FILTERS
+#define DEBUG_GPU_FILTERS
 #ifdef DEBUG_GPU_FILTERS
 #include <print>
 #endif
@@ -562,6 +562,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
                  UTILS::EnumToString(m_filterSettingsService.GetCurrentGpuFilterMode()));
     std::println("  gpuFilterEffectData.srceDestLerpFactor = {}",
                  gpuFilterEffectData.srceDestLerpFactor());
+    std::println("  gpuFilterEffectData.gpuLerpFactor = {}", gpuFilterEffectData.gpuLerpFactor());
 #endif
 
     if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
@@ -599,6 +600,9 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 #endif
     }
 
+#ifdef DEBUG_GPU_FILTERS
+    std::println("  Updating new gpu midpoint...");
+#endif
     gpuFilterEffectData.filterTimingInfo = {
         .startTime = static_cast<float>(m_goomTime.GetCurrentTime()),
         .maxTime   = static_cast<float>(gpuFilterSettings.maxTimeToNextFilterModeChange)};
@@ -609,6 +613,14 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
             .OtherToNormalizedCoords(filterSettings.filterEffectsSettings.zoomMidpoint)
             .GetFltCoords();
     gpuFilterEffectData.midpoint.ResetValues(currentMidpoint, newMidpoint);
+
+#ifdef DEBUG_GPU_FILTERS
+    std::println("  Old midpoint = ({}, {}), new midpoint = ({}, {}).",
+                 currentMidpoint.x,
+                 currentMidpoint.y,
+                 newMidpoint.x,
+                 newMidpoint.y);
+#endif
 
     m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }
