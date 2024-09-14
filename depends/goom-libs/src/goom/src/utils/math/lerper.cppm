@@ -55,7 +55,7 @@ public:
   [[nodiscard]] auto operator()() const noexcept -> const T&;
   auto Increment() noexcept -> void;
 
-  [[nodiscard]] auto GetT() const noexcept -> const TValue&;
+  [[nodiscard]] auto GetT() const noexcept -> float;
   auto ResetT(float t = 0.0) noexcept -> void;
 
 private:
@@ -115,9 +115,9 @@ auto Lerper<T>::Increment() noexcept -> void
 }
 
 template<Lerpable T>
-auto Lerper<T>::GetT() const noexcept -> const TValue&
+auto Lerper<T>::GetT() const noexcept -> float
 {
-  return m_t;
+  return m_t();
 }
 
 template<Lerpable T>
