@@ -1,5 +1,10 @@
 module;
 
+//#define DEBUG_GPU_FILTERS
+#ifdef DEBUG_GPU_FILTERS
+#include <print>
+#endif
+
 #include <array>
 #include <cstdint>
 #include <map>
@@ -996,11 +1001,21 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
   if constexpr (ALL_AFTER_EFFECTS_TURNED_OFF)
   {
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
+#ifdef DEBUG_GPU_FILTERS
+    std::println("SetRandomZoomMidpoint: after effects turned off: zoomMidpoint = ({}, {}).",
+                 m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
+                 m_filterSettings.filterEffectsSettings.zoomMidpoint.y);
+#endif
     return;
   }
   if (IsZoomMidpointInTheMiddle())
   {
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
+#ifdef DEBUG_GPU_FILTERS
+    std::println("SetRandomZoomMidpoint: zoomMidpoint = ({}, {}).",
+                 m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
+                 m_filterSettings.filterEffectsSettings.zoomMidpoint.y);
+#endif
     return;
   }
 
@@ -1144,6 +1159,12 @@ auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints)
           .y = I_QUARTER * m_goomInfo->GetDimensions().GetIntHeight()};
       break;
   }
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("SetAnyRandomZoomMidpoint: zoomMidpoint = ({}, {}).",
+               m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
+               m_filterSettings.filterEffectsSettings.zoomMidpoint.y);
+#endif
 }
 
 } // namespace GOOM::FILTER_FX
