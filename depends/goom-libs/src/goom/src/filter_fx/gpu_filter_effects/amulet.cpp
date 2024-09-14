@@ -15,7 +15,7 @@ using UTILS::MATH::NumberRange;
 
 static constexpr auto AMPLITUDE_RANGE       = NumberRange{1.5F, 4.5F};
 static constexpr auto BASE_RANGE            = NumberRange{0.01F, 0.3F};
-static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{1.0F, 3.0F};
+static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{0.50F, 1.0F};
 static constexpr auto FREQUENCY_RANGE       = NumberRange{0.001F, 0.03F};
 
 static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
