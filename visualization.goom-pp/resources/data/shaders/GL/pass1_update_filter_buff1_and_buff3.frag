@@ -163,7 +163,7 @@ TexelPositions GetFilterBuffPosMappedTexelPositions(ivec2 deviceXY)
     lerpedNormalizedPositions.pos1 += deltaAmp * delta;
     lerpedNormalizedPositions.pos2 -= deltaAmp * delta;
 
-    if (!u_useGpuFilterPositionsToGetColor)
+    if (!u_useGpuFilterPositionsToGetColor && !AllGpuFilterModesAreNone())
     {
         const vec2 GpuPos              = GetFinalGpuFilteredPosition(deviceXY);
         const float gpuLerpFactor      = u_maxGpuFilterLerpFactor * u_gpuFilterLerpFactor;
