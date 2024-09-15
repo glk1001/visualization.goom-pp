@@ -1,6 +1,7 @@
 module;
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 export module Goom.FilterFx.FilterSettings;
@@ -38,6 +39,7 @@ struct FilterEffectsSettings
   float baseZoomAdjustmentFactorMultiplier;
   float afterEffectsVelocityMultiplier;
   std::shared_ptr<IZoomAdjustmentEffect> zoomAdjustmentEffect;
+  std::function<bool()> okToChangeFilterSettings;
 
   Point2dInt zoomMidpoint;
 
@@ -49,6 +51,7 @@ struct GpuFilterEffectsSettings
 {
   std::shared_ptr<IGpuZoomFilterEffect> gpuZoomFilterEffect;
   int32_t maxTimeToNextFilterModeChange;
+  std::function<bool()> okToChangeGpuFilterSettings;
 };
 
 struct FilterSettings

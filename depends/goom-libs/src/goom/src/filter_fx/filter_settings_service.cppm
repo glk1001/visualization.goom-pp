@@ -3,7 +3,7 @@ module;
 #undef NO_LOGGING
 #include "goom/goom_logger.h"
 
-// #define DEBUG_GPU_FILTERS
+#define DEBUG_GPU_FILTERS
 #ifdef DEBUG_GPU_FILTERS
 #include <print>
 #endif
@@ -67,12 +67,16 @@ public:
   using GpuFilterModeEnumMap          = RuntimeEnumMap<GpuZoomFilterMode, GpuZoomFilterModeInfo>;
   using CreateGpuZoomFilterEffectFunc = std::function<std::unique_ptr<IGpuZoomFilterEffect>(
       GpuZoomFilterMode gpuFilterMode, const GoomRand& goomRand)>;
+  using OkToChangeFilterSettings      = std::function<bool()>;
+  using OkToChangeGpuFilterSettings   = std::function<bool()>;
 
   FilterSettingsService(const PluginInfo& goomInfo,
                         const GoomRand& goomRand,
                         const std::string& resourcesDirectory,
                         const CreateZoomAdjustmentEffectFunc& createZoomAdjustmentEffect,
-                        const CreateGpuZoomFilterEffectFunc& createGpuZoomFilterEffect);
+                        const CreateGpuZoomFilterEffectFunc& createGpuZoomFilterEffect,
+                        const OkToChangeFilterSettings& okToChangeFilterSettings,
+                        const OkToChangeGpuFilterSettings& okToChangeGpuFilterSettings);
   FilterSettingsService(const FilterSettingsService&) noexcept = delete;
   FilterSettingsService(FilterSettingsService&&) noexcept      = delete;
   virtual ~FilterSettingsService() noexcept;
@@ -94,20 +98,18 @@ public:
 
   [[nodiscard]] auto GetCurrentGpuFilterMode() const noexcept -> GpuZoomFilterMode;
   [[nodiscard]] auto GetPreviousGPUFilterModeName() const noexcept -> const std::string_view&;
-  auto PutBackGpuFilterMode(GpuZoomFilterMode gpuFilterMode) noexcept -> void;
 
   [[nodiscard]] auto GetFilterSettings() const noexcept -> const FilterSettings&;
   [[nodiscard]] auto GetROVitesse() const noexcept -> const Vitesse&;
+
+  // The following methods will change filter settings.
   [[nodiscard]] auto GetRWVitesse() noexcept -> Vitesse&;
-
-  auto SetNewRandomFilter(int32_t maxTimeToNextFilterChange) -> void;
-
-  auto ResetRandomFilterMultiplierEffect() -> void;
-  auto ResetRandomAfterEffects() -> void;
-  auto ChangeMilieu() -> void;
-  auto TurnOffRotation() noexcept -> void;
-  auto MultiplyRotation(float factor) noexcept -> void;
-  auto ToggleRotationDirection() noexcept -> void;
+  [[nodiscard]] auto SetNewRandomFilter() -> bool;
+  [[nodiscard]] auto SetNewRandomGpuFilter(int32_t maxTimeToNextFilterModeChange) -> bool;
+  [[nodiscard]] auto ChangeMilieu() -> bool;
+  [[nodiscard]] auto TurnOffRotation() noexcept -> bool;
+  [[nodiscard]] auto MultiplyRotation(float factor) noexcept -> bool;
+  [[nodiscard]] auto ToggleRotationDirection() noexcept -> bool;
 
   static constexpr auto DEFAULT_TRAN_LERP_INCREMENT = 0.002F;
   auto ResetTransformBufferLerpData() noexcept -> void;
@@ -145,14 +147,15 @@ private:
   FilterModeEnumMap m_filterModeData;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
-  GpuZoomFilterMode m_gpuFilterMode              = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_previousGpuFilterMode      = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_savedPreviousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 
   FilterSettings m_filterSettings;
 
+  [[nodiscard]] auto CanChangeFilterSettings() const noexcept -> bool;
+  [[nodiscard]] auto CanChangeGpuFilterSettings() const noexcept -> bool;
   auto SetRandomSettingsForNewFilterMode() -> void;
   auto SetRandomSettingsForNewGpuFilterMode() -> void;
 
@@ -175,6 +178,8 @@ private:
   static constexpr auto PROB_MULTIPLIER_EFFECT_AMPLITUDES_EQUAL        = 0.95F;
   [[nodiscard]] auto GetNewRandomFilterMode() const -> ZoomFilterMode;
   [[nodiscard]] auto GetNewRandomGpuFilterMode() const -> GpuZoomFilterMode;
+  auto ResetRandomFilterMultiplierEffect() -> void;
+  auto ResetRandomAfterEffects() -> void;
   auto SetMaxZoomAdjustment() -> void;
   auto SetBaseZoomAdjustmentFactorMultiplier() noexcept -> void;
   auto SetAfterEffectsVelocityMultiplier() noexcept -> void;
@@ -289,15 +294,41 @@ inline auto FilterSettingsService::GetRWVitesse() noexcept -> Vitesse&
   return m_filterSettings.filterEffectsSettings.vitesse;
 }
 
-inline auto FilterSettingsService::ChangeMilieu() -> void
+inline auto FilterSettingsService::CanChangeFilterSettings() const noexcept -> bool
 {
+  return m_filterSettings.filterEffectsSettings.okToChangeFilterSettings();
+}
+
+inline auto FilterSettingsService::CanChangeGpuFilterSettings() const noexcept -> bool
+{
+  if (not m_filterSettings.gpuFilterEffectsSettings.okToChangeGpuFilterSettings())
+  {
+#ifdef DEBUG_GPU_FILTERS
+    std::println("Not ok to change gpu filter settings.");
+#endif
+    return false;
+  }
+
+  return true;
+}
+
+inline auto FilterSettingsService::ChangeMilieu() -> bool
+{
+  if (not CanChangeFilterSettings())
+  {
+    return false;
+  }
+
   m_filterSettings.filterEffectsSettingsHaveChanged    = true;
   m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
   SetMaxZoomAdjustment();
   ResetRandomFilterMultiplierEffect();
   SetBaseZoomAdjustmentFactorMultiplier();
   SetAfterEffectsVelocityMultiplier();
-  SetRandomZoomMidpoint();
+  SetRandomZoomMidpoint(); // NOTE: Gpu is OK with midpoint change anytime
+  ResetRandomAfterEffects();
+
+  return true;
 }
 
 inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
@@ -307,23 +338,45 @@ inline auto FilterSettingsService::SetMaxZoomAdjustment() -> void
       m_goomRand->GetRandInRange<SPEED_FACTOR_RANGE>() * MAX_MAX_ZOOM_ADJUSTMENT;
 }
 
-inline auto FilterSettingsService::SetNewRandomFilter(const int32_t maxTimeToNextFilterModeChange)
-    -> void
+inline auto FilterSettingsService::SetNewRandomFilter() -> bool
 {
-  Expects(maxTimeToNextFilterModeChange > 0);
+  if (not CanChangeFilterSettings())
+  {
+    return false;
+  }
 
   m_filterSettings.filterEffectsSettingsHaveChanged = true;
   m_previousFilterMode                              = m_filterMode;
   m_filterMode                                      = GetNewRandomFilterMode();
+
   SetRandomSettingsForNewFilterMode();
 
+  return true;
+}
+
+inline auto FilterSettingsService::SetNewRandomGpuFilter(
+    const int32_t maxTimeToNextFilterModeChange) -> bool
+{
+#ifdef DEBUG_GPU_FILTERS
+  std::println("Check if can set new gpu filter...");
+#endif
+
+  if (not CanChangeGpuFilterSettings())
+  {
+#ifdef DEBUG_GPU_FILTERS
+    std::println("Cannot set new gpu filter.");
+#endif
+    return false;
+  }
+
+  Expects(maxTimeToNextFilterModeChange > 0);
+
   m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
-  m_savedPreviousGpuFilterMode                         = m_previousGpuFilterMode;
   m_previousGpuFilterMode                              = m_gpuFilterMode;
   m_gpuFilterMode                                      = GetNewRandomGpuFilterMode();
 
 #ifdef DEBUG_GPU_FILTERS
-  std::println("Setting new gpu filter {} (prev = {}).",
+  std::println("Set new gpu filter to {} (prev = {}).",
                UTILS::EnumToString(m_gpuFilterMode),
                UTILS::EnumToString(m_previousGpuFilterMode));
 #endif
@@ -365,20 +418,8 @@ inline auto FilterSettingsService::SetNewRandomFilter(const int32_t maxTimeToNex
                  maxTimeToNextFilterModeChange);
 #endif
   }
-}
 
-inline auto FilterSettingsService::PutBackGpuFilterMode(
-    const GpuZoomFilterMode gpuFilterMode) noexcept -> void
-{
-  m_previousGpuFilterMode = m_savedPreviousGpuFilterMode;
-  m_gpuFilterMode         = gpuFilterMode;
-
-#ifdef DEBUG_GPU_FILTERS
-  std::println("Put back gpu filter {}", UTILS::EnumToString(m_gpuFilterMode));
-#endif
-
-  // No need to run 'SetRandomSettingsForNewFilterMode()'
-  // -- just use whatever happened before put back.
+  return true;
 }
 
 inline auto FilterSettingsService::SetRandomSettingsForNewFilterMode() -> void
@@ -397,41 +438,62 @@ inline auto FilterSettingsService::SetRandomSettingsForNewGpuFilterMode() -> voi
   SetGpuFilterModeRandomEffects();
 }
 
-inline auto FilterSettingsService::TurnOffRotation() noexcept -> void
+inline auto FilterSettingsService::TurnOffRotation() noexcept -> bool
 {
+  if (not CanChangeFilterSettings())
+  {
+    return false;
+  }
+
   if (not m_filterSettings.filterEffectsSettings.afterEffectsSettings
               .isActive[AFTER_EFFECTS::AfterEffectsTypes::ROTATION])
   {
-    return;
+    return true;
   }
   m_filterSettings.filterEffectsSettingsHaveChanged = true;
   m_filterSettings.filterEffectsSettings.afterEffectsSettings
       .isActive[AFTER_EFFECTS::AfterEffectsTypes::ROTATION] = false;
+
+  return true;
 }
 
-inline auto FilterSettingsService::MultiplyRotation(const float factor) noexcept -> void
+inline auto FilterSettingsService::MultiplyRotation(const float factor) noexcept -> bool
 {
+  if (not CanChangeFilterSettings())
+  {
+    return false;
+  }
+
   if (not m_filterSettings.filterEffectsSettings.afterEffectsSettings
               .isActive[AFTER_EFFECTS::AfterEffectsTypes::ROTATION])
   {
-    return;
+    return true;
   }
   m_filterSettings.filterEffectsSettingsHaveChanged = true;
   m_filterSettings.filterEffectsSettings.afterEffectsSettings.rotationAdjustments.SetMultiplyFactor(
       factor, AFTER_EFFECTS::RotationAdjustments::AdjustmentType::INSTEAD_OF_RANDOM);
+
+  return true;
 }
 
-inline auto FilterSettingsService::ToggleRotationDirection() noexcept -> void
+inline auto FilterSettingsService::ToggleRotationDirection() noexcept -> bool
 {
+  if (not CanChangeFilterSettings())
+  {
+    return false;
+  }
+
   if (not m_filterSettings.filterEffectsSettings.afterEffectsSettings
               .isActive[AFTER_EFFECTS::AfterEffectsTypes::ROTATION])
   {
-    return;
+    return true;
   }
 
   m_filterSettings.filterEffectsSettingsHaveChanged = true;
   m_filterSettings.filterEffectsSettings.afterEffectsSettings.rotationAdjustments.Toggle(
       AFTER_EFFECTS::RotationAdjustments::AdjustmentType::INSTEAD_OF_RANDOM);
+
+  return true;
 }
 
 inline auto FilterSettingsService::ResetTransformBufferLerpData() noexcept -> void

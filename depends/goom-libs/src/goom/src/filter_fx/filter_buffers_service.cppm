@@ -33,6 +33,8 @@ public:
   auto Start() noexcept -> void;
   auto Finish() noexcept -> void;
 
+  [[nodiscard]] auto IsTransformBufferReadyForNextFilter() const noexcept -> bool;
+
   [[nodiscard]] auto IsTransformBufferReadyToCopy() const noexcept -> bool;
   auto CopyTransformBuffer(std::span<Point2dFlt> destBuff) noexcept -> void;
 
@@ -70,6 +72,11 @@ private:
 
 namespace GOOM::FILTER_FX
 {
+
+inline auto FilterBuffersService::IsTransformBufferReadyForNextFilter() const noexcept -> bool
+{
+  return ZoomFilterBuffers::UpdateStatus::IN_PROGRESS != m_filterBuffers.GetUpdateStatus();
+}
 
 inline auto FilterBuffersService::IsTransformBufferReadyToCopy() const noexcept -> bool
 {

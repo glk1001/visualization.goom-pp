@@ -738,7 +738,9 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
                                              const CreateZoomAdjustmentEffectFunc&
                                                  createZoomAdjustmentEffect,
                                              const CreateGpuZoomFilterEffectFunc&
-                                                 createGpuZoomFilterEffect)
+                                                 createGpuZoomFilterEffect,
+                                             const OkToChangeFilterSettings& okToChangeFilterSettings,
+                                             const OkToChangeGpuFilterSettings& okToChangeGpuFilterSettings)
   : m_goomInfo{&goomInfo},
     m_goomRand{&goomRand},
     m_screenCentre{goomInfo.GetDimensions().GetCentrePoint()},
@@ -762,6 +764,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
            .baseZoomAdjustmentFactorMultiplier = DEFAULT_BASE_ZOOM_ADJUSTMENT_FACTOR_MULTIPLIER,
            .afterEffectsVelocityMultiplier = DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION,
            .zoomAdjustmentEffect = nullptr,
+           .okToChangeFilterSettings = okToChangeFilterSettings,
            .zoomMidpoint={.x = DEFAULT_ZOOM_MID_X, .y = DEFAULT_ZOOM_MID_Y},
            .filterMultiplierEffectsSettings = {
                .isActive = DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE,
@@ -778,7 +781,12 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
             }
         },
         .gpuFilterEffectsSettingsHaveChanged = false,
-        .transformBufferLerpData=GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
+        .gpuFilterEffectsSettings = {
+          .gpuZoomFilterEffect = nullptr,
+          .maxTimeToNextFilterModeChange = 1,
+          .okToChangeGpuFilterSettings = okToChangeGpuFilterSettings,
+        },
+        .transformBufferLerpData = GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
     },
     m_zoomMidpointWeights{
       goomRand,
@@ -833,8 +841,11 @@ auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMo
 
 auto FilterSettingsService::Start() -> void
 {
+  [[maybe_unused]] const auto dontCare1 = SetNewRandomFilter();
+
   static constexpr auto APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES = 300;
-  SetNewRandomFilter(APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES);
+  [[maybe_unused]] const auto dontCare2 =
+      SetNewRandomGpuFilter(APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES);
 }
 
 auto FilterSettingsService::NewCycle() noexcept -> void

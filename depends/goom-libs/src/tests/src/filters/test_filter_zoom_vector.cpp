@@ -101,6 +101,7 @@ const auto GOOM_RAND                = GoomRand{};
       .baseZoomAdjustmentFactorMultiplier = UNIT_BASE_ZOOM_ADJUSTMENT_FACTOR_MULTIPLIER,
       .afterEffectsVelocityMultiplier     = DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION,
       .zoomAdjustmentEffect               = std::make_shared<UniformZoomAdjustmentEffect>(),
+      .okToChangeFilterSettings           = nullptr,
       .zoomMidpoint                       = {.x = DEFAULT_ZOOM_MID_X, .y = DEFAULT_ZOOM_MID_Y},
       .filterMultiplierEffectsSettings    = {.isActive   = DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE,
                                                     .xFreq      = DEFAULT_MULTIPLIER_EFFECT_X_FREQ,

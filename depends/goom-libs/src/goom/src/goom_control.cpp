@@ -276,14 +276,16 @@ private:
   FilterBuffersService m_filterBuffersService;
   auto StartFilterServices() noexcept -> void;
   auto UpdateFilterSettings() -> void;
-
-  GoomMusicSettingsReactor m_musicSettingsReactor{
-      m_goomInfo, *m_goomRand, m_visualFx, m_filterSettingsService};
+  [[nodiscard]] auto OkToChangeFilterSettings() const noexcept -> bool;
+  [[nodiscard]] auto OkToChangeGpuFilterSettings() const noexcept -> bool;
 
   SmallImageBitmaps m_smallBitmaps;
   GoomStateHandler m_stateHandler{*m_goomRand};
   GoomAllVisualFx m_visualFx;
   auto StartVisualFx() noexcept -> void;
+
+  GoomMusicSettingsReactor m_musicSettingsReactor{
+      m_goomInfo, *m_goomRand, m_visualFx, m_filterSettingsService};
 
   auto NewCycle() -> void;
   auto ProcessAudio(const AudioSamples& soundData) -> void;
@@ -441,7 +443,9 @@ GoomControl::GoomControlImpl::GoomControlImpl(const GoomControl& parentGoomContr
                             *m_goomRand,
                             resourcesDirectory,
                             CreateZoomAdjustmentEffect,
-                            CreateGpuZoomFilterEffect},
+                            CreateGpuZoomFilterEffect,
+                            [this]() { return OkToChangeFilterSettings(); },
+                            [this]() { return OkToChangeGpuFilterSettings(); }},
     m_filterBuffersService{m_goomInfo,
                            m_normalizedCoordsConverter,
                            std::make_unique<FilterZoomVector>(m_goomInfo.GetDimensions().GetWidth(),
@@ -566,15 +570,11 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 #endif
 
     if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
-        not OkToSwitchGpuFilterMode(gpuFilterEffectData, nextGpuFilterMode))
+        nextGpuFilterMode == gpuFilterEffectData.destFilterMode)
     {
-      if (nextGpuFilterMode != gpuFilterEffectData.destFilterMode)
-      {
 #ifdef DEBUG_GPU_FILTERS
-        std::println("Put back gpu filter '{}'", UTILS::EnumToString(nextGpuFilterMode));
+      std::println("No need to change gpu filter mode.");
 #endif
-        m_filterSettingsService.PutBackGpuFilterMode(nextGpuFilterMode);
-      }
     }
     else
     {
@@ -624,6 +624,27 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 
     m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }
+}
+
+auto GoomControl::GoomControlImpl::OkToChangeFilterSettings() const noexcept -> bool
+{
+  return m_filterBuffersService.IsTransformBufferReadyForNextFilter();
+}
+
+auto GoomControl::GoomControlImpl::OkToChangeGpuFilterSettings() const noexcept -> bool
+{
+  Expects(m_frameData != nullptr);
+  Expects(m_frameData->gpuFilterEffectData != nullptr);
+
+  const auto& gpuFilterEffectData = *m_frameData->gpuFilterEffectData;
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("OkToChangeGpuFilterSettings: srceDestLerpFactor = {}.",
+               gpuFilterEffectData.srceDestLerpFactor());
+#endif
+
+  static constexpr auto LERP_CUTOFF = 0.95F;
+  return gpuFilterEffectData.srceDestLerpFactor() > LERP_CUTOFF;
 }
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataPos1Pos2MixFreq() noexcept -> void
@@ -728,6 +749,7 @@ auto GoomControl::GoomControlImpl::StartFilterServices() noexcept -> void
 {
   m_filterSettingsService.Start();
   m_filterSettingsService.NotifyUpdatedFilterEffectsSettings();
+  m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
 
   const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
   m_filterBuffersService.SetFilterEffectsSettings(filterSettings.filterEffectsSettings);
