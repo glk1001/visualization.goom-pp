@@ -3,7 +3,7 @@ module;
 #undef NO_LOGGING
 #include "goom/goom_logger.h"
 
-#define DEBUG_GPU_FILTERS
+//#define DEBUG_GPU_FILTERS
 #ifdef DEBUG_GPU_FILTERS
 #include <print>
 #endif
