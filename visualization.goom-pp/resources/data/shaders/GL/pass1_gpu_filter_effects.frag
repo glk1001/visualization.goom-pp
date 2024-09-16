@@ -154,24 +154,34 @@ uniform float u_beautifulFieldXInnerSinFreq;
 uniform float u_beautifulFieldYInnerSinFreq;
 uniform float u_beautifulFieldXFreq;
 uniform float u_beautifulFieldYFreq;
+uniform float u_beautifulFieldDirection;
 
 vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
-    const vec2 p = position;
+    const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
+    const float elapsedTime       = u_time - u_beautifulFieldStartTime;
+    const float timeToGoFrac      = elapsedTime / u_beautifulFieldMaxTime;
+    const float timeElapsedFrac   = 1.0F - timeToGoFrac;
+    const float timeElapsedFracSq = timeElapsedFrac * timeElapsedFrac;
 
-    const float elapsedTime  = u_time - u_beautifulFieldStartTime;
-    const float timeToGoFrac = elapsedTime / u_beautifulFieldMaxTime;
+    const float ELLIPSE_SEMI_MAJOR = 4.5F;
+    const float ELLIPSE_SEMI_MINOR = 2.5F;
+    const float ELLIPSE_SPEED      = 0.025F;
+    const float x = timeElapsedFracSq * (ELLIPSE_SEMI_MAJOR * cos(ELLIPSE_SPEED * u_time));
+    const float y = u_beautifulFieldDirection
+                    * timeElapsedFracSq * (ELLIPSE_SEMI_MINOR * sin(ELLIPSE_SPEED * u_time));
+    const vec2 p  = position + 0.4 * vec2(x, y);
 
     const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXCycleFreq * timeToGoFrac * TWO_PI);
     const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYCycleFreq * timeToGoFrac * TWO_PI);
-    const float w  = TWO_PI / 5.0;
 
+    const float w = TWO_PI / 5.0;
     const float d = length(p);
 
-    const vec2 v = vec2(u_beautifulFieldXBase + (u_beautifulFieldXAmplitude * cos((w * xT) / d)),
-                        u_beautifulFieldYBase + (u_beautifulFieldYAmplitude * sin((w * yT) / d)));
+    const vec2 v = vec2(u_beautifulFieldXAmplitude * cos((w * xT) / d),
+                        u_beautifulFieldYAmplitude * sin((u_beautifulFieldDirection * w * yT) / d));
 
-    return v;
+    return beautifulFieldBase + v;
 }
 
 // Following assumes HEIGHT <= WIDTH.
