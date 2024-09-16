@@ -34,7 +34,8 @@ public:
               const FrequencyFactor& cycleFrequency,
               float frequencyFactor,
               float positionFactor,
-              float rFactor) noexcept;
+              float rFactor,
+              float vortexSpinSign) noexcept;
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
@@ -46,6 +47,7 @@ public:
     float m_frequencyFactor{};
     float m_positionFactor{};
     float m_rFactor{};
+    float m_vortexSpinSign;
   };
 
 private:

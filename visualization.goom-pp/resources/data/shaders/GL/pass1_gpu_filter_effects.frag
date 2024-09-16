@@ -86,14 +86,26 @@ uniform float u_vortexYBase;
 uniform float u_vortexFreq;
 uniform float u_vortexPositionFactor;
 uniform float u_vortexRFactor;
+uniform float u_vortexSpinSign;
 
 vec2 GetVortexVelocity(const vec2 position)
 {
-    const vec2 p = position;
+    vec2 p = position;
 
-    const float r = length(p);
-    const float theta = atan(p.y, p.x);
-    const float t = sqrt(u_vortexRFactor * r) + theta + (u_vortexFreq * u_time);
+    const float elapsedTime  = u_time - u_vortexStartTime;
+    const float timeToGoFrac = elapsedTime / u_vortexMaxTime;
+
+    const float sinT = sin(u_vortexXCycleFreq * timeToGoFrac * TWO_PI);
+    const float cosT = cos(u_vortexYCycleFreq * timeToGoFrac * TWO_PI);
+
+    const float x = p.x;
+    p.x = p.x * cosT - (u_vortexSpinSign * p.y * sinT);
+    p.y = p.y * cosT + (u_vortexSpinSign * x * sinT);
+
+    const vec2 vortexBase = vec2(u_vortexXBase, u_vortexYBase);
+    const float r         = length(p);
+    const float theta     = atan(p.y, p.x);
+    const float t         = sqrt(u_vortexRFactor * r) + theta + (u_vortexFreq * u_time);
 
     vec2 v = vec2(p.y, -p.x) / r;
 
@@ -103,7 +115,7 @@ vec2 GetVortexVelocity(const vec2 position)
     v.x *= u_vortexXAmplitude * vLength;
     v.y *= u_vortexYAmplitude * vLength;
 
-    v += vec2(u_vortexXBase, u_vortexYBase) + u_vortexPositionFactor * p;
+    v += vortexBase + (u_vortexPositionFactor * p);
 
     return v;
 }
