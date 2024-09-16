@@ -323,7 +323,7 @@ auto GoomVisualization::ProduceItem(const size_t slot, const AudioSamples& audio
   m_goomControl.UpdateGoomBuffers(audioSamples);
 
 #ifdef GOOM_RUNNER_TOO_FAST_BUG
-  static constexpr auto SLOWDOWN_MS = 5U;
+  static constexpr auto SLOWDOWN_MS = 10U;
   std::this_thread::sleep_for(std::chrono::milliseconds(SLOWDOWN_MS));
 #endif
 
