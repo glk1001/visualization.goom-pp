@@ -32,7 +32,8 @@ public:
               const Amplitude& amplitude,
               const FilterBase& filterBase,
               const FrequencyFactor& cycleFrequency,
-              const FrequencyFactor& frequencyFactor) noexcept;
+              const FrequencyFactor& frequencyFactor,
+              float beautifulFieldDirection) noexcept;
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
@@ -42,6 +43,7 @@ public:
     FilterBase m_filterBase{};
     FrequencyFactor m_cycleFrequency{};
     FrequencyFactor m_frequencyFactor{};
+    float m_beautifulFieldDirection{};
   };
 
 private:

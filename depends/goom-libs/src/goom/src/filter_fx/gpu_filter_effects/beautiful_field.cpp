@@ -64,12 +64,16 @@ auto BeautifulField::GetRandomParams() const noexcept -> GpuParams
                          ? xFreq
                          : m_goomRand->GetRandInRange<FREQUENCY_RANGE>();
 
+  static auto s_beautifulFieldDirection = +1.0F;
+  s_beautifulFieldDirection             = -s_beautifulFieldDirection;
+
   return GpuParams{
       viewport,
       {.x = xAmplitude, .y = yAmplitude},
       {     .x = xBase,      .y = yBase},
       {.x = xCycleFreq, .y = yCycleFreq},
       {     .x = xFreq,      .y = yFreq},
+      s_beautifulFieldDirection,
   };
 }
 
@@ -82,12 +86,14 @@ BeautifulField::GpuParams::GpuParams(const Viewport& viewport,
                                      const Amplitude& amplitude,
                                      const FilterBase& filterBase,
                                      const FrequencyFactor& cycleFrequency,
-                                     const FrequencyFactor& frequencyFactor) noexcept
+                                     const FrequencyFactor& frequencyFactor,
+                                     const float beautifulFieldDirection) noexcept
   : m_viewport{viewport},
     m_amplitude{amplitude},
     m_filterBase{filterBase},
     m_cycleFrequency{cycleFrequency},
-    m_frequencyFactor{frequencyFactor}
+    m_frequencyFactor{frequencyFactor},
+    m_beautifulFieldDirection{beautifulFieldDirection}
 {
 }
 
@@ -105,6 +111,7 @@ auto BeautifulField::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTi
   setterFuncs.setFloat("u_beautifulFieldYCycleFreq", m_cycleFrequency.y);
   setterFuncs.setFloat("u_beautifulFieldXFreq", m_frequencyFactor.x);
   setterFuncs.setFloat("u_beautifulFieldYFreq", m_frequencyFactor.y);
+  setterFuncs.setFloat("u_beautifulFieldDirection", m_beautifulFieldDirection);
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
