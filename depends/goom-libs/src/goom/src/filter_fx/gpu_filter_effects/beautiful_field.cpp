@@ -13,7 +13,7 @@ using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 
-static constexpr auto AMPLITUDE_RANGE       = NumberRange{1.0F, 5.0F};
+static constexpr auto AMPLITUDE_RANGE       = NumberRange{25.0F, 125.0F};
 static constexpr auto BASE_RANGE            = NumberRange{0.00F, 0.03F};
 static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{0.5F, 1.0F};
 static constexpr auto FREQUENCY_RANGE       = NumberRange{0.05F, 1.5F};
