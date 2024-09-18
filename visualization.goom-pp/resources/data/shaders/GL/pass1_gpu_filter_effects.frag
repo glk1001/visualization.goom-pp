@@ -170,28 +170,37 @@ uniform float u_beautifulFieldDirection;
 
 vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
+    vec2 p = position;
+
     const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
     const float elapsedTime       = u_time - u_beautifulFieldStartTime;
     const float timeToGoFrac      = elapsedTime / u_beautifulFieldMaxTime;
     const float timeElapsedFrac   = 1.0F - timeToGoFrac;
     const float timeElapsedFracSq = timeElapsedFrac * timeElapsedFrac;
 
+    // Make a spiralling path for 'p'.
     const float ELLIPSE_SEMI_MAJOR = 4.5F;
     const float ELLIPSE_SEMI_MINOR = 2.5F;
     const float ELLIPSE_SPEED      = 0.025F;
     const float x = timeElapsedFracSq * (ELLIPSE_SEMI_MAJOR * cos(ELLIPSE_SPEED * u_time));
-    const float y = u_beautifulFieldDirection
+    const float y = -u_beautifulFieldDirection
                     * timeElapsedFracSq * (ELLIPSE_SEMI_MINOR * sin(ELLIPSE_SPEED * u_time));
-    const vec2 p  = position + 0.4 * vec2(x, y);
+    p  = p + 0.4 * vec2(x, y);
 
     const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXCycleFreq * timeToGoFrac * TWO_PI);
     const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYCycleFreq * timeToGoFrac * TWO_PI);
 
     const float w = TWO_PI / 5.0;
-    const float d = length(p);
 
-    const vec2 v = vec2(u_beautifulFieldXAmplitude * cos((w * xT) / d),
-                        u_beautifulFieldYAmplitude * sin((u_beautifulFieldDirection * w * yT) / d));
+    const float d = length(p);
+    const float MAX_D = 0.5F * (sqrt(2.0F) * FILTER_POS_COORD_WIDTH);
+
+    const float argDenom = pow(d, 0.1 + xT) * ((0.1 + MAX_D) - d);
+    const float argCos = ((w * xT) / argDenom);
+    const float argSin = ((w * yT) / argDenom) * u_beautifulFieldDirection;
+
+    const vec2 v = vec2(u_beautifulFieldXAmplitude * cos(argCos),
+                        u_beautifulFieldYAmplitude * sin(argSin));
 
     return beautifulFieldBase + v;
 }
