@@ -139,7 +139,7 @@ private:
   const GoomRand* m_goomRand;
   Point2dInt m_screenCentre;
   std::string m_resourcesDirectory;
-  std::unique_ptr<AFTER_EFFECTS::AfterEffectsStates> m_randomizedAfterEffects;
+  AFTER_EFFECTS::AfterEffectsStates m_randomizedAfterEffects;
 
   ZoomFilterMode m_filterMode             = ZoomFilterMode::NORMAL_MODE;
   ZoomFilterMode m_previousFilterMode     = ZoomFilterMode::NORMAL_MODE;
