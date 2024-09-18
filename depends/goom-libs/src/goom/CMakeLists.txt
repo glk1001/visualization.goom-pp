@@ -223,6 +223,7 @@ set(GoomFilterFx_modules
     src/filter_fx/filter_settings.cppm
     src/filter_fx/filter_settings_service.cppm
     src/filter_fx/filter_speed.cppm
+    src/filter_fx/filter_weights.cppm
     src/filter_fx/filter_zoom_vector.cppm
     src/filter_fx/normalized_coords.cppm
     src/filter_fx/zoom_vector.cppm
