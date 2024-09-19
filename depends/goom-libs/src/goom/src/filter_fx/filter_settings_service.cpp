@@ -152,6 +152,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
            .afterEffectsVelocityMultiplier = DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION,
            .zoomAdjustmentEffect = nullptr,
            .okToChangeFilterSettings = okToChangeFilterSettings,
+           .filterZoomMidpointHasChanged = false,
            .zoomMidpoint={.x = DEFAULT_ZOOM_MID_X, .y = DEFAULT_ZOOM_MID_Y},
            .filterMultiplierEffectsSettings = {
                .isActive = DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE,
@@ -230,6 +231,7 @@ auto FilterSettingsService::Start() -> void
 {
   [[maybe_unused]] const auto dontCare1 = SetNewRandomFilter();
 
+  m_previousGpuFilterMode                                           = GPU_NONE_MODE;
   static constexpr auto APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES = 300;
   [[maybe_unused]] const auto dontCare2 =
       SetNewRandomGpuFilter(APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES);
@@ -237,7 +239,8 @@ auto FilterSettingsService::Start() -> void
 
 auto FilterSettingsService::NewCycle() noexcept -> void
 {
-  m_filterModeAtLastUpdate = m_filterMode;
+  m_filterModeAtLastUpdate    = m_filterMode;
+  m_gpuFilterModeAtLastUpdate = m_gpuFilterMode;
   m_filterSettings.transformBufferLerpData.Update();
 }
 
@@ -398,6 +401,8 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
 {
   if constexpr (ALL_AFTER_EFFECTS_TURNED_OFF)
   {
+    m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
+        m_filterSettings.filterEffectsSettings.zoomMidpoint != m_screenCentre;
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
 #ifdef DEBUG_GPU_FILTERS
     std::println("SetRandomZoomMidpoint: after effects turned off: zoomMidpoint = ({}, {}).",
@@ -408,6 +413,8 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
   }
   if (IsZoomMidpointInTheMiddle())
   {
+    m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
+        m_filterSettings.filterEffectsSettings.zoomMidpoint != m_screenCentre;
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
 #ifdef DEBUG_GPU_FILTERS
     std::println("SetRandomZoomMidpoint: zoomMidpoint = ({}, {}).",
@@ -513,6 +520,8 @@ auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints)
 {
   static constexpr auto HEIGHT_MARGIN = 2;
 
+  const auto oldZoomMidpoint = m_filterSettings.filterEffectsSettings.zoomMidpoint;
+
   switch (GetWeightRandomMidPoint(allowEdgePoints))
   {
     case ZoomMidpointEvents::BOTTOM_MID_POINT:
@@ -557,6 +566,9 @@ auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints)
           .y = I_QUARTER * m_goomInfo->GetDimensions().GetIntHeight()};
       break;
   }
+
+  m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
+      oldZoomMidpoint != m_filterSettings.filterEffectsSettings.zoomMidpoint;
 
 #ifdef DEBUG_GPU_FILTERS
   std::println("SetAnyRandomZoomMidpoint: zoomMidpoint = ({}, {}).",

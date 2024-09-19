@@ -41,6 +41,7 @@ struct FilterEffectsSettings
   std::shared_ptr<IZoomAdjustmentEffect> zoomAdjustmentEffect;
   std::function<bool()> okToChangeFilterSettings;
 
+  bool filterZoomMidpointHasChanged = false;
   Point2dInt zoomMidpoint;
 
   FilterMultiplierEffectsSettings filterMultiplierEffectsSettings;

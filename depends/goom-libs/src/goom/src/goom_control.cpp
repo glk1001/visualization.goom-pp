@@ -540,6 +540,10 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterPosArrays() noexcept -> 
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> void
 {
+#ifdef DEBUG_GPU_FILTERS
+  std::println("UpdateFrameDataGpuFilterData: update number: {}", m_goomTime.GetCurrentTime());
+#endif
+
   const auto& filterSettings    = std::as_const(m_filterSettingsService).GetFilterSettings();
   const auto& gpuFilterSettings = filterSettings.gpuFilterEffectsSettings;
   auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
@@ -549,16 +553,12 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
   gpuFilterEffectData.gpuLerpFactor.Increment();
   gpuFilterEffectData.srceDestLerpFactor.Increment();
 
-  if (not filterSettings.gpuFilterEffectsSettingsHaveChanged)
+  if (filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {
-    gpuFilterEffectData.filterNeedsUpdating = false;
-  }
-  else
-  {
-    gpuFilterEffectData.filterNeedsUpdating = true;
-
 #ifdef DEBUG_GPU_FILTERS
-    std::println("gpuFilterEffectData need updating:");
+    std::println(
+        "  UpdateFrameDataGpuFilterData: filterSettings.gpuFilterEffectsSettingsHaveChanged = {}",
+        filterSettings.gpuFilterEffectsSettingsHaveChanged);
     std::println("  gpuFilterEffectData.srceFilterMode = {}",
                  UTILS::EnumToString(gpuFilterEffectData.srceFilterMode));
     std::println("  gpuFilterEffectData.destFilterMode = {}",
@@ -574,13 +574,15 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
         nextGpuFilterMode == gpuFilterEffectData.destFilterMode)
     {
 #ifdef DEBUG_GPU_FILTERS
-      std::println("No need to change gpu filter mode.");
+      std::println("Current dest mode = next mode: No need to change gpu filter mode.");
 #endif
     }
     else
     {
+      gpuFilterEffectData.filterNeedsUpdating = true;
+
 #ifdef DEBUG_GPU_FILTERS
-      std::println("  gpuFilterEffectData: switching srce and dest");
+      std::println("  gpuFilterEffectData: switching srce and dest filter modes...");
 #endif
 
       gpuFilterEffectData.srceFilterMode   = gpuFilterEffectData.destFilterMode;
@@ -601,13 +603,18 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 #endif
     }
 
-#ifdef DEBUG_GPU_FILTERS
-    std::println("  Updating new gpu midpoint...");
-#endif
     gpuFilterEffectData.filterTimingInfo = {
         .startTime = static_cast<float>(m_goomTime.GetCurrentTime()),
         .maxTime   = static_cast<float>(gpuFilterSettings.maxTimeToNextFilterModeChange)};
 
+    m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
+  }
+
+  if (filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged)
+  {
+#ifdef DEBUG_GPU_FILTERS
+    std::println("  Updating new gpu midpoint...");
+#endif
     const auto& currentMidpoint = gpuFilterEffectData.midpoint();
     const auto newMidpoint =
         m_normalizedCoordsConverter
@@ -622,9 +629,12 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
                  newMidpoint.x,
                  newMidpoint.y);
 #endif
-
-    m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("  UpdateFrameDataGpuFilterData: filterNeedsUpdating = {}",
+               gpuFilterEffectData.filterNeedsUpdating);
+#endif
 }
 
 auto GoomControl::GoomControlImpl::OkToChangeFilterSettings() const noexcept -> bool
@@ -750,7 +760,7 @@ auto GoomControl::GoomControlImpl::StartFilterServices() noexcept -> void
 {
   m_filterSettingsService.Start();
   m_filterSettingsService.NotifyUpdatedFilterEffectsSettings();
-  m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
+  //m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
 
   const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
   m_filterBuffersService.SetFilterEffectsSettings(filterSettings.filterEffectsSettings);
