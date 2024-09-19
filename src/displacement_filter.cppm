@@ -1131,9 +1131,20 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
 {
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_LERP_FACTOR,
                                                      m_gpuFilterEffectData.gpuLerpFactor());
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_SRCE_DEST_LERP_FACTOR,
+                                                     m_gpuFilterEffectData.srceDestLerpFactor());
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_MIDPOINT,
       glm::vec2{m_gpuFilterEffectData.midpoint().x, m_gpuFilterEffectData.midpoint().y});
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("UpdatePass1GpuFilterEffectDataToGl: gpuLerpFactor = {}",
+               m_gpuFilterEffectData.gpuLerpFactor());
+  std::println("  filterNeedsUpdating = {}", m_gpuFilterEffectData.filterNeedsUpdating);
+  std::println("  srceFilterMode = {}", EnumToString(m_gpuFilterEffectData.srceFilterMode));
+  std::println("  destFilterMode = {}", EnumToString(m_gpuFilterEffectData.destFilterMode));
+  std::println("  srceDestLerpFactor = {}", m_gpuFilterEffectData.srceDestLerpFactor());
+#endif
 
   if (not m_gpuFilterEffectData.filterNeedsUpdating)
   {
@@ -1144,13 +1155,13 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
       UNIFORM_GPU_SRCE_FILTER_MODE, static_cast<uint32_t>(m_gpuFilterEffectData.srceFilterMode));
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_DEST_FILTER_MODE, static_cast<uint32_t>(m_gpuFilterEffectData.destFilterMode));
-  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_SRCE_DEST_LERP_FACTOR,
-                                                     m_gpuFilterEffectData.srceDestLerpFactor());
 
   m_gpuFilterEffectData.srceFilterParams->OutputGpuParams(m_gpuFilterEffectData.filterTimingInfo,
                                                           m_pass1SetterFuncs);
   m_gpuFilterEffectData.destFilterParams->OutputGpuParams(m_gpuFilterEffectData.filterTimingInfo,
                                                           m_pass1SetterFuncs);
+
+  m_gpuFilterEffectData.filterNeedsUpdating = false;
 }
 
 auto DisplacementFilter::UpdatePass4MiscDataToGl(const size_t pboIndex) noexcept -> void
