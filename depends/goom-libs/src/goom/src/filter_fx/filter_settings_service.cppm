@@ -147,8 +147,9 @@ private:
   FilterModeEnumMap m_filterModeData;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
-  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_gpuFilterMode             = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode     = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_gpuFilterModeAtLastUpdate = GpuZoomFilterMode::GPU_NONE_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 
@@ -280,7 +281,7 @@ inline auto FilterSettingsService::HasFilterModeChangedSinceLastUpdate() const n
 
 inline auto FilterSettingsService::HasGpuFilterModeChangedSinceLastUpdate() const noexcept -> bool
 {
-  return m_gpuFilterMode != m_previousGpuFilterMode;
+  return m_gpuFilterModeAtLastUpdate != m_gpuFilterMode;
 }
 
 inline auto FilterSettingsService::GetROVitesse() const noexcept -> const Vitesse&
@@ -319,8 +320,7 @@ inline auto FilterSettingsService::ChangeMilieu() -> bool
     return false;
   }
 
-  m_filterSettings.filterEffectsSettingsHaveChanged    = true;
-  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = true;
+  m_filterSettings.filterEffectsSettingsHaveChanged = true;
   SetMaxZoomAdjustment();
   ResetRandomFilterMultiplierEffect();
   SetBaseZoomAdjustmentFactorMultiplier();
@@ -364,7 +364,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
   if (not CanChangeGpuFilterSettings())
   {
 #ifdef DEBUG_GPU_FILTERS
-    std::println("Cannot set new gpu filter.");
+    std::println("  Cannot set new gpu filter.");
 #endif
     return false;
   }
@@ -376,7 +376,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
   m_gpuFilterMode                                      = GetNewRandomGpuFilterMode();
 
 #ifdef DEBUG_GPU_FILTERS
-  std::println("Set new gpu filter to {} (prev = {}).",
+  std::println("  Set new gpu filter to {} (prev = {}).",
                UTILS::EnumToString(m_gpuFilterMode),
                UTILS::EnumToString(m_previousGpuFilterMode));
 #endif
@@ -391,7 +391,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
       gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
       SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
-      std::println("Set new filter params for '{}'. Max filter time = {}.",
+      std::println("  Set new filter params for '{}'. Max filter time = {}.",
                    UTILS::EnumToString(m_gpuFilterMode),
                    maxTimeToNextFilterModeChange);
 #endif
@@ -402,7 +402,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     if (m_gpuFilterMode == m_previousGpuFilterMode)
     {
 #ifdef DEBUG_GPU_FILTERS
-      std::println("WARN: Wrong weighted filter returned. Should not be same as previous: '{}'.",
+      std::println("  WARN: Wrong weighted filter returned. Should not be same as previous: '{}'.",
                    UTILS::EnumToString(m_gpuFilterMode));
 #endif
       LogWarn(UTILS::GetGoomLogger(),
@@ -413,11 +413,16 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
     SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
-    std::println("Set new filter params for '{}'. Max filter time = {}.",
+    std::println("  Set new filter params for '{}'. Max filter time = {}.",
                  UTILS::EnumToString(m_gpuFilterMode),
                  maxTimeToNextFilterModeChange);
 #endif
   }
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = {}.",
+               m_filterSettings.gpuFilterEffectsSettingsHaveChanged);
+#endif
 
   return true;
 }
