@@ -119,13 +119,6 @@
     <codeStyleSettings language="CMake">
       <option name="ALIGN_MULTILINE_PARAMETERS_IN_CALLS" value="true" />
     </codeStyleSettings>
-    <codeStyleSettings language="GLSL">
-      <indentOptions>
-        <option name="INDENT_SIZE" value="2" />
-        <option name="CONTINUATION_INDENT_SIZE" value="4" />
-        <option name="TAB_SIZE" value="2" />
-      </indentOptions>
-    </codeStyleSettings>
     <codeStyleSettings language="Glsl">
       <option name="SPACE_BEFORE_COLON" value="false" />
     </codeStyleSettings>
