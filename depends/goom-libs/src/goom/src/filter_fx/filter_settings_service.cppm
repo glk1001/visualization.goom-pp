@@ -87,10 +87,7 @@ public:
   auto NewCycle() noexcept -> void;
 
   auto NotifyUpdatedFilterEffectsSettings() noexcept -> void;
-  [[nodiscard]] auto HasFilterModeChangedSinceLastUpdate() const noexcept -> bool;
-
   auto NotifyUpdatedGpuFilterEffectsSettings() noexcept -> void;
-  [[nodiscard]] auto HasGpuFilterModeChangedSinceLastUpdate() const noexcept -> bool;
 
   [[nodiscard]] auto GetCurrentFilterMode() const noexcept -> ZoomFilterMode;
   [[nodiscard]] auto GetCurrentFilterModeName() const noexcept -> const std::string_view&;
@@ -141,15 +138,13 @@ private:
   std::string m_resourcesDirectory;
   AFTER_EFFECTS::AfterEffectsStates m_randomizedAfterEffects;
 
-  ZoomFilterMode m_filterMode             = ZoomFilterMode::NORMAL_MODE;
-  ZoomFilterMode m_previousFilterMode     = ZoomFilterMode::NORMAL_MODE;
-  ZoomFilterMode m_filterModeAtLastUpdate = ZoomFilterMode::NORMAL_MODE;
+  ZoomFilterMode m_filterMode         = ZoomFilterMode::NORMAL_MODE;
+  ZoomFilterMode m_previousFilterMode = ZoomFilterMode::NORMAL_MODE;
   FilterModeEnumMap m_filterModeData;
   ConditionalWeights<ZoomFilterMode> m_weightedFilterEvents;
 
-  GpuZoomFilterMode m_gpuFilterMode             = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_previousGpuFilterMode     = GpuZoomFilterMode::GPU_NONE_MODE;
-  GpuZoomFilterMode m_gpuFilterModeAtLastUpdate = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_gpuFilterMode         = GpuZoomFilterMode::GPU_NONE_MODE;
+  GpuZoomFilterMode m_previousGpuFilterMode = GpuZoomFilterMode::GPU_NONE_MODE;
   GpuFilterModeEnumMap m_gpuFilterModeData;
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 
@@ -272,16 +267,6 @@ inline auto FilterSettingsService::GetPluginInfo() const noexcept -> const Plugi
 inline auto FilterSettingsService::GetGoomRand() const noexcept -> const GoomRand&
 {
   return *m_goomRand;
-}
-
-inline auto FilterSettingsService::HasFilterModeChangedSinceLastUpdate() const noexcept -> bool
-{
-  return m_filterModeAtLastUpdate != m_filterMode;
-}
-
-inline auto FilterSettingsService::HasGpuFilterModeChangedSinceLastUpdate() const noexcept -> bool
-{
-  return m_gpuFilterModeAtLastUpdate != m_gpuFilterMode;
 }
 
 inline auto FilterSettingsService::GetROVitesse() const noexcept -> const Vitesse&

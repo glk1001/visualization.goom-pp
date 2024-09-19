@@ -239,8 +239,6 @@ auto FilterSettingsService::Start() -> void
 
 auto FilterSettingsService::NewCycle() noexcept -> void
 {
-  m_filterModeAtLastUpdate    = m_filterMode;
-  m_gpuFilterModeAtLastUpdate = m_gpuFilterMode;
   m_filterSettings.transformBufferLerpData.Update();
 }
 
