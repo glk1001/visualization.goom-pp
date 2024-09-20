@@ -25,20 +25,23 @@ vec2 GetAmuletVelocity(const vec2 position)
 {
     vec2 p = position;
 
+    const vec2 amuletBase = vec2(u_amuletXBase, u_amuletYBase);
+
     const float elapsedTime  = u_time - u_amuletStartTime;
     const float timeToGoFrac = elapsedTime / u_amuletMaxTime;
 
     const float sinT = sin(u_amuletXCycleFreq * timeToGoFrac * TWO_PI);
     const float cosT = cos(u_amuletYCycleFreq * timeToGoFrac * TWO_PI);
 
+    // Rotate...
     const float x = p.x;
     p.x = p.x * cosT - (u_amuletSpinSign * p.y * sinT);
     p.y = p.y * cosT + (u_amuletSpinSign * x * sinT);
 
     const float sqDistFromZero = (p.x * p.x) + (p.y * p.y);
 
-    const vec2 v = vec2(u_amuletXBase + (u_amuletXAmplitude * sqDistFromZero),
-                        u_amuletYBase + (u_amuletYAmplitude * sqDistFromZero));
+    const vec2 v = amuletBase + vec2(u_amuletXAmplitude * sqDistFromZero,
+                                     u_amuletYAmplitude * sqDistFromZero);
 
     return -p * v;
 }
@@ -60,17 +63,17 @@ vec2 GetWaveVelocity(const vec2 position)
 {
     const vec2 p = position;
 
+    const vec2 waveBase = vec2(u_waveXBase, u_waveYBase);
+
     const float sqDistFromZero = (p.x * p.x) + (p.y * p.y);
-    const float reducer      = exp(-u_waveReducerCoeff * sqDistFromZero);
+    const float reducer        = exp(-u_waveReducerCoeff * sqDistFromZero);
 
-    const float freqFactor = 10.5;
-    const float angle = pow(sqDistFromZero, u_waveSqDistPower);
-
+    const float angle    = pow(sqDistFromZero, u_waveSqDistPower);
     const float cosAngle = cos(u_waveXFreq * angle);
     const float sinAngle = sin(u_waveYFreq * angle);
 
-    const vec2 v = vec2(u_waveXBase + (reducer * u_waveXAmplitude * cosAngle),
-                        u_waveYBase + (reducer * u_waveYAmplitude * sinAngle));
+    const vec2 v = waveBase + vec2(reducer * u_waveXAmplitude * cosAngle,
+                                   reducer * u_waveYAmplitude * sinAngle);
 
     return -p * v;
 }
@@ -92,20 +95,22 @@ vec2 GetVortexVelocity(const vec2 position)
 {
     vec2 p = position;
 
+    const vec2 vortexBase = vec2(u_vortexXBase, u_vortexYBase);
+
     const float elapsedTime  = u_time - u_vortexStartTime;
     const float timeToGoFrac = elapsedTime / u_vortexMaxTime;
 
     const float sinT = sin(u_vortexXCycleFreq * timeToGoFrac * TWO_PI);
     const float cosT = cos(u_vortexYCycleFreq * timeToGoFrac * TWO_PI);
 
+    // Rotate...
     const float x = p.x;
     p.x = p.x * cosT - (u_vortexSpinSign * p.y * sinT);
     p.y = p.y * cosT + (u_vortexSpinSign * x * sinT);
 
-    const vec2 vortexBase = vec2(u_vortexXBase, u_vortexYBase);
-    const float r         = length(p);
-    const float theta     = atan(p.y, p.x);
-    const float t         = sqrt(u_vortexRFactor * r) + theta + (u_vortexFreq * u_time);
+    const float r     = length(p);
+    const float theta = atan(p.y, p.x);
+    const float t     = sqrt(u_vortexRFactor * r) + theta + (u_vortexFreq * u_time);
 
     vec2 v = vec2(p.y, -p.x) / r;
 
@@ -139,6 +144,8 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
 {
     const vec2 p = position;
 
+    const vec2 reflectingPoolBase = vec2(u_reflectingPoolXBase, u_reflectingPoolYBase);
+
     const float elapsedTime  = u_time - u_reflectingPoolStartTime;
     const float timeToGoFrac = elapsedTime / u_reflectingPoolMaxTime;
 
@@ -148,8 +155,8 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
     const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
     const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
 
-    const vec2 v = vec2(u_reflectingPoolXBase + (u_reflectingPoolXAmplitude * vX),
-                        u_reflectingPoolYBase + (u_reflectingPoolYAmplitude * vY));
+    const vec2 v = reflectingPoolBase + vec2(u_reflectingPoolXAmplitude * vX,
+                                             u_reflectingPoolYAmplitude * vY);
 
     return v;
 }
@@ -173,6 +180,7 @@ vec2 GetBeautifulFieldVelocity(const vec2 position)
     vec2 p = position;
 
     const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
+
     const float elapsedTime       = u_time - u_beautifulFieldStartTime;
     const float timeToGoFrac      = elapsedTime / u_beautifulFieldMaxTime;
     const float timeElapsedFrac   = 1.0F - timeToGoFrac;

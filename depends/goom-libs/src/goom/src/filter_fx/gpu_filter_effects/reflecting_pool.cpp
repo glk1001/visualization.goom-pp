@@ -15,7 +15,7 @@ using UTILS::MATH::NumberRange;
 
 static constexpr auto AMPLITUDE_RANGE       = NumberRange{0.05F, 2.5F};
 static constexpr auto BASE_RANGE            = NumberRange{0.00F, 0.03F};
-static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{1.0F, 3.0F};
+static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{0.5F, 1.0F};
 static constexpr auto FREQUENCY_RANGE       = NumberRange{2.0F, 8.0F};
 static constexpr auto INNER_POS_FACTOR      = NumberRange{0.1F, 1.5F};
 
