@@ -175,8 +175,29 @@ uniform float u_beautifulFieldXFreq;
 uniform float u_beautifulFieldYFreq;
 uniform float u_beautifulFieldDirection;
 
+vec2 GetUpDownVelocity(const vec2 position)
+{
+    vec2 p = position;
+
+    const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
+
+    const float elapsedTime  = u_time - u_beautifulFieldStartTime;
+    const float timeToGoFrac = elapsedTime / u_beautifulFieldMaxTime;
+
+    const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXCycleFreq * timeToGoFrac * TWO_PI);
+    const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYCycleFreq * timeToGoFrac * TWO_PI);
+
+    vec2 v;
+    v.x = xT * p.x + sin(xT * p.y);
+    v.y = cos(yT * p.x);
+
+    return beautifulFieldBase + v;
+}
+
 vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
+    return GetUpDownVelocity(position);
+
     vec2 p = position;
 
     const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
