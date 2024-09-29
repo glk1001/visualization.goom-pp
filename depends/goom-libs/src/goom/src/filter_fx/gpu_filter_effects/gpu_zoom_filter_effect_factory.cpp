@@ -9,6 +9,7 @@ import Goom.FilterFx.GpuFilterEffects.BeautifulField;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.GpuFilterEffects.ReflectingPool;
+import Goom.FilterFx.GpuFilterEffects.UpDown;
 import Goom.FilterFx.GpuFilterEffects.Vortex;
 import Goom.FilterFx.GpuFilterEffects.Wave;
 import Goom.FilterFx.FilterModes;
@@ -38,6 +39,8 @@ auto CreateGpuZoomFilterEffect(const GpuZoomFilterMode gpuFilterMode, const Goom
       return std::make_unique<ReflectingPool>(goomRand);
     case GPU_BEAUTIFUL_FIELD_MODE:
       return std::make_unique<BeautifulField>(goomRand);
+    case GPU_UP_DOWN_MODE:
+      return std::make_unique<UpDown>(goomRand);
   }
 }
 
