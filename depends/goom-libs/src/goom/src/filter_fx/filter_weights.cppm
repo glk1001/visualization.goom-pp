@@ -36,9 +36,10 @@ export namespace GOOM::FILTER_FX
 // For debugging:
 
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
-inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
+//inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
+inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_UP_DOWN_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_VORTEX_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_WAVE_MODE;
 
@@ -114,6 +115,7 @@ static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
 static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;
 static constexpr auto GPU_REFLECTING_POOL_WEIGHT = 10.0F;
 static constexpr auto GPU_BEAUTIFUL_FIELD_WEIGHT = 10.0F;
+static constexpr auto GPU_UP_DOWN_WEIGHT         = 10.0F;
 
 static constexpr auto AMULET_MODE_WEIGHT             = 10.0F;
 static constexpr auto COMPLEX_RATIONAL_MODE_WEIGHT   = 10.0F;
@@ -433,6 +435,7 @@ static constexpr auto DEFAULT_AFTER_EFFECTS_OFF_TIMES    = EnumMap<AfterEffectsT
         {.key = GPU_VORTEX_MODE, .weight = GPU_VORTEX_WEIGHT},
         {.key = GPU_REFLECTING_POOL_MODE, .weight = GPU_REFLECTING_POOL_WEIGHT},
         {.key = GPU_BEAUTIFUL_FIELD_MODE, .weight = GPU_BEAUTIFUL_FIELD_WEIGHT},
+        {.key = GPU_UP_DOWN_MODE, .weight = GPU_UP_DOWN_WEIGHT},
         },
   };
 

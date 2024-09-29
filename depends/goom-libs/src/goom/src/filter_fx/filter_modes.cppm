@@ -18,6 +18,7 @@ enum class GpuZoomFilterMode : UnderlyingEnumType
   GPU_VORTEX_MODE,
   GPU_REFLECTING_POOL_MODE,
   GPU_BEAUTIFUL_FIELD_MODE,
+  GPU_UP_DOWN_MODE,
 };
 
 enum class ZoomFilterMode : UnderlyingEnumType
@@ -74,6 +75,7 @@ inline auto GetGpuFilterModeName(const GpuZoomFilterMode gpuFilterMode) noexcept
       {GPU_VORTEX_MODE, "GPU Vortex"},
       {GPU_REFLECTING_POOL_MODE, "GPU Reflecting Pool"},
       {GPU_BEAUTIFUL_FIELD_MODE, "GPU Beautiful Field"},
+      {GPU_UP_DOWN_MODE, "GPU Up Down"},
   }}};
   static_assert(GPU_FILTER_MODE_NAMES.size() == NUM<GpuZoomFilterMode>);
 

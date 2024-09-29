@@ -213,6 +213,7 @@ set(GoomFilterFx_modules
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cppm
     src/filter_fx/gpu_filter_effects/none.cppm
     src/filter_fx/gpu_filter_effects/reflecting_pool.cppm
+    src/filter_fx/gpu_filter_effects/up_down.cppm
     src/filter_fx/gpu_filter_effects/vortex.cppm
     src/filter_fx/gpu_filter_effects/wave.cppm
     src/filter_fx/common_types.cppm
@@ -268,6 +269,7 @@ set(GoomFilterFx_source_files
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect.cpp
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cpp
     src/filter_fx/gpu_filter_effects/reflecting_pool.cpp
+    src/filter_fx/gpu_filter_effects/up_down.cpp
     src/filter_fx/gpu_filter_effects/vortex.cpp
     src/filter_fx/gpu_filter_effects/wave.cpp
     src/filter_fx/filter_utils/image_displacement.cpp

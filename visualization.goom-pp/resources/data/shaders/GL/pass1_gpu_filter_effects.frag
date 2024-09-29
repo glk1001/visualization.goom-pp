@@ -120,9 +120,9 @@ vec2 GetVortexVelocity(const vec2 position)
     v.x *= u_vortexXAmplitude * vLength;
     v.y *= u_vortexYAmplitude * vLength;
 
-    v += vortexBase + (u_vortexPositionFactor * p);
+    v += u_vortexPositionFactor * p;
 
-    return v;
+    return vortexBase + v;
 }
 
 uniform float u_reflectingPoolStartTime;
@@ -155,10 +155,9 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
     const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
     const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
 
-    const vec2 v = reflectingPoolBase + vec2(u_reflectingPoolXAmplitude * vX,
-                                             u_reflectingPoolYAmplitude * vY);
+    const vec2 v = vec2(u_reflectingPoolXAmplitude * vX, u_reflectingPoolYAmplitude * vY);
 
-    return v;
+    return reflectingPoolBase + v;
 }
 
 uniform float u_beautifulFieldStartTime;
@@ -175,29 +174,8 @@ uniform float u_beautifulFieldXFreq;
 uniform float u_beautifulFieldYFreq;
 uniform float u_beautifulFieldDirection;
 
-vec2 GetUpDownVelocity(const vec2 position)
-{
-    vec2 p = position;
-
-    const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
-
-    const float elapsedTime  = u_time - u_beautifulFieldStartTime;
-    const float timeToGoFrac = elapsedTime / u_beautifulFieldMaxTime;
-
-    const float xT = u_beautifulFieldXFreq * sin(u_beautifulFieldXCycleFreq * timeToGoFrac * TWO_PI);
-    const float yT = u_beautifulFieldYFreq * sin(u_beautifulFieldYCycleFreq * timeToGoFrac * TWO_PI);
-
-    vec2 v;
-    v.x = xT * p.x + sin(xT * p.y);
-    v.y = cos(yT * p.x);
-
-    return beautifulFieldBase + v;
-}
-
 vec2 GetBeautifulFieldVelocity(const vec2 position)
 {
-    return GetUpDownVelocity(position);
-
     vec2 p = position;
 
     const vec2 beautifulFieldBase = vec2(u_beautifulFieldXBase, u_beautifulFieldYBase);
@@ -234,6 +212,44 @@ vec2 GetBeautifulFieldVelocity(const vec2 position)
     return beautifulFieldBase + v;
 }
 
+uniform float u_upDownStartTime;
+uniform float u_upDownMaxTime;
+uniform float u_upDownXCycleFreq;
+uniform float u_upDownYCycleFreq;
+uniform float u_upDownXAmplitude;
+uniform float u_upDownYAmplitude;
+uniform float u_upDownXBase;
+uniform float u_upDownYBase;
+uniform float u_upDownXFreq;
+uniform float u_upDownYFreq;
+uniform float u_upDownRotateFreq;
+uniform float u_upDownMixFreq;
+
+vec2 GetUpDownVelocity(const vec2 position)
+{
+    vec2 p = position;
+
+    const vec2 upDownBase = vec2(u_upDownXBase, u_upDownYBase);
+
+    const float elapsedTime  = u_time - u_upDownStartTime;
+    const float timeToGoFrac = elapsedTime / u_upDownMaxTime;
+
+    const float xT = u_upDownXFreq * sin(u_upDownXCycleFreq * timeToGoFrac * TWO_PI);
+    const float yT = u_upDownYFreq * sin(u_upDownYCycleFreq * timeToGoFrac * TWO_PI);
+
+    const vec2 vUp = vec2(u_upDownXAmplitude * ((xT * p.x) + sin(xT * p.y)),
+                          u_upDownYAmplitude * cos(yT * p.x));
+    const vec2 vAcross = vec2(u_upDownXAmplitude * ((xT * p.y) + cos(xT * p.x)),
+                              u_upDownYAmplitude * sin(yT * p.y));
+
+    const vec2 rotateVec = vec2(cos(u_upDownRotateFreq * timeToGoFrac * TWO_PI),
+                                sin(u_upDownRotateFreq * timeToGoFrac * TWO_PI));
+
+    const vec2 v = rotateVec * mix(vUp, vAcross, sin(u_upDownMixFreq * timeToGoFrac * TWO_PI));
+
+    return upDownBase + v;
+}
+
 // Following assumes HEIGHT <= WIDTH.
 const float RATIO_DEV_TO_NORMALIZED_COORD = FILTER_POS_COORD_WIDTH / float(WIDTH - 1);
 // const vec2 MIDPOINT = vec2(FILTER_POS_MIN_COORD + (RATIO_DEV_TO_NORMALIZED_COORD * float(WIDTH/2)),
@@ -266,6 +282,9 @@ vec2 GetGpuFilteredPosition(const uint gpuFilterMode, const ivec2 deviceXY)
             break;
         case GPU_BEAUTIFUL_FIELD_MODE:
             velocity = GetBeautifulFieldVelocity(centredPos);
+            break;
+        case GPU_UP_DOWN_MODE:
+            velocity = GetUpDownVelocity(centredPos);
             break;
         default:
             break;
