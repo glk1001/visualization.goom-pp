@@ -7,7 +7,6 @@ export module Goom.FilterFx.NormalizedCoords;
 
 import Goom.Utils.Math.Misc;
 import Goom.Lib.AssertUtils;
-import Goom.Lib.FrameData;
 import Goom.Lib.GoomTypes;
 import Goom.Lib.Point2d;
 
@@ -20,10 +19,9 @@ public:
   // IMPORTANT: Max coord must be 2.0F - other filter functions
   //            implicitly depend on this.
   static constexpr auto MAX_NORMALIZED_COORD_MUST_BE = 2.0F;
-  static_assert(MAX_NORMALIZED_COORD == MAX_NORMALIZED_COORD_MUST_BE);
-  static constexpr auto MIN_COORD   = MIN_NORMALIZED_COORD;
-  static constexpr auto MAX_COORD   = MAX_NORMALIZED_COORD;
-  static constexpr auto COORD_WIDTH = NORMALIZED_COORD_WIDTH;
+  static constexpr auto MAX_COORD                    = MAX_NORMALIZED_COORD_MUST_BE;
+  static constexpr auto MIN_COORD                    = -MAX_COORD;
+  static constexpr auto COORD_WIDTH                  = MAX_COORD - MIN_COORD;
 
   constexpr explicit NormalizedCoords(const Point2dFlt& alreadyNormalized) noexcept;
   constexpr NormalizedCoords(float xAlreadyNormalized, float yAlreadyNormalized) noexcept;

@@ -2,12 +2,17 @@ module;
 
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <string_view>
 #include <vector>
 
 export module Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 
+import Goom.FilterFx.CommonTypes;
+import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.NameValuePairs;
+
+using GOOM::UTILS::NameValuePairs;
 
 export namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
@@ -15,6 +20,11 @@ export namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 class IGpuParams
 {
 public:
+  IGpuParams(const std::string_view& filterName,
+             const Viewport& viewport,
+             const Amplitude& amplitude,
+             const FilterBase& filterBase,
+             const FrequencyFactor& cycleFrequency) noexcept;
   IGpuParams()                                     = default;
   IGpuParams(const IGpuParams&)                    = default;
   IGpuParams(IGpuParams&&)                         = default;
@@ -39,6 +49,28 @@ public:
 
   virtual auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                                const SetterFuncs& setterFuncs) const noexcept -> void = 0;
+
+protected:
+  auto OutputStandardParams(const FilterTimingInfo& filterTimingInfo,
+                            const SetterFuncs& setterFuncs) const noexcept -> void;
+
+private:
+  Viewport m_viewport{};
+
+  Amplitude m_amplitude{};
+  std::string m_xAmplitudeUniformName;
+  std::string m_yAmplitudeUniformName;
+
+  FilterBase m_filterBase{};
+  std::string m_xFilterBaseUniformName;
+  std::string m_yFilterBaseUniformName;
+
+  FrequencyFactor m_cycleFrequency{};
+  std::string m_xCycleFrequencyUniformName;
+  std::string m_yCycleFrequencyUniformName;
+
+  std::string m_startTimeUniformName;
+  std::string m_maxTimeUniformName;
 };
 
 class IGpuZoomFilterEffect
@@ -56,7 +88,7 @@ public:
   [[nodiscard]] virtual auto GetGpuParams() const noexcept -> const IGpuParams& = 0;
 
   [[nodiscard]] virtual auto GetGpuZoomFilterEffectNameValueParams() const noexcept
-      -> GOOM::UTILS::NameValuePairs = 0;
+      -> NameValuePairs = 0;
 };
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

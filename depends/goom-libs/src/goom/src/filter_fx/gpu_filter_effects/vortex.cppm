@@ -7,6 +7,7 @@ import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.NameValuePairs;
 import Goom.Utils.Math.GoomRand;
 
+using GOOM::FILTER_FX::FILTER_UTILS::RandomViewport;
 using GOOM::UTILS::NameValuePairs;
 using GOOM::UTILS::MATH::GoomRand;
 
@@ -40,10 +41,6 @@ public:
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
-    Viewport m_viewport;
-    Amplitude m_amplitude{};
-    FilterBase m_filterBase{};
-    FrequencyFactor m_cycleFrequency{};
     float m_frequencyFactor{};
     float m_positionFactor{};
     float m_rFactor{};
@@ -52,7 +49,7 @@ public:
 
 private:
   const GoomRand* m_goomRand;
-  FILTER_UTILS::RandomViewport m_randomViewport;
+  RandomViewport m_randomViewport;
   GpuParams m_gpuParams;
   [[nodiscard]] auto GetRandomParams() const noexcept -> GpuParams;
 };

@@ -8,12 +8,14 @@ export module Goom.Lib.FrameData;
 
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.FilterModes;
+import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.Math.GoomRand;
 import Goom.Utils.Math.Lerper;
 import Goom.Lib.GoomGraphic;
 import Goom.Lib.Point2d;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::FILTER_FX::NormalizedCoords;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
 using GOOM::UTILS::MATH::Lerper;
 using GOOM::UTILS::MATH::NumberRange;
@@ -21,9 +23,9 @@ using GOOM::UTILS::MATH::NumberRange;
 export namespace GOOM
 {
 
-inline constexpr auto MIN_NORMALIZED_COORD   = -2.0F;
-inline constexpr auto MAX_NORMALIZED_COORD   = -MIN_NORMALIZED_COORD;
-inline constexpr auto NORMALIZED_COORD_WIDTH = MAX_NORMALIZED_COORD - MIN_NORMALIZED_COORD;
+inline constexpr auto MIN_NORMALIZED_COORD   = NormalizedCoords::MIN_COORD;
+inline constexpr auto MAX_NORMALIZED_COORD   = NormalizedCoords::MAX_COORD;
+inline constexpr auto NORMALIZED_COORD_WIDTH = NormalizedCoords::COORD_WIDTH;
 
 struct FilterPosArrays
 {

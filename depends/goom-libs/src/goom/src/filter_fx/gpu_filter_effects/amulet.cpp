@@ -1,6 +1,7 @@
 module Goom.FilterFx.GpuFilterEffects.Amulet;
 
 import Goom.FilterFx.FilterUtils.Utils;
+import Goom.FilterFx.CommonTypes;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.NameValuePairs;
 import Goom.Utils.Math.GoomRand;
@@ -43,23 +44,6 @@ Amulet::Amulet(const GoomRand& goomRand) noexcept
 
 auto Amulet::GetRandomParams() const noexcept -> GpuParams
 {
-  const auto viewport = m_randomViewport.GetRandomViewport();
-
-  const auto xAmplitude = m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-  const auto yAmplitude = m_goomRand->ProbabilityOf<PROB_XY_AMPLITUDES_EQUAL>()
-                              ? xAmplitude
-                              : m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-
-  const auto xBase = m_goomRand->GetRandInRange<BASE_RANGE>();
-  const auto yBase = m_goomRand->ProbabilityOf<PROB_XY_BASES_EQUAL>()
-                         ? xBase
-                         : m_goomRand->GetRandInRange<BASE_RANGE>();
-
-  const auto xCycleFreq = m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-  const auto yCycleFreq = m_goomRand->ProbabilityOf<PROB_XY_CYCLE_FREQUENCIES_EQUAL>()
-                              ? xCycleFreq
-                              : m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-
   const auto xFreq = m_goomRand->GetRandInRange<FREQUENCY_RANGE>();
   const auto yFreq = m_goomRand->ProbabilityOf<PROB_XY_FREQUENCIES_EQUAL>()
                          ? xFreq
@@ -68,11 +52,11 @@ auto Amulet::GetRandomParams() const noexcept -> GpuParams
   const auto amuletSpinSign = m_goomRand->ProbabilityOf(PROB_NEGATIVE_SPIN_SIGN) ? -1.0F : +1.0F;
 
   return GpuParams{
-      viewport,
-      {.x = xAmplitude, .y = yAmplitude},
-      {     .x = xBase,      .y = yBase},
-      {.x = xCycleFreq, .y = yCycleFreq},
-      {     .x = xFreq,      .y = yFreq},
+      m_randomViewport.GetRandomViewport(),
+      GetRandomXYPair(*m_goomRand, AMPLITUDE_RANGE, PROB_XY_AMPLITUDES_EQUAL),
+      GetRandomXYPair(*m_goomRand, BASE_RANGE, PROB_XY_BASES_EQUAL),
+      GetRandomXYPair(*m_goomRand, CYCLE_FREQUENCY_RANGE, PROB_XY_CYCLE_FREQUENCIES_EQUAL),
+      {.x = xFreq, .y = yFreq},
       amuletSpinSign,
   };
 }
@@ -88,10 +72,7 @@ Amulet::GpuParams::GpuParams(const Viewport& viewport,
                              const FrequencyFactor& cycleFrequency,
                              const FrequencyFactor& frequencyFactor,
                              const float amuletSpinSign) noexcept
-  : m_viewport{viewport},
-    m_amplitude{amplitude},
-    m_filterBase{filterBase},
-    m_cycleFrequency{cycleFrequency},
+  : IGpuParams{"amulet", viewport, amplitude, filterBase, cycleFrequency},
     m_frequencyFactor{frequencyFactor},
     m_amuletSpinSign{amuletSpinSign}
 {
@@ -100,14 +81,8 @@ Amulet::GpuParams::GpuParams(const Viewport& viewport,
 auto Amulet::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                                         const SetterFuncs& setterFuncs) const noexcept -> void
 {
-  setterFuncs.setFloat("u_amuletStartTime", filterTimingInfo.startTime);
-  setterFuncs.setFloat("u_amuletMaxTime", filterTimingInfo.maxTime);
-  setterFuncs.setFloat("u_amuletXAmplitude", m_amplitude.x);
-  setterFuncs.setFloat("u_amuletYAmplitude", m_amplitude.y);
-  setterFuncs.setFloat("u_amuletXBase", m_filterBase.x);
-  setterFuncs.setFloat("u_amuletYBase", m_filterBase.y);
-  setterFuncs.setFloat("u_amuletXCycleFreq", m_cycleFrequency.x);
-  setterFuncs.setFloat("u_amuletYCycleFreq", m_cycleFrequency.y);
+  OutputStandardParams(filterTimingInfo, setterFuncs);
+
   setterFuncs.setFloat("u_amuletXFreq", m_frequencyFactor.x);
   setterFuncs.setFloat("u_amuletYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_amuletSpinSign", m_amuletSpinSign);
