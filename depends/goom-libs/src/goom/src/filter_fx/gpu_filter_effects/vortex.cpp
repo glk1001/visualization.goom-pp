@@ -44,23 +44,6 @@ Vortex::Vortex(const GoomRand& goomRand) noexcept
 
 auto Vortex::GetRandomParams() const noexcept -> GpuParams
 {
-  const auto viewport = m_randomViewport.GetRandomViewport();
-
-  const auto xAmplitude = m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-  const auto yAmplitude = m_goomRand->ProbabilityOf<PROB_XY_AMPLITUDES_EQUAL>()
-                              ? xAmplitude
-                              : m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-
-  const auto xBase = m_goomRand->GetRandInRange<BASE_RANGE>();
-  const auto yBase = m_goomRand->ProbabilityOf<PROB_XY_BASES_EQUAL>()
-                         ? xBase
-                         : m_goomRand->GetRandInRange<BASE_RANGE>();
-
-  const auto xCycleFreq = m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-  const auto yCycleFreq = m_goomRand->ProbabilityOf<PROB_XY_CYCLE_FREQUENCIES_EQUAL>()
-                              ? xCycleFreq
-                              : m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-
   const auto frequencyFactor = m_goomRand->GetRandInRange<FREQUENCY_RANGE>();
 
   const auto positionFactor = m_goomRand->GetRandInRange<POSITION_FACTOR_RANGE>();
@@ -69,10 +52,10 @@ auto Vortex::GetRandomParams() const noexcept -> GpuParams
   const auto vortexSpinSign = m_goomRand->ProbabilityOf(PROB_NEGATIVE_SPIN_SIGN) ? -1.0F : +1.0F;
 
   return GpuParams{
-      viewport,
-      {.x = xAmplitude, .y = yAmplitude},
-      {     .x = xBase,      .y = yBase},
-      {.x = xCycleFreq, .y = yCycleFreq},
+      m_randomViewport.GetRandomViewport(),
+      GetRandomXYPair(*m_goomRand, AMPLITUDE_RANGE, PROB_XY_AMPLITUDES_EQUAL),
+      GetRandomXYPair(*m_goomRand, BASE_RANGE, PROB_XY_BASES_EQUAL),
+      GetRandomXYPair(*m_goomRand, CYCLE_FREQUENCY_RANGE, PROB_XY_CYCLE_FREQUENCIES_EQUAL),
       frequencyFactor,
       positionFactor,
       rFactor,
@@ -93,10 +76,7 @@ Vortex::GpuParams::GpuParams(const Viewport& viewport,
                              const float positionFactor,
                              const float rFactor,
                              const float vortexSpinSign) noexcept
-  : m_viewport{viewport},
-    m_amplitude{amplitude},
-    m_filterBase{filterBase},
-    m_cycleFrequency{cycleFrequency},
+  : IGpuParams{"vortex", viewport, amplitude, filterBase, cycleFrequency},
     m_frequencyFactor{frequencyFactor},
     m_positionFactor{positionFactor},
     m_rFactor{rFactor},
@@ -107,14 +87,8 @@ Vortex::GpuParams::GpuParams(const Viewport& viewport,
 auto Vortex::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                                         const SetterFuncs& setterFuncs) const noexcept -> void
 {
-  setterFuncs.setFloat("u_vortexStartTime", filterTimingInfo.startTime);
-  setterFuncs.setFloat("u_vortexMaxTime", filterTimingInfo.maxTime);
-  setterFuncs.setFloat("u_vortexXAmplitude", m_amplitude.x);
-  setterFuncs.setFloat("u_vortexYAmplitude", m_amplitude.y);
-  setterFuncs.setFloat("u_vortexXBase", m_filterBase.x);
-  setterFuncs.setFloat("u_vortexYBase", m_filterBase.y);
-  setterFuncs.setFloat("u_vortexXCycleFreq", m_cycleFrequency.x);
-  setterFuncs.setFloat("u_vortexYCycleFreq", m_cycleFrequency.y);
+  OutputStandardParams(filterTimingInfo, setterFuncs);
+
   setterFuncs.setFloat("u_vortexFreq", m_frequencyFactor);
   setterFuncs.setFloat("u_vortexPositionFactor", m_positionFactor);
   setterFuncs.setFloat("u_vortexRFactor", m_rFactor);

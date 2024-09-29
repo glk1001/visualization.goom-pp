@@ -44,23 +44,6 @@ Wave::Wave(const GoomRand& goomRand) noexcept
 
 auto Wave::GetRandomParams() const noexcept -> GpuParams
 {
-  const auto viewport = m_randomViewport.GetRandomViewport();
-
-  const auto xAmplitude = m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-  const auto yAmplitude = m_goomRand->ProbabilityOf<PROB_XY_AMPLITUDES_EQUAL>()
-                              ? xAmplitude
-                              : m_goomRand->GetRandInRange<AMPLITUDE_RANGE>();
-
-  const auto xBase = m_goomRand->GetRandInRange<BASE_RANGE>();
-  const auto yBase = m_goomRand->ProbabilityOf<PROB_XY_BASES_EQUAL>()
-                         ? xBase
-                         : m_goomRand->GetRandInRange<BASE_RANGE>();
-
-  const auto xCycleFreq = m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-  const auto yCycleFreq = m_goomRand->ProbabilityOf<PROB_XY_CYCLE_FREQUENCIES_EQUAL>()
-                              ? xCycleFreq
-                              : m_goomRand->GetRandInRange<CYCLE_FREQUENCY_RANGE>();
-
   const auto xFreq = m_goomRand->GetRandInRange<FREQ_FACTOR_RANGE>();
   const auto yFreq = m_goomRand->ProbabilityOf<PROB_XY_FREQUENCIES_EQUAL>()
                          ? xFreq
@@ -71,11 +54,11 @@ auto Wave::GetRandomParams() const noexcept -> GpuParams
   const auto sqDistPower = m_goomRand->GetRandInRange<SQ_DIST_POWER_RANGE>();
 
   return GpuParams{
-      viewport,
-      {.x = xAmplitude, .y = yAmplitude},
-      {     .x = xBase,      .y = yBase},
-      {.x = xCycleFreq, .y = yCycleFreq},
-      {     .x = xFreq,      .y = yFreq},
+      m_randomViewport.GetRandomViewport(),
+      GetRandomXYPair(*m_goomRand, AMPLITUDE_RANGE, PROB_XY_AMPLITUDES_EQUAL),
+      GetRandomXYPair(*m_goomRand, BASE_RANGE, PROB_XY_BASES_EQUAL),
+      GetRandomXYPair(*m_goomRand, CYCLE_FREQUENCY_RANGE, PROB_XY_CYCLE_FREQUENCIES_EQUAL),
+      {.x = xFreq, .y = yFreq},
       reducerCoeff,
       sqDistPower
   };
@@ -93,10 +76,7 @@ Wave::GpuParams::GpuParams(const Viewport& viewport,
                            const FrequencyFactor& frequencyFactor,
                            const float reducerCoeff,
                            const float sqDistPower) noexcept
-  : m_viewport{viewport},
-    m_amplitude{amplitude},
-    m_filterBase{filterBase},
-    m_cycleFrequency{cycleFrequency},
+  : IGpuParams{"wave", viewport, amplitude, filterBase, cycleFrequency},
     m_frequencyFactor{frequencyFactor},
     m_reducerCoeff{reducerCoeff},
     m_sqDistPower{sqDistPower}
@@ -106,14 +86,8 @@ Wave::GpuParams::GpuParams(const Viewport& viewport,
 auto Wave::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                                       const SetterFuncs& setterFuncs) const noexcept -> void
 {
-  setterFuncs.setFloat("u_waveStartTime", filterTimingInfo.startTime);
-  setterFuncs.setFloat("u_waveMaxTime", filterTimingInfo.maxTime);
-  setterFuncs.setFloat("u_waveXAmplitude", m_amplitude.x);
-  setterFuncs.setFloat("u_waveYAmplitude", m_amplitude.y);
-  setterFuncs.setFloat("u_waveXBase", m_filterBase.x);
-  setterFuncs.setFloat("u_waveYBase", m_filterBase.y);
-  setterFuncs.setFloat("u_waveXCycleFreq", m_cycleFrequency.x);
-  setterFuncs.setFloat("u_waveYCycleFreq", m_cycleFrequency.y);
+  OutputStandardParams(filterTimingInfo, setterFuncs);
+
   setterFuncs.setFloat("u_waveXFreq", m_frequencyFactor.x);
   setterFuncs.setFloat("u_waveYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_waveReducerCoeff", m_reducerCoeff);

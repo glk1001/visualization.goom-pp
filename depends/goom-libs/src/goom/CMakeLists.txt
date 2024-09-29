@@ -265,6 +265,7 @@ set(GoomFilterFx_source_files
     src/filter_fx/filter_effects/zoom_vector_effects.cpp
     src/filter_fx/gpu_filter_effects/amulet.cpp
     src/filter_fx/gpu_filter_effects/beautiful_field.cpp
+    src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect.cpp
     src/filter_fx/gpu_filter_effects/gpu_zoom_filter_effect_factory.cpp
     src/filter_fx/gpu_filter_effects/reflecting_pool.cpp
     src/filter_fx/gpu_filter_effects/vortex.cpp
