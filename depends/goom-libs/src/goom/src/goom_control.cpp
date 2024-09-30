@@ -442,6 +442,7 @@ GoomControl::GoomControlImpl::GoomControlImpl(const GoomControl& parentGoomContr
     m_filterSettingsService{m_goomInfo,
                             *m_goomRand,
                             resourcesDirectory,
+                            m_normalizedCoordsConverter,
                             CreateZoomAdjustmentEffect,
                             CreateGpuZoomFilterEffect,
                             [this]() { return OkToChangeFilterSettings(); },
@@ -547,10 +548,10 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
   const auto& gpuFilterSettings = filterSettings.gpuFilterEffectsSettings;
   auto& gpuFilterEffectData     = *m_frameData->gpuFilterEffectData;
 
-  // Always increment irrespective of whether settings have changed.
-  gpuFilterEffectData.midpoint.Increment();
-  gpuFilterEffectData.gpuLerpFactor.Increment();
-  gpuFilterEffectData.srceDestLerpFactor.Increment();
+  // Always set these irrespective of whether settings have changed.
+  gpuFilterEffectData.midpoint           = gpuFilterSettings.midpoint();
+  gpuFilterEffectData.gpuLerpFactor      = gpuFilterSettings.gpuLerpFactor();
+  gpuFilterEffectData.srceDestLerpFactor = gpuFilterSettings.srceDestLerpFactor();
 
   if (filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {
@@ -565,8 +566,8 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
     std::println("  m_filterSettingsService.GetCurrentGpuFilterMode() = {}",
                  UTILS::EnumToString(m_filterSettingsService.GetCurrentGpuFilterMode()));
     std::println("  gpuFilterEffectData.srceDestLerpFactor = {}",
-                 gpuFilterEffectData.srceDestLerpFactor());
-    std::println("  gpuFilterEffectData.gpuLerpFactor = {}", gpuFilterEffectData.gpuLerpFactor());
+                 gpuFilterEffectData.srceDestLerpFactor);
+    std::println("  gpuFilterEffectData.gpuLerpFactor = {}", gpuFilterEffectData.gpuLerpFactor);
 #endif
 
     if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
@@ -590,15 +591,13 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
       gpuFilterEffectData.destFilterMode   = nextGpuFilterMode;
       gpuFilterEffectData.destFilterParams = &gpuFilterSettings.gpuZoomFilterEffect->GetGpuParams();
 
-      gpuFilterEffectData.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
-
 #ifdef DEBUG_GPU_FILTERS
       std::println("  NOW gpuFilterEffectData.srceFilterMode = {}",
                    UTILS::EnumToString(gpuFilterEffectData.srceFilterMode));
       std::println("  NOW gpuFilterEffectData.destFilterMode = {}",
                    UTILS::EnumToString(gpuFilterEffectData.destFilterMode));
       std::println("  NOW gpuFilterEffectData.srceDestLerpFactor = {}",
-                   gpuFilterEffectData.srceDestLerpFactor());
+                   gpuFilterEffectData.srceDestLerpFactor);
 #endif
     }
 
@@ -607,27 +606,6 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
         .maxTime   = static_cast<float>(gpuFilterSettings.maxTimeToNextFilterModeChange)};
 
     m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
-  }
-
-  if (filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged)
-  {
-#ifdef DEBUG_GPU_FILTERS
-    std::println("  Updating new gpu midpoint...");
-#endif
-    const auto& currentMidpoint = gpuFilterEffectData.midpoint();
-    const auto newMidpoint =
-        m_normalizedCoordsConverter
-            .OtherToNormalizedCoords(filterSettings.filterEffectsSettings.zoomMidpoint)
-            .GetFltCoords();
-    gpuFilterEffectData.midpoint.ResetValues(currentMidpoint, newMidpoint);
-
-#ifdef DEBUG_GPU_FILTERS
-    std::println("  Old midpoint = ({}, {}), new midpoint = ({}, {}).",
-                 currentMidpoint.x,
-                 currentMidpoint.y,
-                 newMidpoint.x,
-                 newMidpoint.y);
-#endif
   }
 
 #ifdef DEBUG_GPU_FILTERS
@@ -650,11 +628,11 @@ auto GoomControl::GoomControlImpl::OkToChangeGpuFilterSettings() const noexcept 
 
 #ifdef DEBUG_GPU_FILTERS
   std::println("OkToChangeGpuFilterSettings: srceDestLerpFactor = {}.",
-               gpuFilterEffectData.srceDestLerpFactor());
+               gpuFilterEffectData.srceDestLerpFactor);
 #endif
 
   static constexpr auto LERP_CUTOFF = 0.95F;
-  return gpuFilterEffectData.srceDestLerpFactor() > LERP_CUTOFF;
+  return gpuFilterEffectData.srceDestLerpFactor > LERP_CUTOFF;
 }
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataPos1Pos2MixFreq() noexcept -> void

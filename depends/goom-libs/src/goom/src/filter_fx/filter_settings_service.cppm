@@ -25,6 +25,7 @@ import Goom.FilterFx.FilterConsts;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.FilterSpeed;
+import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.DebuggingLogger;
 import Goom.Utils.EnumUtils;
 import Goom.Utils.Math.GoomRand;
@@ -36,6 +37,7 @@ import Goom.PluginInfo;
 
 using GOOM::FILTER_FX::FILTER_EFFECTS::IZoomAdjustmentEffect;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuZoomFilterEffect;
+using GOOM::FILTER_FX::NormalizedCoordsConverter;
 using GOOM::UTILS::NUM;
 using GOOM::UTILS::RuntimeEnumMap;
 using GOOM::UTILS::MATH::ConditionalWeights;
@@ -73,6 +75,7 @@ public:
   FilterSettingsService(const PluginInfo& goomInfo,
                         const GoomRand& goomRand,
                         const std::string& resourcesDirectory,
+                        const NormalizedCoordsConverter& normalizedCoordsConverter,
                         const CreateZoomAdjustmentEffectFunc& createZoomAdjustmentEffect,
                         const CreateGpuZoomFilterEffectFunc& createGpuZoomFilterEffect,
                         const OkToChangeFilterSettings& okToChangeFilterSettings,
@@ -115,6 +118,14 @@ public:
   auto MultiplyTransformBufferLerpIncrement(float factor) noexcept -> void;
   auto SetTransformBufferLerpToEnd() noexcept -> void;
 
+  static constexpr auto DEFAULT_NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
+  static constexpr auto DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 250U;
+  static constexpr auto DEFAULT_NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
+  auto ResetGpuLerpData() noexcept -> void;
+  auto SetGpuLerpIncrement(float value) noexcept -> void;
+  auto SetDefaultGpuLerpIncrement() noexcept -> void;
+  auto MultiplyGpuLerpIncrement(float factor) noexcept -> void;
+
 protected:
   [[nodiscard]] auto GetFilterSettings() noexcept -> FilterSettings&;
   auto SetFilterMode(ZoomFilterMode filterMode) noexcept -> void;
@@ -136,6 +147,7 @@ private:
   const GoomRand* m_goomRand;
   Point2dInt m_screenCentre;
   std::string m_resourcesDirectory;
+  const NormalizedCoordsConverter* m_normalizedCoordsConverter;
   AFTER_EFFECTS::AfterEffectsStates m_randomizedAfterEffects;
 
   ZoomFilterMode m_filterMode         = ZoomFilterMode::NORMAL_MODE;
@@ -149,6 +161,8 @@ private:
   Weights<GpuZoomFilterMode> m_weightedGpuFilterEvents;
 
   FilterSettings m_filterSettings;
+  [[nodiscard]] auto GetCentreZoomMidpoint() const noexcept -> Point2dFlt;
+  auto UpdateGpuZoomMidpoint() -> void;
 
   [[nodiscard]] auto CanChangeFilterSettings() const noexcept -> bool;
   [[nodiscard]] auto CanChangeGpuFilterSettings() const noexcept -> bool;
@@ -396,6 +410,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     }
 
     gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
+    gpuFilterEffectsSettings.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
     SetRandomSettingsForNewGpuFilterMode();
 #ifdef DEBUG_GPU_FILTERS
     std::println("  Set new filter params for '{}'. Max filter time = {}.",
@@ -513,6 +528,32 @@ inline auto FilterSettingsService::MultiplyTransformBufferLerpIncrement(const fl
 inline auto FilterSettingsService::SetTransformBufferLerpToEnd() noexcept -> void
 {
   m_filterSettings.transformBufferLerpData.SetLerpToEnd();
+}
+
+inline auto FilterSettingsService::ResetGpuLerpData() noexcept -> void
+{
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.ResetValues(0.0F, 1.0F);
+}
+
+inline auto FilterSettingsService::SetGpuLerpIncrement(const float value) noexcept -> void
+{
+  Expects(value >= 0.0F);
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetStepSize(value);
+  // m_filterSettings.gpuFilterEffectsSettings.srceDestLerpFactor.SetStepSize(value);
+}
+
+inline auto FilterSettingsService::SetDefaultGpuLerpIncrement() noexcept -> void
+{
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetNumSteps(
+      DEFAULT_NUM_GPU_LERP_FACTOR_STEPS);
+  m_filterSettings.gpuFilterEffectsSettings.srceDestLerpFactor.SetNumSteps(
+      DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS);
+}
+
+inline auto FilterSettingsService::MultiplyGpuLerpIncrement(const float factor) noexcept -> void
+{
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetStepSize(
+      m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetStepSize() * factor);
 }
 
 } // namespace GOOM::FILTER_FX

@@ -41,7 +41,6 @@ import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.NormalizedCoords;
-import Goom.Utils.Math.Lerper;
 import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
 import Goom.Lib.FrameData;
@@ -56,11 +55,9 @@ import :GlslShaderFile;
 import :Scene;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
-using GOOM::FILTER_FX::NormalizedCoordsConverter;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
-using GOOM::UTILS::MATH::Lerper;
 
 export namespace GOOM::OPENGL
 {
@@ -576,11 +573,7 @@ auto DisplacementFilter::InitFrameDataArray() noexcept -> void
 
 auto DisplacementFilter::GetInitialGpuFilterEffectData() const noexcept -> GpuFilterEffectData
 {
-  static constexpr auto NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
-  static constexpr auto NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 250U;
-  static constexpr auto NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
-
-  const auto centreMidpoint = GetCentreZoomMidpoint();
+  static constexpr auto CENTRE_MIDPOINT = Point2dFlt{};
 
   return {
       .filterNeedsUpdating = false,
@@ -589,25 +582,10 @@ auto DisplacementFilter::GetInitialGpuFilterEffectData() const noexcept -> GpuFi
       .srceFilterParams    = &None::GetEmptyGpuParams(),
       .destFilterParams    = &None::GetEmptyGpuParams(),
       .filterTimingInfo    = {.startTime = 0.0F, .maxTime = 1.0F},
-      .srceDestLerpFactor  = {NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
-                              1.0F, 1.0F,
-                              Lerper<float>::LerperType::SINGLE},
-      .gpuLerpFactor       = {NUM_GPU_LERP_FACTOR_STEPS,
-                              0.0F, 1.0F,
-                              Lerper<float>::LerperType::CONTINUOUS},
-      .midpoint            = {NUM_GPU_MIDPOINT_LERP_STEPS, centreMidpoint, centreMidpoint},
+      .srceDestLerpFactor  = 1.0F,
+      .gpuLerpFactor       = 0.0F,
+      .midpoint            = CENTRE_MIDPOINT,
   };
-}
-
-auto DisplacementFilter::GetCentreZoomMidpoint() const noexcept -> Point2dFlt
-{
-  const auto textureDimensions =
-      Dimensions{static_cast<uint32_t>(GetWidth()), static_cast<uint32_t>(GetHeight())};
-  const auto textureCentrePoint = textureDimensions.GetCentrePoint();
-  const auto coordsConverter    = NormalizedCoordsConverter{textureDimensions};
-  const auto centreCoords       = coordsConverter.OtherToNormalizedCoords(textureCentrePoint);
-
-  return centreCoords.GetFltCoords();
 }
 
 auto DisplacementFilter::InitMiscData(MiscData& miscData) noexcept -> void
@@ -1135,20 +1113,20 @@ auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept
 auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
 {
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_FILTER_LERP_FACTOR,
-                                                     m_gpuFilterEffectData.gpuLerpFactor());
+                                                     m_gpuFilterEffectData.gpuLerpFactor);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_SRCE_DEST_LERP_FACTOR,
-                                                     m_gpuFilterEffectData.srceDestLerpFactor());
+                                                     m_gpuFilterEffectData.srceDestLerpFactor);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_MIDPOINT,
-      glm::vec2{m_gpuFilterEffectData.midpoint().x, m_gpuFilterEffectData.midpoint().y});
+      glm::vec2{m_gpuFilterEffectData.midpoint.x, m_gpuFilterEffectData.midpoint.y});
 
 #ifdef DEBUG_GPU_FILTERS
   std::println("UpdatePass1GpuFilterEffectDataToGl: gpuLerpFactor = {}",
-               m_gpuFilterEffectData.gpuLerpFactor());
+               m_gpuFilterEffectData.gpuLerpFactor);
   std::println("  filterNeedsUpdating = {}", m_gpuFilterEffectData.filterNeedsUpdating);
   std::println("  srceFilterMode = {}", EnumToString(m_gpuFilterEffectData.srceFilterMode));
   std::println("  destFilterMode = {}", EnumToString(m_gpuFilterEffectData.destFilterMode));
-  std::println("  srceDestLerpFactor = {}", m_gpuFilterEffectData.srceDestLerpFactor());
+  std::println("  srceDestLerpFactor = {}", m_gpuFilterEffectData.srceDestLerpFactor);
 #endif
 
   if (not m_gpuFilterEffectData.filterNeedsUpdating)

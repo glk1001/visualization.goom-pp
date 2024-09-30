@@ -24,8 +24,10 @@ import Goom.FilterFx.FilterConsts;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.FilterSpeed;
+import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.EnumUtils;
 import Goom.Utils.Math.GoomRand;
+import Goom.Utils.Math.Lerper;
 import Goom.Utils.Math.Misc;
 import Goom.PluginInfo;
 
@@ -37,12 +39,14 @@ using AFTER_EFFECTS::AfterEffectsTypes;
 using AFTER_EFFECTS::HypercosOverlayMode;
 using AFTER_EFFECTS::RotationAdjustments;
 using FILTER_EFFECTS::ZoomVectorEffects;
+using FILTER_FX::NormalizedCoordsConverter;
 using FILTER_UTILS::GoomLerpData;
 using UTILS::NUM;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::I_HALF;
 using UTILS::MATH::I_QUARTER;
 using UTILS::MATH::I_THREE_QUARTERS;
+using UTILS::MATH::Lerper;
 using UTILS::MATH::NumberRange;
 using UTILS::MATH::U_HALF;
 using UTILS::MATH::UNIT_RANGE;
@@ -117,9 +121,19 @@ constexpr auto PROB_REVERSE_SPEED            = 0.5F;
 
 } // namespace
 
+auto FilterSettingsService::GetCentreZoomMidpoint() const noexcept -> Point2dFlt
+{
+  const auto centreCoords = m_normalizedCoordsConverter->OtherToNormalizedCoords(
+      m_goomInfo->GetDimensions().GetCentrePoint());
+
+  return centreCoords.GetFltCoords();
+}
+
 FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
                                              const GoomRand& goomRand,
                                              const std::string& resourcesDirectory,
+                                             const NormalizedCoordsConverter&
+                                                 normalizedCoordsConverter,
                                              const CreateZoomAdjustmentEffectFunc&
                                                  createZoomAdjustmentEffect,
                                              const CreateGpuZoomFilterEffectFunc&
@@ -132,6 +146,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
     m_goomRand{&goomRand},
     m_screenCentre{goomInfo.GetDimensions().GetCentrePoint()},
     m_resourcesDirectory{resourcesDirectory},
+    m_normalizedCoordsConverter{&normalizedCoordsConverter},
     m_randomizedAfterEffects{
         goomInfo.GetTime(),
         goomRand,
@@ -173,6 +188,15 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
             .gpuZoomFilterEffect = nullptr,
             .maxTimeToNextFilterModeChange = 1,
             .okToChangeGpuFilterSettings = okToChangeGpuFilterSettings,
+            .gpuLerpFactor = {DEFAULT_NUM_GPU_LERP_FACTOR_STEPS,
+                              0.0F, 1.0F,
+                              Lerper<float>::LerperType::CONTINUOUS},
+            .srceDestLerpFactor = {DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
+                              1.0F, 1.0F,
+                              Lerper<float>::LerperType::SINGLE},
+            .midpoint = {DEFAULT_NUM_GPU_MIDPOINT_LERP_STEPS,
+                         GetCentreZoomMidpoint(),
+                         GetCentreZoomMidpoint()},
         },
         .transformBufferLerpData = GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
     },
@@ -240,6 +264,10 @@ auto FilterSettingsService::Start() -> void
 auto FilterSettingsService::NewCycle() noexcept -> void
 {
   m_filterSettings.transformBufferLerpData.Update();
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.Increment();
+  m_filterSettings.gpuFilterEffectsSettings.srceDestLerpFactor.Increment();
+  m_filterSettings.gpuFilterEffectsSettings.midpoint.Increment();
 }
 
 auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() noexcept -> void
@@ -423,6 +451,34 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
   }
 
   SetAnyRandomZoomMidpoint(IsAllowedEdgePoints(m_filterMode));
+
+  UpdateGpuZoomMidpoint();
+}
+
+auto FilterSettingsService::UpdateGpuZoomMidpoint() -> void
+{
+  if (not m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged)
+  {
+    return;
+  }
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("  Updating new gpu midpoint...");
+#endif
+  const auto& currentMidpoint = m_filterSettings.gpuFilterEffectsSettings.midpoint();
+  const auto newMidpoint =
+      m_normalizedCoordsConverter
+          ->OtherToNormalizedCoords(m_filterSettings.filterEffectsSettings.zoomMidpoint)
+          .GetFltCoords();
+  m_filterSettings.gpuFilterEffectsSettings.midpoint.ResetValues(currentMidpoint, newMidpoint);
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("  Old midpoint = ({}, {}), new midpoint = ({}, {}).",
+               currentMidpoint.x,
+               currentMidpoint.y,
+               newMidpoint.x,
+               newMidpoint.y);
+#endif
 }
 
 auto FilterSettingsService::IsAllowedEdgePoints(const ZoomFilterMode filterMode) noexcept -> bool
