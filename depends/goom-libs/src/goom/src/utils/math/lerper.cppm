@@ -50,7 +50,10 @@ public:
          LerperType lerperType = LerperType::SINGLE) noexcept;
 
   auto ResetValues(const T& value1, const T& value2) noexcept -> void;
-  auto SetNumSteps(uint32_t val) noexcept -> void;
+  auto SetNumSteps(uint32_t numSteps) noexcept -> void;
+
+  [[nodiscard]] auto GetStepSize() const noexcept -> float;
+  auto SetStepSize(float stepSize) noexcept -> void;
 
   [[nodiscard]] auto operator()() const noexcept -> const T&;
   auto Increment() noexcept -> void;
@@ -96,9 +99,21 @@ auto Lerper<T>::ResetValues(const T& value1, const T& value2) noexcept -> void
 }
 
 template<Lerpable T>
-auto Lerper<T>::SetNumSteps(const uint32_t val) noexcept -> void
+auto Lerper<T>::SetNumSteps(const uint32_t numSteps) noexcept -> void
 {
-  m_t.SetNumSteps(val);
+  m_t.SetNumSteps(numSteps);
+}
+
+template<Lerpable T>
+auto Lerper<T>::GetStepSize() const noexcept -> float
+{
+  return m_t.GetStepSize();
+}
+
+template<Lerpable T>
+auto Lerper<T>::SetStepSize(const float stepSize) noexcept -> void
+{
+  m_t.SetStepSize(stepSize);
 }
 
 template<Lerpable T>
