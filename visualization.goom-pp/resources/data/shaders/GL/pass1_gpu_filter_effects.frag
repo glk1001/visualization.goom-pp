@@ -17,8 +17,6 @@ uniform float u_amuletXAmplitude;
 uniform float u_amuletYAmplitude;
 uniform float u_amuletXBase;
 uniform float u_amuletYBase;
-uniform float u_amuletXFreq;
-uniform float u_amuletYFreq;
 uniform float u_amuletSpinSign;
 
 vec2 GetAmuletVelocity(const vec2 position)
@@ -65,7 +63,14 @@ vec2 GetWaveVelocity(const vec2 position)
 
     const vec2 waveBase = vec2(u_waveXBase, u_waveYBase);
 
-    const float sqDistFromZero = (p.x * p.x) + (p.y * p.y);
+    const float elapsedTime  = u_time - u_waveStartTime;
+    const float timeToGoFrac = elapsedTime / u_waveMaxTime;
+
+    // TODO: Fix this wasteful hack. Makes sure all wave uniforms are used.
+    const float xT = cos(u_waveXCycleFreq * timeToGoFrac * TWO_PI);
+    const float yT = cos(u_waveYCycleFreq * timeToGoFrac * TWO_PI);
+
+    const float sqDistFromZero = xT*(p.x * p.x) + yT*(p.y * p.y);
     const float reducer        = exp(-u_waveReducerCoeff * sqDistFromZero);
 
     const float angle    = pow(sqDistFromZero, u_waveSqDistPower);
