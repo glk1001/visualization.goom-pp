@@ -23,6 +23,7 @@ import Goom.FilterFx.FilterEffects.AdjustmentEffects.Speedway;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.UniformZoomAdjustmentEffect;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.Wave;
 import Goom.FilterFx.FilterEffects.AdjustmentEffects.YOnly;
+import Goom.FilterFx.FilterConsts;
 import Goom.FilterFx.FilterEffects.ZoomAdjustmentEffect;
 import Goom.FilterFx.FilterModes;
 import Goom.Utils.Math.GoomRand;
@@ -173,7 +174,8 @@ auto CreateZoomAdjustmentEffect(const ZoomFilterMode filterMode,
     return CreateFuncZoomAdjustmentEffect(filterMode, goomRand, resourcesDirectory);
   }
 
-  if (static constexpr auto PROB_FUNC_OF_FUNC = 0.5F; goomRand.ProbabilityOf<PROB_FUNC_OF_FUNC>())
+  if (static constexpr auto PROB_FUNC_OF_FUNC = USE_FORCED_FILTER_MODE ? 0.0F : 0.5F;
+      goomRand.ProbabilityOf<PROB_FUNC_OF_FUNC>())
   {
     return CreateFuncOfFuncZoomAdjustmentEffect(filterMode, goomRand, resourcesDirectory);
   }
