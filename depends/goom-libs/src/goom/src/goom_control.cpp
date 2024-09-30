@@ -238,6 +238,9 @@ private:
   Blend2dDoubleGoomBuffers m_blend2dDoubleGoomBuffers;
   FxHelper m_fxHelper;
   std::string m_dumpDirectory;
+  NormalizedCoordsConverter m_normalizedCoordsConverter{
+      {m_goomInfo.GetDimensions().GetWidth(), m_goomInfo.GetDimensions().GetHeight()}
+  };
 
   auto Blend2dClearAll() -> void;
   auto AddBlend2dImagesToGoomBuffers() -> void;
@@ -271,9 +274,6 @@ private:
 
   SmallImageBitmaps m_smallBitmaps;
   GoomStateHandler m_stateHandler{*m_goomRand};
-  NormalizedCoordsConverter m_normalizedCoordsConverter{
-      {m_goomInfo.GetDimensions().GetWidth(), m_goomInfo.GetDimensions().GetHeight()}
-  };
   GoomAllVisualFx m_visualFx;
   auto StartVisualFx() noexcept -> void;
 
