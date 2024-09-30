@@ -15,7 +15,7 @@ using UTILS::MATH::NumberRange;
 
 static constexpr auto AMPLITUDE_RANGE       = NumberRange{0.1F, 1.51F};
 static constexpr auto BASE_RANGE            = NumberRange{0.1F, 0.3F};
-static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{1.0F, 3.0F};
+static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{0.00001F, 0.00001F};
 static constexpr auto FREQ_FACTOR_RANGE     = NumberRange{1.0F, 50.0F};
 static constexpr auto REDUCER_COEFF_RANGE   = NumberRange{0.95F, 1.5F};
 static constexpr auto SQ_DIST_POWER_RANGE   = NumberRange{0.15F, 1.1F};

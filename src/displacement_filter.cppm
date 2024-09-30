@@ -165,6 +165,7 @@ private:
   std::vector<FrameData> m_frameDataArray;
   using IGpuParams = FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
   IGpuParams::SetterFuncs m_pass1SetterFuncs;
+  [[nodiscard]] auto GetPass1SetterFuncs() noexcept -> IGpuParams::SetterFuncs;
   auto InitFrameDataArrayPointers(std::vector<FrameData>& frameDataArray) noexcept -> void;
   auto InitFrameDataArray() noexcept -> void;
   auto InitFrameDataArrayToGl() -> void;
@@ -501,20 +502,24 @@ DisplacementFilter::DisplacementFilter(
     m_buffSize{static_cast<size_t>(GetWidth()) * static_cast<size_t>(GetHeight())},
     m_aspectRatio{static_cast<float>(GetWidth()) / static_cast<float>(GetHeight())},
     m_frameDataArray(NUM_PBOS),
-    m_pass1SetterFuncs{
-        .setFloat = [this](const std::string_view& uniformName, const float value)
-        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
-        .setInt = [this](const std::string_view& uniformName, const int32_t value)
-        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
-        .setBool = [this](const std::string_view& uniformName, const bool value)
-        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
-        .setFltVector = [this](const std::string_view& uniformName, const std::vector<float> value)
-        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
-        .setIntVector =
-            [this](const std::string_view& uniformName, const std::vector<int32_t> value)
-        { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
-    }
+    m_pass1SetterFuncs{GetPass1SetterFuncs()}
 {
+}
+
+auto DisplacementFilter::GetPass1SetterFuncs() noexcept -> IGpuParams::SetterFuncs
+{
+  return {
+      .setFloat = [this](const std::string_view& uniformName, const float value)
+      { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+      .setInt = [this](const std::string_view& uniformName, const int32_t value)
+      { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+      .setBool = [this](const std::string_view& uniformName, const bool value)
+      { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+      .setFltVector = [this](const std::string_view& uniformName, const std::vector<float> value)
+      { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+      .setIntVector = [this](const std::string_view& uniformName, const std::vector<int32_t> value)
+      { m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(uniformName, value); },
+  };
 }
 
 auto DisplacementFilter::InitScene() -> void

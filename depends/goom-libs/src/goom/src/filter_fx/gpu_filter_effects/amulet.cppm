@@ -33,13 +33,11 @@ public:
               const Amplitude& amplitude,
               const FilterBase& filterBase,
               const FrequencyFactor& cycleFrequency,
-              const FrequencyFactor& frequencyFactor,
               float amuletSpinSign) noexcept;
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
-    FrequencyFactor m_frequencyFactor{};
     float m_amuletSpinSign = 1.0F;
   };
 

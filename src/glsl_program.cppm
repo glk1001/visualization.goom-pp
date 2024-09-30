@@ -26,6 +26,8 @@ module;
 
 export module Goom.GoomVisualization:GlslProgram;
 
+import Goom.Lib.AssertUtils;
+
 export namespace GOOM::OPENGL
 {
 
@@ -579,6 +581,9 @@ auto GlslProgram::GetUniformLocation(const std::string_view& name) -> GLint
   {
     const auto loc              = glGetUniformLocation(m_handle, nameStr.c_str());
     m_uniformLocations[nameStr] = loc;
+
+    Expects(loc != -1, nameStr);
+
     return loc;
   }
 
