@@ -412,7 +412,10 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     }
 
     gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
-    gpuFilterEffectsSettings.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+    if (m_gpuFilterMode != GpuZoomFilterMode::GPU_NONE_MODE)
+    {
+      gpuFilterEffectsSettings.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
+    }
     SetRandomSettingsForNewGpuFilterMode();
 
 #ifdef DEBUG_WITH_PRINTLN
