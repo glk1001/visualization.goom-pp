@@ -2,7 +2,7 @@
 
 // Adapted from "https://bruop.github.io/exposure/"
 
-#include "pass3_lum_avg_consts.h"
+#include "pass3_lum_avg_consts.h_glsl"
 
 #define GROUP_SIZE 256
 #define THREADS_X  256

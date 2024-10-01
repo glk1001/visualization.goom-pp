@@ -1,6 +1,6 @@
 #version 430
 
-#include "pass1_update_filter_buff1_and_buff3_consts.h"
+#include "pass1_update_filter_buff1_and_buff3_consts.h_glsl"
 
 uniform sampler2D tex_mainColorImage;        // Main colors for this frame
 uniform sampler2D tex_lowColorImage;         // Low colors for this frame
@@ -27,7 +27,7 @@ uniform float u_pos1Pos2MixFreq;
 uniform float u_time;
 
 uniform float u_gpuFilterLerpFactor;  // For lerping between gpu and srce and dest buffers.
-uniform float u_maxGpuFilterLerpFactor = 0.6F;
+uniform float u_maxGpuFilterLerpFactor = 1.0F;
 uniform float u_maxGpuColorMixFactor   = 0.75F;
 uniform bool u_useGpuFilterPositionsToGetColor = false;
 
@@ -37,7 +37,7 @@ uniform float u_baseColorMultiplier;        // Used to factor this frames' persi
 uniform float u_mainColorMultiplier = 1.0F; // Used to factor this frames' main color.
 uniform float u_lowColorMultiplier  = 0.7F; // Used to factor this frames' low color.
 
-#include "pass1_gpu_filter_effects_consts.h"
+#include "pass1_gpu_filter_effects_consts.h_glsl"
 #include "pass1_gpu_filter_effects.frag"
 
 vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY);
@@ -70,9 +70,15 @@ void main()
     const vec4 mappedMainColor = texture(tex_mainColorImage, texCoord);
     const vec3 newMainColor    = mappedPersistentColorVal.rgb
                                  + (u_mainColorMultiplier * mappedMainColor.rgb);
-    imageStore(img_mainColorsBuff, deviceXY, vec4(newMainColor, mappedLowAlpha));
 
-  discard;
+#if (DEBUG_GPU_FILTERS == 0)
+    imageStore(img_mainColorsBuff, deviceXY, vec4(newMainColor, mappedLowAlpha));
+#else
+    const vec3 debugMainColor = GetDebugColor(deviceXY, newMainColor);
+    imageStore(img_mainColorsBuff, deviceXY, vec4(debugMainColor, mappedLowAlpha));
+#endif
+
+    discard;
 }
 
 

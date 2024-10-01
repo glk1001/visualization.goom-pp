@@ -57,6 +57,10 @@ using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
 
+static constexpr auto DEBUG_GPU_FILTERS                  = 1;
+static constexpr auto DEBUG_GPU_FILTERS_RECT_INNER_WIDTH = 50;
+static constexpr auto DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH = 100;
+
 export namespace GOOM::OPENGL
 {
 
@@ -761,20 +765,23 @@ auto DisplacementFilter::SetupScreenBuffers() -> void
 auto DisplacementFilter::CompileAndLinkShaders() -> void
 {
   auto shaderMacros = std::unordered_map<std::string, std::string>{
-      {       "LOW_COLORS_BUFF_IMAGE_UNIT",        std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
-      {      "MAIN_COLORS_BUFF_IMAGE_UNIT",       std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
-      {"PERSISTENT_COLORS_BUFF_IMAGE_UNIT", std::to_string(PERSISTENT_COLORS_BUFF_IMAGE_UNIT)},
-      {               "LUM_AVG_IMAGE_UNIT",                std::to_string(LUM_AVG_IMAGE_UNIT)},
-      {      "FILTER_SRCE_POS_IMAGE_UNIT1", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
-      {      "FILTER_SRCE_POS_IMAGE_UNIT2", std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
-      {      "FILTER_DEST_POS_IMAGE_UNIT1", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
-      {      "FILTER_DEST_POS_IMAGE_UNIT2", std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
-      {       "LUM_HISTOGRAM_BUFFER_INDEX",        std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
-      {                            "WIDTH",                        std::to_string(GetWidth())},
-      {                           "HEIGHT",                       std::to_string(GetHeight())},
-      {                     "ASPECT_RATIO",                     std::to_string(m_aspectRatio)},
-      {             "FILTER_POS_MIN_COORD",              std::to_string(MIN_NORMALIZED_COORD)},
-      {           "FILTER_POS_COORD_WIDTH",            std::to_string(NORMALIZED_COORD_WIDTH)},
+      {        "LOW_COLORS_BUFF_IMAGE_UNIT",         std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
+      {       "MAIN_COLORS_BUFF_IMAGE_UNIT",        std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
+      { "PERSISTENT_COLORS_BUFF_IMAGE_UNIT",  std::to_string(PERSISTENT_COLORS_BUFF_IMAGE_UNIT)},
+      {                "LUM_AVG_IMAGE_UNIT",                 std::to_string(LUM_AVG_IMAGE_UNIT)},
+      {       "FILTER_SRCE_POS_IMAGE_UNIT1",  std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(0))},
+      {       "FILTER_SRCE_POS_IMAGE_UNIT2",  std::to_string(FILTER_SRCE_POS_IMAGE_UNITS.at(1))},
+      {       "FILTER_DEST_POS_IMAGE_UNIT1",  std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(0))},
+      {       "FILTER_DEST_POS_IMAGE_UNIT2",  std::to_string(FILTER_DEST_POS_IMAGE_UNITS.at(1))},
+      {        "LUM_HISTOGRAM_BUFFER_INDEX",         std::to_string(LUM_HISTOGRAM_BUFFER_INDEX)},
+      {                             "WIDTH",                         std::to_string(GetWidth())},
+      {                            "HEIGHT",                        std::to_string(GetHeight())},
+      {                      "ASPECT_RATIO",                      std::to_string(m_aspectRatio)},
+      {              "FILTER_POS_MIN_COORD",               std::to_string(MIN_NORMALIZED_COORD)},
+      {            "FILTER_POS_COORD_WIDTH",             std::to_string(NORMALIZED_COORD_WIDTH)},
+      {                 "DEBUG_GPU_FILTERS",                  std::to_string(DEBUG_GPU_FILTERS)},
+      {"DEBUG_GPU_FILTERS_RECT_INNER_WIDTH", std::to_string(DEBUG_GPU_FILTERS_RECT_INNER_WIDTH)},
+      {"DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH", std::to_string(DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH)},
   };
 
   for (auto i = 0U; i < NUM<GpuZoomFilterMode>; ++i)
@@ -821,14 +828,30 @@ auto DisplacementFilter::GetShaderFilepath(const std::string& filename) const no
   return m_shaderDir + "/" + filename;
 }
 
+namespace
+{
+
+[[nodiscard]] inline auto GetTempShaderDir() noexcept -> std::string
+{
+  if constexpr (DEBUG_GPU_FILTERS == 0)
+  {
+    return fs::temp_directory_path().string();
+  }
+  else
+  {
+    return std::string{"/home/greg/Prj/workdir"};
+  }
+}
+
+} // namespace
+
 auto DisplacementFilter::CompileShaderFile(GlslProgram& program,
                                            const std::string& filepath,
                                            const ShaderMacros& shaderMacros) -> void
 {
   static constexpr auto* INCLUDE_DIR = "";
 
-  //  const auto tempDir        = std::string{"/home/greg/Prj/workdir"};
-  const auto tempDir        = fs::temp_directory_path().string();
+  const auto tempDir        = GetTempShaderDir();
   const auto filename       = fs::path(filepath).filename().string();
   const auto tempShaderFile = tempDir + "/" + filename;
 

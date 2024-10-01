@@ -1,6 +1,6 @@
 #version 430
 
-#include "pass4_reset_filter_buff2_and_output_buff3_consts.h"
+#include "pass4_reset_filter_buff2_and_output_buff3_consts.h_glsl"
 #include "tone-maps.glsl"
 
 layout(location = 0) out vec4 fragColor;
@@ -26,6 +26,15 @@ float GetChromaticIncrease(const float chroma);
 vec3 RGBtoHCY(const vec3 RGB);
 vec3 HCYtoRGB(vec3 HCY);
 float GetFinalExposure(const float brightness, const float averageLuminance);
+
+#if (DEBUG_GPU_FILTERS == 1)
+vec3 GetIfThenDebugColor(const ivec2 deviceXY, const vec3 debugColor, const vec3 currentColor)
+{
+    return (deviceXY.x < DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH) &&
+             (deviceXY.y < DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH)
+           ? debugColor : currentColor;
+}
+#endif
 
 void main()
 {
@@ -57,6 +66,10 @@ void main()
 
     // Finish with the tone mapping and baked in gamma.
     finalColor = GetToneMappedColor(finalColor);
+
+#if (DEBUG_GPU_FILTERS == 1)
+    finalColor = GetIfThenDebugColor(deviceXY, hdrColor.rgb, finalColor);
+#endif
 
     fragColor = vec4(finalColor, 1.0F);
 }
