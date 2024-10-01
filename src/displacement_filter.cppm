@@ -1,10 +1,8 @@
 module;
 
+#include "goom/debug_with_println.h"
+
 //#define SAVE_FILTER_BUFFERS
-//#define DEBUG_GPU_FILTERS
-#ifdef DEBUG_GPU_FILTERS
-#include <print>
-#endif
 
 #include "goom/goom_logger.h"
 #include "goom_gl.h"
@@ -1120,7 +1118,7 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
       UNIFORM_GPU_MIDPOINT,
       glm::vec2{m_gpuFilterEffectData.midpoint.x, m_gpuFilterEffectData.midpoint.y});
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("UpdatePass1GpuFilterEffectDataToGl: gpuLerpFactor = {}",
                m_gpuFilterEffectData.gpuLerpFactor);
   std::println("  filterNeedsUpdating = {}", m_gpuFilterEffectData.filterNeedsUpdating);

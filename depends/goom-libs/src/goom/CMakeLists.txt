@@ -58,6 +58,7 @@ set(GoomLib_modules
     include/goom/spimpl.cppm
 )
 set(GoomLib_source_files
+    include/goom/debug_with_println.h
     src/goom_control.cpp
     src/goom_graphic.cpp
     src/goom_logger.cpp
