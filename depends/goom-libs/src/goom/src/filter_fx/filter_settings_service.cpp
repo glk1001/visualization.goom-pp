@@ -1,9 +1,6 @@
 module;
 
-//#define DEBUG_GPU_FILTERS
-#ifdef DEBUG_GPU_FILTERS
-#include <print>
-#endif
+#include "goom/debug_with_println.h"
 
 #include <map> // TODO(glk): Clang needs this otherwise link fails
 #include <memory>
@@ -436,7 +433,8 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
     m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
         m_filterSettings.filterEffectsSettings.zoomMidpoint != m_screenCentre;
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
-#ifdef DEBUG_GPU_FILTERS
+
+#ifdef DEBUG_WITH_PRINTLN
     std::println("SetRandomZoomMidpoint: after effects turned off: zoomMidpoint = ({}, {}).",
                  m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
                  m_filterSettings.filterEffectsSettings.zoomMidpoint.y);
@@ -448,7 +446,8 @@ auto FilterSettingsService::SetRandomZoomMidpoint() -> void
     m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
         m_filterSettings.filterEffectsSettings.zoomMidpoint != m_screenCentre;
     m_filterSettings.filterEffectsSettings.zoomMidpoint = m_screenCentre;
-#ifdef DEBUG_GPU_FILTERS
+
+#ifdef DEBUG_WITH_PRINTLN
     std::println("SetRandomZoomMidpoint: zoomMidpoint = ({}, {}).",
                  m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
                  m_filterSettings.filterEffectsSettings.zoomMidpoint.y);
@@ -468,9 +467,10 @@ auto FilterSettingsService::UpdateGpuZoomMidpoint() -> void
     return;
   }
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("  Updating new gpu midpoint...");
 #endif
+
   const auto& currentMidpoint = m_filterSettings.gpuFilterEffectsSettings.midpoint();
   const auto newMidpoint =
       m_normalizedCoordsConverter
@@ -478,7 +478,7 @@ auto FilterSettingsService::UpdateGpuZoomMidpoint() -> void
           .GetFltCoords();
   m_filterSettings.gpuFilterEffectsSettings.midpoint.ResetValues(currentMidpoint, newMidpoint);
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("  Old midpoint = ({}, {}), new midpoint = ({}, {}).",
                currentMidpoint.x,
                currentMidpoint.y,
@@ -630,7 +630,7 @@ auto FilterSettingsService::SetAnyRandomZoomMidpoint(const bool allowEdgePoints)
   m_filterSettings.filterEffectsSettings.filterZoomMidpointHasChanged =
       oldZoomMidpoint != m_filterSettings.filterEffectsSettings.zoomMidpoint;
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("SetAnyRandomZoomMidpoint: zoomMidpoint = ({}, {}).",
                m_filterSettings.filterEffectsSettings.zoomMidpoint.x,
                m_filterSettings.filterEffectsSettings.zoomMidpoint.y);

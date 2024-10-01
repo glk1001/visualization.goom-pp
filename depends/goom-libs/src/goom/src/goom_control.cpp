@@ -12,14 +12,11 @@
 
 module;
 
+#include "goom/debug_with_println.h"
+
 //#define DO_GOOM_STATE_DUMP
-//#define DEBUG_GPU_FILTERS
-#ifdef DEBUG_GPU_FILTERS
-#include <print>
-#endif
 
 #undef NO_LOGGING // NOLINT: This maybe be defined on command line.
-
 #include "goom/goom_logger.h"
 
 #include <cmath>
@@ -541,7 +538,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataFilterPosArrays() noexcept -> 
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("UpdateFrameDataGpuFilterData: update number: {}", m_goomTime.GetCurrentTime());
 #endif
 
@@ -556,7 +553,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 
   if (filterSettings.gpuFilterEffectsSettingsHaveChanged)
   {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
     std::println(
         "  UpdateFrameDataGpuFilterData: filterSettings.gpuFilterEffectsSettingsHaveChanged = {}",
         filterSettings.gpuFilterEffectsSettingsHaveChanged);
@@ -574,7 +571,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
     if (const auto nextGpuFilterMode = m_filterSettingsService.GetCurrentGpuFilterMode();
         nextGpuFilterMode == gpuFilterEffectData.destFilterMode)
     {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
       std::println("Current dest mode = next mode: No need to change gpu filter mode.");
 #endif
     }
@@ -582,7 +579,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
     {
       gpuFilterEffectData.filterNeedsUpdating = true;
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
       std::println("  gpuFilterEffectData: switching srce and dest filter modes...");
 #endif
 
@@ -592,7 +589,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
       gpuFilterEffectData.destFilterMode   = nextGpuFilterMode;
       gpuFilterEffectData.destFilterParams = &gpuFilterSettings.gpuZoomFilterEffect->GetGpuParams();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
       std::println("  NOW gpuFilterEffectData.srceFilterMode = {}",
                    UTILS::EnumToString(gpuFilterEffectData.srceFilterMode));
       std::println("  NOW gpuFilterEffectData.destFilterMode = {}",
@@ -609,7 +606,7 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
     m_filterSettingsService.NotifyUpdatedGpuFilterEffectsSettings();
   }
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("  UpdateFrameDataGpuFilterData: filterNeedsUpdating = {}",
                gpuFilterEffectData.filterNeedsUpdating);
 #endif
@@ -627,7 +624,7 @@ auto GoomControl::GoomControlImpl::OkToChangeGpuFilterSettings() const noexcept 
 
   const auto& gpuFilterEffectData = *m_frameData->gpuFilterEffectData;
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("OkToChangeGpuFilterSettings: srceDestLerpFactor = {}.",
                gpuFilterEffectData.srceDestLerpFactor);
 #endif

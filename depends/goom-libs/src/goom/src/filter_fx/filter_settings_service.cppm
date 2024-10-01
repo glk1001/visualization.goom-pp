@@ -1,12 +1,9 @@
 module;
 
+#include "goom/debug_with_println.h"
+
 #undef NO_LOGGING
 #include "goom/goom_logger.h"
-
-//#define DEBUG_GPU_FILTERS
-#ifdef DEBUG_GPU_FILTERS
-#include <print>
-#endif
 
 #include <functional>
 #include <memory>
@@ -303,9 +300,10 @@ inline auto FilterSettingsService::CanChangeGpuFilterSettings() const noexcept -
 {
   if (not m_filterSettings.gpuFilterEffectsSettings.okToChangeGpuFilterSettings())
   {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
     std::println("Not ok to change gpu filter settings.");
 #endif
+
     return false;
   }
 
@@ -356,15 +354,16 @@ inline auto FilterSettingsService::SetNewRandomFilter() -> bool
 inline auto FilterSettingsService::SetNewRandomGpuFilter(
     const int32_t maxTimeToNextFilterModeChange) -> bool
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("Check if can set new gpu filter...");
 #endif
 
   if (not CanChangeGpuFilterSettings())
   {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
     std::println("  Cannot set new gpu filter.");
 #endif
+
     return false;
   }
 
@@ -374,7 +373,7 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
   m_previousGpuFilterMode                              = m_gpuFilterMode;
   m_gpuFilterMode                                      = GetNewRandomGpuFilterMode();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("  Set new gpu filter to {} (prev = {}).",
                UTILS::EnumToString(m_gpuFilterMode),
                UTILS::EnumToString(m_previousGpuFilterMode));
@@ -389,7 +388,8 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     {
       gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
       SetRandomSettingsForNewGpuFilterMode();
-#ifdef DEBUG_GPU_FILTERS
+
+#ifdef DEBUG_WITH_PRINTLN
       std::println("  Set new filter params for '{}'. Max filter time = {}.",
                    UTILS::EnumToString(m_gpuFilterMode),
                    maxTimeToNextFilterModeChange);
@@ -401,7 +401,8 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     if ((m_gpuFilterMode == m_previousGpuFilterMode) and
         (m_gpuFilterMode != GpuZoomFilterMode::GPU_NONE_MODE))
     {
-#ifdef DEBUG_GPU_FILTERS
+
+#ifdef DEBUG_WITH_PRINTLN
       std::println("  WARN: Wrong weighted filter returned. Should not be same as previous: '{}'.",
                    UTILS::EnumToString(m_gpuFilterMode));
 #endif
@@ -413,14 +414,15 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
     gpuFilterEffectsSettings.maxTimeToNextFilterModeChange = maxTimeToNextFilterModeChange;
     gpuFilterEffectsSettings.srceDestLerpFactor.ResetValues(0.0F, 1.0F);
     SetRandomSettingsForNewGpuFilterMode();
-#ifdef DEBUG_GPU_FILTERS
+
+#ifdef DEBUG_WITH_PRINTLN
     std::println("  Set new filter params for '{}'. Max filter time = {}.",
                  UTILS::EnumToString(m_gpuFilterMode),
                  maxTimeToNextFilterModeChange);
 #endif
   }
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("  m_filterSettings.gpuFilterEffectsSettingsHaveChanged = {}.",
                m_filterSettings.gpuFilterEffectsSettingsHaveChanged);
 #endif
@@ -533,13 +535,13 @@ inline auto FilterSettingsService::SetTransformBufferLerpToEnd() noexcept -> voi
 
 inline auto FilterSettingsService::ResetGpuLerpFactorUpABit() noexcept -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   const auto oldGpuLerpFactor = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor();
 #endif
 
   m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GoUpABit();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("ResetGpuLerpDataUpABit: oldGpuLerpFactor = {:.2f}, gpuLerpFactor = {:.2f}.",
                oldGpuLerpFactor,
                m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
@@ -548,13 +550,13 @@ inline auto FilterSettingsService::ResetGpuLerpFactorUpABit() noexcept -> void
 
 inline auto FilterSettingsService::ResetGpuLerpFactorDownABit() noexcept -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   const auto oldGpuLerpFactor = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor();
 #endif
 
   m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GoDownABit();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("ResetGpuLerpDataDownABit: oldGpuLerpFactor = {:.2f}, gpuLerpFactor = {:.2f}.",
                oldGpuLerpFactor,
                m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
@@ -565,7 +567,7 @@ inline auto FilterSettingsService::SetDefaultGpuLerpIncrement() noexcept -> void
 {
   m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.ResetNumStepsToDefault();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("SetDefaultGpuLerpIncrement: gpuLerpFactor = {}.",
                m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
 #endif
@@ -573,13 +575,13 @@ inline auto FilterSettingsService::SetDefaultGpuLerpIncrement() noexcept -> void
 
 inline auto FilterSettingsService::SpeedUpGpuLerpFactorABit() noexcept -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   const auto oldNumSteps = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps();
 #endif
 
   m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SpeedUpABit();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("SpeedUpGpuLerpABit: gpuLerpFactor = {}, oldNumSteps = {}, newNumSteps = {}.",
                m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor(),
                oldNumSteps,
@@ -589,13 +591,13 @@ inline auto FilterSettingsService::SpeedUpGpuLerpFactorABit() noexcept -> void
 
 inline auto FilterSettingsService::SlowDownGpuLerpFactorABit() noexcept -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   const auto oldNumSteps = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps();
 #endif
 
   m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SlowDownABit();
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("SlowDownGpuLerpABit: gpuLerpFactor = {}, oldNumSteps = {}, newNumSteps = {}.",
                m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor(),
                oldNumSteps,

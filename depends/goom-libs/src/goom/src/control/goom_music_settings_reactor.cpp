@@ -1,6 +1,6 @@
 module;
 
-//#define DEBUG_GPU_FILTERS
+#include "goom/debug_with_println.h"
 
 #include <cmath>
 #include <cstdint>
@@ -833,7 +833,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeGpuFilterMo
   m_numUpdatesSinceLastGpuFilterChange  = 0;
   m_hasGpuFilterModeChangedInThisUpdate = true;
 
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("Changed GPU filter.");
 #endif
 }
@@ -939,7 +939,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeSpeed(
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeGpuLerpData() -> void
 {
-#ifdef DEBUG_GPU_FILTERS
+#ifdef DEBUG_WITH_PRINTLN
   std::println("Changing GPU lerp data.");
 #endif
 
