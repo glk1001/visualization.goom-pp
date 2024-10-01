@@ -35,9 +35,9 @@ import Goom.Lib.GoomTypes;
 import Goom.Lib.Point2d;
 import Goom.PluginInfo;
 
+using GOOM::FILTER_FX::NormalizedCoordsConverter;
 using GOOM::FILTER_FX::FILTER_EFFECTS::IZoomAdjustmentEffect;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuZoomFilterEffect;
-using GOOM::FILTER_FX::NormalizedCoordsConverter;
 using GOOM::UTILS::NUM;
 using GOOM::UTILS::RuntimeEnumMap;
 using GOOM::UTILS::MATH::ConditionalWeights;
@@ -118,13 +118,13 @@ public:
   auto MultiplyTransformBufferLerpIncrement(float factor) noexcept -> void;
   auto SetTransformBufferLerpToEnd() noexcept -> void;
 
-  static constexpr auto DEFAULT_NUM_GPU_LERP_FACTOR_STEPS           = 2500U;
-  static constexpr auto DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 250U;
+  static constexpr auto DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS = 100U;
   static constexpr auto DEFAULT_NUM_GPU_MIDPOINT_LERP_STEPS         = 500U;
-  auto ResetGpuLerpData() noexcept -> void;
-  auto SetGpuLerpIncrement(float value) noexcept -> void;
   auto SetDefaultGpuLerpIncrement() noexcept -> void;
-  auto MultiplyGpuLerpIncrement(float factor) noexcept -> void;
+  auto ResetGpuLerpFactorUpABit() noexcept -> void;
+  auto ResetGpuLerpFactorDownABit() noexcept -> void;
+  auto SpeedUpGpuLerpFactorABit() noexcept -> void;
+  auto SlowDownGpuLerpFactorABit() noexcept -> void;
 
 protected:
   [[nodiscard]] auto GetFilterSettings() noexcept -> FilterSettings&;
@@ -531,30 +531,76 @@ inline auto FilterSettingsService::SetTransformBufferLerpToEnd() noexcept -> voi
   m_filterSettings.transformBufferLerpData.SetLerpToEnd();
 }
 
-inline auto FilterSettingsService::ResetGpuLerpData() noexcept -> void
+inline auto FilterSettingsService::ResetGpuLerpFactorUpABit() noexcept -> void
 {
-  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.ResetValues(0.0F, 1.0F);
+#ifdef DEBUG_GPU_FILTERS
+  const auto oldGpuLerpFactor = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor();
+#endif
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GoUpABit();
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("ResetGpuLerpDataUpABit: oldGpuLerpFactor = {:.2f}, gpuLerpFactor = {:.2f}.",
+               oldGpuLerpFactor,
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
+#endif
 }
 
-inline auto FilterSettingsService::SetGpuLerpIncrement(const float value) noexcept -> void
+inline auto FilterSettingsService::ResetGpuLerpFactorDownABit() noexcept -> void
 {
-  Expects(value >= 0.0F);
-  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetStepSize(value);
-  // m_filterSettings.gpuFilterEffectsSettings.srceDestLerpFactor.SetStepSize(value);
+#ifdef DEBUG_GPU_FILTERS
+  const auto oldGpuLerpFactor = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor();
+#endif
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GoDownABit();
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("ResetGpuLerpDataDownABit: oldGpuLerpFactor = {:.2f}, gpuLerpFactor = {:.2f}.",
+               oldGpuLerpFactor,
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
+#endif
 }
 
 inline auto FilterSettingsService::SetDefaultGpuLerpIncrement() noexcept -> void
 {
-  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetNumSteps(
-      DEFAULT_NUM_GPU_LERP_FACTOR_STEPS);
-  m_filterSettings.gpuFilterEffectsSettings.srceDestLerpFactor.SetNumSteps(
-      DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS);
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.ResetNumStepsToDefault();
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("SetDefaultGpuLerpIncrement: gpuLerpFactor = {}.",
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor());
+#endif
 }
 
-inline auto FilterSettingsService::MultiplyGpuLerpIncrement(const float factor) noexcept -> void
+inline auto FilterSettingsService::SpeedUpGpuLerpFactorABit() noexcept -> void
 {
-  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SetStepSize(
-      m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetStepSize() * factor);
+#ifdef DEBUG_GPU_FILTERS
+  const auto oldNumSteps = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps();
+#endif
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SpeedUpABit();
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("SpeedUpGpuLerpABit: gpuLerpFactor = {}, oldNumSteps = {}, newNumSteps = {}.",
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor(),
+               oldNumSteps,
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps());
+#endif
+}
+
+inline auto FilterSettingsService::SlowDownGpuLerpFactorABit() noexcept -> void
+{
+#ifdef DEBUG_GPU_FILTERS
+  const auto oldNumSteps = m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps();
+#endif
+
+  m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.SlowDownABit();
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("SlowDownGpuLerpABit: gpuLerpFactor = {}, oldNumSteps = {}, newNumSteps = {}.",
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor(),
+               oldNumSteps,
+               m_filterSettings.gpuFilterEffectsSettings.gpuLerpFactor.GetNumSteps());
+#endif
 }
 
 } // namespace GOOM::FILTER_FX
