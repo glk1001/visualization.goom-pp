@@ -131,12 +131,13 @@ vec4 GetPosMappedPersistentColorValue(const vec2 uv, const ivec2 deviceXY)
     }
 
     // Use Gpu filter position to directly get color.
+    bool isZeroPos;
     const float gpuLerpFactor = u_maxGpuColorMixFactor * u_gpuFilterLerpFactor;
-    const vec2 GpuPos           = GetFinalGpuFilteredPosition(deviceXY);
-    const vec2 GpuTexelPos      = GetTexelPos(GpuPos);
-    const vec4 GpuColor         = texture(tex_persistentColorsImage, GpuTexelPos);
-    // const vec4 colorGpuColorMix = mix(color1Color2Mix, GpuColor, gpuLerpFactor);
-    const vec4 colorGpuColorMix = color1Color2Mix + (0.1 * gpuLerpFactor * GpuColor);
+    const vec2 gpuPos           = GetFinalGpuFilteredPosition(deviceXY, isZeroPos);
+    const vec2 gpuTexelPos      = GetTexelPos(gpuPos);
+    const vec4 gpuColor         = texture(tex_persistentColorsImage, gpuTexelPos);
+    // const vec4 colorGpuColorMix = mix(color1Color2Mix, gpuColor, gpuLerpFactor);
+    const vec4 colorGpuColorMix = color1Color2Mix + (0.1 * gpuLerpFactor * gpuColor);
 
     return colorGpuColorMix;
 }
@@ -171,10 +172,14 @@ TexelPositions GetFilterBuffPosMappedTexelPositions(ivec2 deviceXY)
 
     if (!u_useGpuFilterPositionsToGetColor && !AllGpuFilterModesAreNone())
     {
-        const vec2 GpuPos              = GetFinalGpuFilteredPosition(deviceXY);
-        const float gpuLerpFactor      = u_maxGpuFilterLerpFactor * u_gpuFilterLerpFactor;
-        lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, GpuPos, gpuLerpFactor);
-        lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, GpuPos, gpuLerpFactor);
+        bool isZeroPos;
+        const vec2 gpuPos = GetFinalGpuFilteredPosition(deviceXY, isZeroPos);
+        if (!isZeroPos)
+        {
+            const float gpuLerpFactor      = u_maxGpuFilterLerpFactor * u_gpuFilterLerpFactor;
+            lerpedNormalizedPositions.pos1 = mix(lerpedNormalizedPositions.pos1, gpuPos, gpuLerpFactor);
+            lerpedNormalizedPositions.pos2 = mix(lerpedNormalizedPositions.pos2, gpuPos, gpuLerpFactor);
+        }
     }
 
     return GetTexelPositions(lerpedNormalizedPositions);

@@ -346,21 +346,30 @@ vec3 GetDebugColor(const ivec2 deviceXY, const vec3 currentColor)
 }
 #endif
 
-vec2 GetFinalGpuFilteredPosition(const ivec2 deviceXY)
+vec2 GetFinalGpuFilteredPosition(const ivec2 deviceXY, out bool isZeroPos)
 {
+    isZeroPos = false;
+
     if (u_gpuSrceFilterMode == GPU_NONE_MODE)
     {
-        return u_gpuSrceDestFilterLerpFactor <= 0.001F
-            ? vec2(0.0F)
-            : u_gpuSrceDestFilterLerpFactor * GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
+        if (u_gpuSrceDestFilterLerpFactor <= 0.001F)
+        {
+            isZeroPos = true;
+            return vec2(0.0F);
+        }
+        return u_gpuSrceDestFilterLerpFactor * GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
     }
     if (u_gpuDestFilterMode == GPU_NONE_MODE)
     {
         const float srceFactor = 1.0F - u_gpuSrceDestFilterLerpFactor;
-        return srceFactor < 0.001F
-            ? vec2(0.0F)
-            : srceFactor * GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
+        if (srceFactor < 0.001F)
+        {
+            isZeroPos = true;
+            return vec2(0.0F);
+        }
+        return srceFactor * GetGpuFilteredPosition(u_gpuSrceFilterMode, deviceXY);
     }
+
     if ((u_gpuSrceFilterMode == u_gpuDestFilterMode) || (u_gpuSrceDestFilterLerpFactor >= 1.0F))
     {
         return GetGpuFilteredPosition(u_gpuDestFilterMode, deviceXY);
