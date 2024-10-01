@@ -1,5 +1,7 @@
 module;
 
+//#define DEBUG_GPU_FILTERS
+
 #include <cmath>
 #include <cstdint>
 #include <format>
@@ -91,13 +93,12 @@ enum class ChangeEvents : UnderlyingEnumType
   SET_SLOWER_SPEED_AND_SPEED_FORWARD,
   SET_SLOWER_SPEED_AND_TOGGLE_REVERSE,
   CHANGE_SPEED,
-  UPDATE_GPU_LERP_DATA,
-  UPDATE_TRANSFORM_BUFFER_LERP_DATA,
-  SET_NEW_LERP_DATA_BASED_ON_SPEED,
-  SET_NEW_GPU_LERP_DATA_BASED_ON_SPEED,
-  SET_LERP_TO_END,
-  RESET_LERP_DATA,
-  RESET_GPU_LERP_DATA,
+  CHANGE_GPU_LERP_DATA,
+  RESET_GPU_LERP_DATA_BASED_ON_SPEED,
+  CHANGE_TRANSFORM_BUFFER_LERP_DATA,
+  RESET_TRANSFORM_BUFFER_LERP_DATA_BASED_ON_SPEED,
+  RESET_TRANSFORM_BUFFER_LERP_TO_END,
+  RESET_TRANSFORM_BUFFER_LERP_DATA,
 };
 using enum ChangeEvents;
 
@@ -133,7 +134,7 @@ private:
   int32_t m_numUpdatesSinceLastFilterChange = 0;
 
   bool m_hasGpuFilterModeChangedInThisUpdate                         = false;
-  static constexpr auto MAX_UPDATES_BETWEEN_GPU_FILTER_CHANGES_RANGE = NumberRange{300, 500};
+  static constexpr auto MAX_UPDATES_BETWEEN_GPU_FILTER_CHANGES_RANGE = NumberRange{200, 500};
   int32_t m_numUpdatesSinceLastGpuFilterChange                       = 0;
   int32_t m_maxUpdatesBetweenGpuFilterChanges = MAX_UPDATES_BETWEEN_GPU_FILTER_CHANGES_RANGE.min;
 
@@ -175,13 +176,12 @@ private:
   auto DoChangeSpeedReverse() -> void;
   auto DoSetSlowerSpeedAndToggleReverse() -> void;
   auto DoChangeSpeed(uint32_t currentVitesse, uint32_t newVitesse) -> void;
-  auto DoUpdateGpuLerpData() -> void;
-  auto DoResetGpuLerpData() -> void;
-  auto DoSetNewGpuLerpDataBasedOnSpeed() -> void;
-  auto DoUpdateTransformBufferLerpData() -> void;
-  auto DoSetTransformBufferLerpToEnd() -> void;
+  auto DoChangeGpuLerpData() -> void;
+  auto DoResetGpuLerpDataBasedOnSpeed() -> void;
+  auto DoChangeTransformBufferLerpData() -> void;
+  auto DoResetTransformBufferLerpToEnd() -> void;
   auto DoResetTransformBufferLerpData() -> void;
-  auto DoSetNewTransformBufferLerpDataBasedOnSpeed() -> void;
+  auto DoResetTransformBufferLerpDataBasedOnSpeed() -> void;
 
   struct PreChangeEventData
   {
@@ -493,6 +493,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::UpdateSettings() ->
   LowerTheSpeedMaybe();
 
   ChangeTransformBufferLerpDataMaybe();
+  ChangeGpuLerpDataMaybe();
   ChangeRotationMaybe();
 
   CheckIfFilterModeChanged();
@@ -614,7 +615,8 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeTransformBuff
     return;
   }
 
-  DoUpdateTransformBufferLerpData();
+  DoChangeTransformBufferLerpData();
+  m_filterSettingsService->ResetGpuLerpFactorDownABit();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeTransformBufferLerpToEndMaybe()
@@ -625,7 +627,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeTransformBuff
     return;
   }
 
-  DoSetTransformBufferLerpToEnd();
+  DoResetTransformBufferLerpToEnd();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeGpuLerpDataMaybe() -> void
@@ -635,7 +637,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeGpuLerpDataMa
     return;
   }
 
-  DoUpdateGpuLerpData();
+  DoChangeGpuLerpData();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeRotationMaybe() -> void
@@ -792,7 +794,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoMegaLentUpdate() 
   m_visualFx->ChangeAllFxColorMaps();
   m_filterSettingsService->GetRWVitesse().SetVitesse(Vitesse::SLOWEST_SPEED);
 
-  DoSetTransformBufferLerpToEnd();
+  DoResetTransformBufferLerpToEnd();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoBigBreak() -> void
@@ -830,6 +832,10 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeGpuFilterMo
   LogChangeEvent(CHANGE_GPU_FILTER_MODE);
   m_numUpdatesSinceLastGpuFilterChange  = 0;
   m_hasGpuFilterModeChangedInThisUpdate = true;
+
+#ifdef DEBUG_GPU_FILTERS
+  std::println("Changed GPU filter.");
+#endif
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeFilterExtraSettings() -> void
@@ -931,9 +937,13 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeSpeed(
       static_cast<float>(currentVitesse), static_cast<float>(newVitesse), OLD_TO_NEW_SPEED_MIX)));
 }
 
-auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoUpdateGpuLerpData() -> void
+auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeGpuLerpData() -> void
 {
-  LogChangeEvent(UPDATE_GPU_LERP_DATA);
+#ifdef DEBUG_GPU_FILTERS
+  std::println("Changing GPU lerp data.");
+#endif
+
+  LogChangeEvent(CHANGE_GPU_LERP_DATA);
 
   static constexpr auto MIN_TIME_SINCE_LAST_GOOM            = 10U;
   static constexpr auto NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE = 2U;
@@ -941,43 +951,33 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoUpdateGpuLerpData
       (m_goomInfo->GetSoundEvents().GetTotalGoomsInCurrentCycle() >=
        NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE))
   {
-    DoSetNewGpuLerpDataBasedOnSpeed();
+    DoResetGpuLerpDataBasedOnSpeed();
   }
   else
   {
-    DoResetGpuLerpData();
+    m_filterSettingsService->ResetGpuLerpFactorUpABit();
   }
 }
 
-auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoResetGpuLerpData() -> void
-{
-  LogChangeEvent(RESET_GPU_LERP_DATA);
-  m_filterSettingsService->ResetGpuLerpData();
-}
-
-auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoSetNewGpuLerpDataBasedOnSpeed()
+auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoResetGpuLerpDataBasedOnSpeed()
     -> void
 {
-  LogChangeEvent(SET_NEW_GPU_LERP_DATA_BASED_ON_SPEED);
+  LogChangeEvent(RESET_GPU_LERP_DATA_BASED_ON_SPEED);
 
-  m_filterSettingsService->SetDefaultGpuLerpIncrement();
-
-  auto diff = static_cast<float>(m_filterSettingsService->GetROVitesse().GetVitesse()) -
-              static_cast<float>(m_previousZoomSpeed);
-  if (diff < 0.0F)
+  if (m_filterSettingsService->GetROVitesse().GetVitesse() < m_previousZoomSpeed)
   {
-    diff = -diff;
+    m_filterSettingsService->SlowDownGpuLerpFactorABit();
   }
-  if (static constexpr auto DIFF_CUT = 2.0F; diff > DIFF_CUT)
+  else if (m_filterSettingsService->GetROVitesse().GetVitesse() > m_previousZoomSpeed)
   {
-    m_filterSettingsService->MultiplyGpuLerpIncrement((diff + DIFF_CUT) / DIFF_CUT);
+    m_filterSettingsService->SpeedUpGpuLerpFactorABit();
   }
 }
 
-auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoUpdateTransformBufferLerpData()
+auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeTransformBufferLerpData()
     -> void
 {
-  LogChangeEvent(UPDATE_TRANSFORM_BUFFER_LERP_DATA);
+  LogChangeEvent(CHANGE_TRANSFORM_BUFFER_LERP_DATA);
 
   static constexpr auto MIN_TIME_SINCE_LAST_GOOM            = 10U;
   static constexpr auto NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE = 2U;
@@ -985,7 +985,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoUpdateTransformBu
       (m_goomInfo->GetSoundEvents().GetTotalGoomsInCurrentCycle() >=
        NUM_CYCLES_BEFORE_LERP_SPEED_CHANGE))
   {
-    DoSetNewTransformBufferLerpDataBasedOnSpeed();
+    DoResetTransformBufferLerpDataBasedOnSpeed();
   }
   else
   {
@@ -995,9 +995,10 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoUpdateTransformBu
   }
 }
 
-auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoSetTransformBufferLerpToEnd() -> void
+auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoResetTransformBufferLerpToEnd()
+    -> void
 {
-  LogChangeEvent(SET_LERP_TO_END);
+  LogChangeEvent(RESET_TRANSFORM_BUFFER_LERP_TO_END);
 
   m_filterSettingsService->SetDefaultTransformBufferLerpIncrement();
   m_filterSettingsService->SetTransformBufferLerpToEnd();
@@ -1006,14 +1007,14 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoSetTransformBuffe
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoResetTransformBufferLerpData()
     -> void
 {
-  LogChangeEvent(RESET_LERP_DATA);
+  LogChangeEvent(RESET_TRANSFORM_BUFFER_LERP_DATA);
   m_filterSettingsService->ResetTransformBufferLerpData();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::
-    DoSetNewTransformBufferLerpDataBasedOnSpeed() -> void
+    DoResetTransformBufferLerpDataBasedOnSpeed() -> void
 {
-  LogChangeEvent(SET_NEW_LERP_DATA_BASED_ON_SPEED);
+  LogChangeEvent(RESET_TRANSFORM_BUFFER_LERP_DATA_BASED_ON_SPEED);
 
   m_filterSettingsService->SetDefaultTransformBufferLerpIncrement();
 

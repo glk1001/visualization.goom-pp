@@ -20,6 +20,7 @@ import Goom.FilterFx.AfterEffects.AfterEffectsStates;
 import Goom.FilterFx.AfterEffects.AfterEffectsTypes;
 import Goom.FilterFx.FilterEffects.ZoomVectorEffects;
 import Goom.FilterFx.FilterUtils.GoomLerpData;
+import Goom.FilterFx.GpuFilterEffects.GpuLerpFactor;
 import Goom.FilterFx.FilterConsts;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
@@ -40,6 +41,7 @@ using AFTER_EFFECTS::HypercosOverlayMode;
 using AFTER_EFFECTS::RotationAdjustments;
 using FILTER_EFFECTS::ZoomVectorEffects;
 using FILTER_FX::NormalizedCoordsConverter;
+using FILTER_FX::GPU_FILTER_EFFECTS::GpuLerpFactor;
 using FILTER_UTILS::GoomLerpData;
 using UTILS::NUM;
 using UTILS::MATH::GoomRand;
@@ -188,9 +190,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
             .gpuZoomFilterEffect = nullptr,
             .maxTimeToNextFilterModeChange = 1,
             .okToChangeGpuFilterSettings = okToChangeGpuFilterSettings,
-            .gpuLerpFactor = {DEFAULT_NUM_GPU_LERP_FACTOR_STEPS,
-                              0.0F, 1.0F,
-                              Lerper<float>::LerperType::CONTINUOUS},
+            .gpuLerpFactor = GpuLerpFactor{goomRand},
             .srceDestLerpFactor = {DEFAULT_NUM_GPU_SRCE_DEST_LERP_FACTOR_STEPS,
                               1.0F, 1.0F,
                               Lerper<float>::LerperType::SINGLE},

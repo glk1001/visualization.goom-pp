@@ -10,6 +10,7 @@ import Goom.FilterFx.AfterEffects.AfterEffectsStates;
 import Goom.FilterFx.FilterUtils.GoomLerpData;
 import Goom.FilterFx.FilterSpeed;
 import Goom.FilterFx.FilterEffects.ZoomAdjustmentEffect;
+import Goom.FilterFx.GpuFilterEffects.GpuLerpFactor;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.Utils.Math.Lerper;
 import Goom.Lib.Point2d;
@@ -17,6 +18,7 @@ import Goom.Lib.Point2d;
 using GOOM::FILTER_FX::AFTER_EFFECTS::AfterEffectsStates;
 using GOOM::FILTER_FX::FILTER_EFFECTS::IZoomAdjustmentEffect;
 using GOOM::FILTER_FX::FILTER_UTILS::GoomLerpData;
+using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::GpuLerpFactor;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuZoomFilterEffect;
 using GOOM::UTILS::MATH::Lerper;
 
@@ -55,7 +57,7 @@ struct GpuFilterEffectsSettings
   std::shared_ptr<IGpuZoomFilterEffect> gpuZoomFilterEffect;
   int32_t maxTimeToNextFilterModeChange;
   std::function<bool()> okToChangeGpuFilterSettings;
-  Lerper<float> gpuLerpFactor{};
+  GpuLerpFactor gpuLerpFactor{};
   Lerper<float> srceDestLerpFactor{};
   Lerper<Point2dFlt> midpoint{};
 };
