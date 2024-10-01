@@ -304,6 +304,48 @@ bool AllGpuFilterModesAreNone()
     return (u_gpuSrceFilterMode == GPU_NONE_MODE) && (u_gpuDestFilterMode == GPU_NONE_MODE);
 }
 
+#if (DEBUG_GPU_FILTERS == 1)
+bool GpuFilterModesAreZero()
+{
+    return AllGpuFilterModesAreNone()
+           ||
+           ((u_gpuSrceFilterMode == GPU_NONE_MODE) && (u_gpuSrceDestFilterLerpFactor <= 0.001F))
+           ||
+           ((u_gpuDestFilterMode == GPU_NONE_MODE) && (u_gpuSrceDestFilterLerpFactor > (1.0F - 0.001F)));
+}
+
+vec3 GetGpuLerpFactorColor()
+{
+    if (u_gpuFilterLerpFactor < 0.1F)
+    {
+        return vec3(0.0, 0.0, 1.0);
+    }
+    if (u_gpuFilterLerpFactor < 0.5F)
+    {
+        return vec3(0.0, 1.0, 0.0);
+    }
+    if (u_gpuFilterLerpFactor < 0.75F)
+    {
+        return vec3(1.0, 0.0, 0.0);
+    }
+    return vec3(1.0, 1.0, 1.0);
+}
+
+vec3 GetDebugColor(const ivec2 deviceXY, const vec3 currentColor)
+{
+    vec3 debugColor = !GpuFilterModesAreZero() &&
+                        (deviceXY.x < DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH) &&
+                        (deviceXY.y < DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH)
+                      ? vec3(1.0, 1.0, 0.0) : currentColor;
+    debugColor      = !GpuFilterModesAreZero() &&
+                        (deviceXY.x < DEBUG_GPU_FILTERS_RECT_INNER_WIDTH) &&
+                        (deviceXY.y < DEBUG_GPU_FILTERS_RECT_INNER_WIDTH)
+                     ? GetGpuLerpFactorColor() : debugColor;
+
+    return debugColor;
+}
+#endif
+
 vec2 GetFinalGpuFilteredPosition(const ivec2 deviceXY)
 {
     if (u_gpuSrceFilterMode == GPU_NONE_MODE)

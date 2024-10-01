@@ -2,7 +2,7 @@
 
 // Adapted from "https://bruop.github.io/exposure/"
 
-#include "pass2_lum_histogram_consts.h"
+#include "pass2_lum_histogram_consts.h_glsl"
 
 #define GROUP_SIZE 256
 #define THREADS_X   16
