@@ -109,7 +109,7 @@ namespace GOOM::FILTER_FX
 
 using UTILS::NUM;
 
-static constexpr auto GPU_NONE_MODE_WEIGHT       = 100.0F;
+static constexpr auto GPU_NONE_MODE_WEIGHT       = 200.0F;
 static constexpr auto GPU_AMULET_MODE_WEIGHT     = 10.0F;
 static constexpr auto GPU_WAVE_WEIGHT            = 10.0F;
 static constexpr auto GPU_VORTEX_WEIGHT          = 10.0F;
