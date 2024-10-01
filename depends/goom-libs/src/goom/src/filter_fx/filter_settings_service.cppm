@@ -398,7 +398,8 @@ inline auto FilterSettingsService::SetNewRandomGpuFilter(
   }
   else
   {
-    if (m_gpuFilterMode == m_previousGpuFilterMode)
+    if ((m_gpuFilterMode == m_previousGpuFilterMode) and
+        (m_gpuFilterMode != GpuZoomFilterMode::GPU_NONE_MODE))
     {
 #ifdef DEBUG_GPU_FILTERS
       std::println("  WARN: Wrong weighted filter returned. Should not be same as previous: '{}'.",

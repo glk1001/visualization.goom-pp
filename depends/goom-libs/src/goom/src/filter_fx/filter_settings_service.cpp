@@ -248,6 +248,12 @@ auto FilterSettingsService::GetNewRandomGpuFilterMode() const -> GpuZoomFilterMo
   {
     return FORCED_GPU_FILTER_MODE;
   }
+
+  if (m_gpuFilterMode == GPU_NONE_MODE)
+  {
+    // GPU_NONE_MODE is a special case - repeats allowed.
+    return m_weightedGpuFilterEvents.GetRandomWeighted();
+  }
   return m_weightedGpuFilterEvents.GetRandomWeighted(m_gpuFilterMode);
 }
 
