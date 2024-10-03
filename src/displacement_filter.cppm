@@ -38,6 +38,7 @@ export module Goom.GoomVisualization:DisplacementFilter;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.FilterModes;
+import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
@@ -53,7 +54,9 @@ import :GlslShaderFile;
 import :Scene;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
+using GOOM::FILTER_FX::TextureWrapType;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
+using GOOM::UTILS::EnumMap;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
 
@@ -160,6 +163,7 @@ private:
   GpuFilterEffectData m_gpuFilterEffectData = GetInitialGpuFilterEffectData();
   [[nodiscard]] auto GetInitialGpuFilterEffectData() const noexcept -> GpuFilterEffectData;
   [[nodiscard]] auto GetCentreZoomMidpoint() const noexcept -> Point2dFlt;
+  [[nodiscard]] static auto GetGlTextureWrapType(TextureWrapType textureWrapType) noexcept -> GLint;
   size_t m_currentPboIndex = 0U;
   std::vector<FrameData> m_frameDataArray;
   using IGpuParams = FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
@@ -1129,6 +1133,21 @@ auto DisplacementFilter::UpdatePass1MiscDataToGl(const size_t pboIndex) noexcept
       UNIFORM_PREV_FRAME_T_MIX, m_useZeroPrevFrameTMix ? 0.0F : miscData.prevFrameTMix);
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_TIME,
                                                      static_cast<float>(miscData.goomTime));
+  m_glFilterBuffers.persistedColorsBuffTexture.SetTextureWrapType(
+      GetGlTextureWrapType(miscData.textureWrapType));
+}
+
+auto DisplacementFilter::GetGlTextureWrapType(const TextureWrapType textureWrapType) noexcept
+    -> GLint
+{
+  static constexpr auto GL_TEXTURE_WRAPS = EnumMap<TextureWrapType, GLint>{{{
+      {TextureWrapType::REPEAT, GL_REPEAT},
+      {TextureWrapType::MIRRORED_REPEAT, GL_MIRRORED_REPEAT},
+      {TextureWrapType::CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE},
+      {TextureWrapType::MIRRORED_CLAMP_TO_EDGE, GL_MIRROR_CLAMP_TO_EDGE},
+  }}};
+
+  return GL_TEXTURE_WRAPS[textureWrapType];
 }
 
 auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void

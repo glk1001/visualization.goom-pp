@@ -118,6 +118,28 @@ constexpr auto PROB_REVERSE_SPEED            = 0.5F;
   return FilterSettingsService::GpuFilterModeEnumMap::Make(std::move(gpuFilterModeVec));
 }
 
+[[nodiscard]] auto GetWeightedTextureWrapTypes(const GoomRand& goomRand) -> Weights<TextureWrapType>
+{
+  static constexpr auto REPEAT_WEIGHT                 = 10.0F;
+  static constexpr auto MIRRORED_REPEAT_WEIGHT        = 10.0F;
+  static constexpr auto CLAMP_TO_EDGE_WEIGHT          = 10.0F;
+  static constexpr auto MIRRORED_CLAMP_TO_EDGE_WEIGHT = 10.0F;
+
+  auto textureWrapTypeWeights = Weights<TextureWrapType>{
+      goomRand,
+      {
+        {.key = TextureWrapType::REPEAT, .weight = REPEAT_WEIGHT},
+        {.key = TextureWrapType::MIRRORED_REPEAT, .weight = MIRRORED_REPEAT_WEIGHT},
+        {.key = TextureWrapType::CLAMP_TO_EDGE, .weight = CLAMP_TO_EDGE_WEIGHT},
+        {.key = TextureWrapType::MIRRORED_CLAMP_TO_EDGE, .weight = MIRRORED_CLAMP_TO_EDGE_WEIGHT},
+        },
+  };
+
+  Ensures(textureWrapTypeWeights.GetNumSetWeights() == NUM<TextureWrapType>);
+
+  return textureWrapTypeWeights;
+}
+
 } // namespace
 
 auto FilterSettingsService::GetCentreZoomMidpoint() const noexcept -> Point2dFlt
@@ -151,6 +173,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
         goomRand,
         GetRepeatAfterEffectsProbability(),
         GetAfterEffectsOffTime()},
+    m_weightedTextureWrapTypes{GetWeightedTextureWrapTypes(goomRand)},
     m_filterModeData{GetFilterModeData(goomRand,
                                        m_resourcesDirectory,
                                        createZoomAdjustmentEffect)},
@@ -195,6 +218,7 @@ FilterSettingsService::FilterSettingsService(const PluginInfo& goomInfo,
                          GetCentreZoomMidpoint(),
                          GetCentreZoomMidpoint()},
         },
+        .textureWrapType = TextureWrapType::MIRRORED_REPEAT,
         .transformBufferLerpData = GoomLerpData{DEFAULT_TRAN_LERP_INCREMENT, true},
     },
     m_zoomMidpointWeights{
@@ -262,6 +286,8 @@ auto FilterSettingsService::Start() -> void
   static constexpr auto APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES = 300;
   [[maybe_unused]] const auto dontCare2 =
       SetNewRandomGpuFilter(APPROX_MAX_TIME_BETWEEN_FILTER_MODE_CHANGES);
+
+  SetRandomwTextureWrapType();
 }
 
 auto FilterSettingsService::NewCycle() noexcept -> void
@@ -283,6 +309,11 @@ auto FilterSettingsService::NotifyUpdatedFilterEffectsSettings() noexcept -> voi
 auto FilterSettingsService::NotifyUpdatedGpuFilterEffectsSettings() noexcept -> void
 {
   m_filterSettings.gpuFilterEffectsSettingsHaveChanged = false;
+}
+
+auto FilterSettingsService::SetRandomwTextureWrapType() noexcept -> void
+{
+  m_filterSettings.textureWrapType = m_weightedTextureWrapTypes.GetRandomWeighted();
 }
 
 auto FilterSettingsService::SetDefaultFilterSettings() -> void

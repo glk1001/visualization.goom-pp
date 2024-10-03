@@ -108,6 +108,8 @@ public:
   [[nodiscard]] auto MultiplyRotation(float factor) noexcept -> bool;
   [[nodiscard]] auto ToggleRotationDirection() noexcept -> bool;
 
+  auto SetRandomwTextureWrapType() noexcept -> void;
+
   static constexpr auto DEFAULT_TRAN_LERP_INCREMENT = 0.002F;
   auto ResetTransformBufferLerpData() noexcept -> void;
   auto SetTransformBufferLerpIncrement(float value) noexcept -> void;
@@ -146,6 +148,7 @@ private:
   std::string m_resourcesDirectory;
   const NormalizedCoordsConverter* m_normalizedCoordsConverter;
   AFTER_EFFECTS::AfterEffectsStates m_randomizedAfterEffects;
+  Weights<TextureWrapType> m_weightedTextureWrapTypes;
 
   ZoomFilterMode m_filterMode         = ZoomFilterMode::NORMAL_MODE;
   ZoomFilterMode m_previousFilterMode = ZoomFilterMode::NORMAL_MODE;

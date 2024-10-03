@@ -8,6 +8,7 @@ export module Goom.Lib.FrameData;
 
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.FilterModes;
+import Goom.FilterFx.FilterSettings;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.Math.GoomRand;
 import Goom.Lib.GoomGraphic;
@@ -15,6 +16,7 @@ import Goom.Lib.Point2d;
 
 using GOOM::FILTER_FX::GpuZoomFilterMode;
 using GOOM::FILTER_FX::NormalizedCoords;
+using GOOM::FILTER_FX::TextureWrapType;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::IGpuParams;
 using GOOM::UTILS::MATH::NumberRange;
 
@@ -43,6 +45,7 @@ struct ImageArrays
 };
 struct MiscData
 {
+  TextureWrapType textureWrapType{};
   // TODO(glk) - blending params, contrast, other command/effects
   float brightness          = 1.0F;
   float hueShift            = 0.0F;

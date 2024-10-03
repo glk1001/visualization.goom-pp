@@ -251,6 +251,7 @@ private:
 
   FrameData* m_frameData = nullptr;
   auto UpdateFrameData() -> void;
+  auto UpdateFrameDataMiscData() noexcept -> void;
   auto UpdateFrameDataPixelBuffers() noexcept -> void;
   auto UpdateFrameDataFilterPosArrays() noexcept -> void;
   auto UpdateFrameDataGpuFilterData() noexcept -> void;
@@ -491,12 +492,19 @@ inline auto GoomControl::GoomControlImpl::SetFrameData(FrameData& frameData) -> 
 
 auto GoomControl::GoomControlImpl::UpdateFrameData() -> void
 {
-  m_frameData->miscData.goomTime = m_goomTime.GetCurrentTime();
-
+  UpdateFrameDataMiscData();
   UpdateFrameDataPixelBuffers();
   UpdateFrameDataPos1Pos2MixFreq();
   UpdateFrameDataFilterPosArrays();
   UpdateFrameDataGpuFilterData();
+}
+
+auto GoomControl::GoomControlImpl::UpdateFrameDataMiscData() noexcept -> void
+{
+  const auto& filterSettings = std::as_const(m_filterSettingsService).GetFilterSettings();
+
+  m_frameData->miscData.goomTime        = m_goomTime.GetCurrentTime();
+  m_frameData->miscData.textureWrapType = filterSettings.textureWrapType;
 }
 
 auto GoomControl::GoomControlImpl::UpdateFrameDataPixelBuffers() noexcept -> void

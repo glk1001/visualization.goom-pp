@@ -49,6 +49,7 @@ public:
   [[nodiscard]] auto GetTextureName(size_t textureIndex) const noexcept -> GLuint;
 
   auto ZeroTextures() -> void;
+  auto SetTextureWrapType(GLint textureWrapType) noexcept -> void;
   auto BindTextures(GlslProgram& program) -> void;
   auto BindTexture(GlslProgram& program, uint32_t textureIndex) -> void;
   auto CopyMappedBufferToTexture(size_t pboIndex, size_t textureIndex) -> void;
@@ -61,6 +62,7 @@ private:
   std::array<int32_t, NumTextures> m_textureImageUnits{};
   int32_t m_textureWidth{};
   int32_t m_textureHeight{};
+  GLint m_textureWrapType = GL_MIRRORED_REPEAT;
   size_t m_buffSize{};
   std::array<GLuint, NumTextures> m_textureNames{};
   auto AllocateBuffers() -> void;
@@ -145,11 +147,11 @@ auto Gl2DTexture<CppTextureType,
   m_gl->Call()(glTexParameteri,
                static_cast<GLenum>(GL_TEXTURE_2D),
                static_cast<GLenum>(GL_TEXTURE_WRAP_S),
-               GL_MIRRORED_REPEAT);
+               m_textureWrapType);
   m_gl->Call()(glTexParameteri,
                static_cast<GLenum>(GL_TEXTURE_2D),
                static_cast<GLenum>(GL_TEXTURE_WRAP_T),
-               GL_MIRRORED_REPEAT);
+               m_textureWrapType);
 
   if (m_textureImageUnits.at(textureIndex) != -1)
   {
@@ -265,6 +267,16 @@ auto Gl2DTexture<CppTextureType,
   }
 
   m_gl->Call()(glActiveTexture, TEXTURE_UNIT + textureIndex);
+
+  m_gl->Call()(glTexParameteri,
+               static_cast<GLenum>(GL_TEXTURE_2D),
+               static_cast<GLenum>(GL_TEXTURE_WRAP_S),
+               m_textureWrapType);
+  m_gl->Call()(glTexParameteri,
+               static_cast<GLenum>(GL_TEXTURE_2D),
+               static_cast<GLenum>(GL_TEXTURE_WRAP_T),
+               m_textureWrapType);
+
   m_gl->Call()(glBindTexture, static_cast<GLenum>(GL_TEXTURE_2D), m_textureNames.at(textureIndex));
 }
 
@@ -303,6 +315,24 @@ auto Gl2DTexture<CppTextureType,
     -> std::span<CppTextureType>
 {
   return std::span<CppTextureType>{m_pboBuffers.mappedBuffers.at(pboIndex), m_buffSize};
+}
+
+template<typename CppTextureType,
+         uint32_t NumTextures,
+         int32_t TextureLocation,
+         GLenum TextureFormat,
+         GLenum TextureInternalFormat,
+         GLenum TexturePixelType,
+         uint32_t NumPbos>
+auto Gl2DTexture<CppTextureType,
+                 NumTextures,
+                 TextureLocation,
+                 TextureFormat,
+                 TextureInternalFormat,
+                 TexturePixelType,
+                 NumPbos>::SetTextureWrapType(const GLint textureWrapType) noexcept -> void
+{
+  m_textureWrapType = textureWrapType;
 }
 
 template<typename CppTextureType,
