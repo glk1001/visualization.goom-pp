@@ -13,6 +13,7 @@ import Goom.FilterFx.FilterEffects.ZoomAdjustmentEffect;
 import Goom.FilterFx.GpuFilterEffects.GpuLerpFactor;
 import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.Utils.Math.Lerper;
+import Goom.Lib.GoomTypes;
 import Goom.Lib.Point2d;
 
 using GOOM::FILTER_FX::AFTER_EFFECTS::AfterEffectsStates;
@@ -62,12 +63,21 @@ struct GpuFilterEffectsSettings
   Lerper<Point2dFlt> midpoint{};
 };
 
+enum class TextureWrapType: UnderlyingEnumType
+{
+  REPEAT,
+  MIRRORED_REPEAT,
+  CLAMP_TO_EDGE,
+  MIRRORED_CLAMP_TO_EDGE,
+};
+
 struct FilterSettings
 {
   bool filterEffectsSettingsHaveChanged = false;
   FilterEffectsSettings filterEffectsSettings{};
   bool gpuFilterEffectsSettingsHaveChanged = false;
   GpuFilterEffectsSettings gpuFilterEffectsSettings{};
+  TextureWrapType textureWrapType{};
   GoomLerpData transformBufferLerpData;
 };
 

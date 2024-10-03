@@ -60,22 +60,22 @@ void main()
     mappedPersistentColorVal.rgb *= GetBaseColorMultiplier(mappedPersistentColorVal.rgb);
 
     // Get and store the low color added to this frames' mapped color.
-    const vec4 mappedLowColor  = texture(tex_lowColorImage, texCoord);
-    const float mappedLowAlpha = mappedLowColor.a; // Use low color alpha for main also.
+    const vec4 imageLowColor  = texture(tex_lowColorImage, texCoord);
+    const float imageLowAlpha = imageLowColor.a; // Use low color alpha for main also.
     const vec3 newLowColor     = mappedPersistentColorVal.rgb
-                                 + (u_lowColorMultiplier * mappedLowColor.rgb);
-    imageStore(img_lowColorsBuff, deviceXY, vec4(newLowColor, mappedLowAlpha));
+                                 + (u_lowColorMultiplier * imageLowColor.rgb);
+    imageStore(img_lowColorsBuff, deviceXY, vec4(newLowColor, imageLowAlpha));
 
     // Get and store the main color added to this frames' buff2 color.
-    const vec4 mappedMainColor = texture(tex_mainColorImage, texCoord);
-    const vec3 newMainColor    = mappedPersistentColorVal.rgb
-                                 + (u_mainColorMultiplier * mappedMainColor.rgb);
+    const vec4 imageMainColor = texture(tex_mainColorImage, texCoord);
+    const vec3 newMainColor   = mappedPersistentColorVal.rgb
+                                 + (u_mainColorMultiplier * imageMainColor.rgb);
 
 #if (DEBUG_GPU_FILTERS == 0)
-    imageStore(img_mainColorsBuff, deviceXY, vec4(newMainColor, mappedLowAlpha));
+    imageStore(img_mainColorsBuff, deviceXY, vec4(newMainColor, imageLowAlpha));
 #else
     const vec3 debugMainColor = GetDebugColor(deviceXY, newMainColor);
-    imageStore(img_mainColorsBuff, deviceXY, vec4(debugMainColor, mappedLowAlpha));
+    imageStore(img_mainColorsBuff, deviceXY, vec4(debugMainColor, imageLowAlpha));
 #endif
 
     discard;
