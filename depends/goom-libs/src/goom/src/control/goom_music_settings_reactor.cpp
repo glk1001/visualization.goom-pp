@@ -616,7 +616,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeTransformBuff
   }
 
   DoChangeTransformBufferLerpData();
-  m_filterSettingsService->ResetGpuLerpFactorDownABit();
+  m_filterSettingsService->SlowDownGpuLerpFactorABit();
 }
 
 auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::ChangeTransformBufferLerpToEndMaybe()
@@ -957,7 +957,7 @@ auto GoomMusicSettingsReactor::GoomMusicSettingsReactorImpl::DoChangeGpuLerpData
   }
   else
   {
-    m_filterSettingsService->ResetGpuLerpFactorUpABit();
+    m_filterSettingsService->SpeedUpGpuLerpFactorABit();
   }
 }
 
