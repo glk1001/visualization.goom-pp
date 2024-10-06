@@ -66,6 +66,7 @@ struct GpuFilterEffectData
   float srceDestLerpFactor{};
   float gpuLerpFactor{};
   Point2dFlt midpoint{};
+  float maxZoomAdjustment{};
 };
 struct FrameData
 {

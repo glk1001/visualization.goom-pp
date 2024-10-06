@@ -8,6 +8,7 @@ uniform uint u_gpuSrceFilterMode;
 uniform uint u_gpuDestFilterMode;
 uniform float u_gpuSrceDestFilterLerpFactor;
 uniform vec2 u_gpuFilterMidpoint;
+uniform float u_gpuMaxZoomAdjustment;
 
 uniform float u_amuletStartTime;
 uniform float u_amuletMaxTime;
@@ -294,6 +295,8 @@ vec2 GetGpuFilteredPosition(const uint gpuFilterMode, const ivec2 deviceXY)
         default:
             break;
     }
+
+    velocity = clamp(velocity, GPU_MIN_ZOOM_ADJUSTMENT, u_gpuMaxZoomAdjustment);
 
     //return (centredPos + velocity) + MIDPOINT;
     return (centredPos + velocity) + u_gpuFilterMidpoint;
