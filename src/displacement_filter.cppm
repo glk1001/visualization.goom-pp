@@ -39,6 +39,7 @@ import Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 import Goom.FilterFx.GpuFilterEffects.None;
 import Goom.FilterFx.FilterModes;
 import Goom.FilterFx.FilterSettings;
+import Goom.FilterFx.FilterSettingsService;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.EnumUtils;
 import Goom.Lib.AssertUtils;
@@ -53,6 +54,7 @@ import :GlslProgram;
 import :GlslShaderFile;
 import :Scene;
 
+using GOOM::FILTER_FX::FilterSettingsService;
 using GOOM::FILTER_FX::GpuZoomFilterMode;
 using GOOM::FILTER_FX::TextureWrapType;
 using GOOM::FILTER_FX::GPU_FILTER_EFFECTS::None;
@@ -118,6 +120,7 @@ protected:
   static constexpr auto* UNIFORM_GPU_SRCE_DEST_LERP_FACTOR = "u_gpuSrceDestFilterLerpFactor";
   static constexpr auto* UNIFORM_GPU_FILTER_LERP_FACTOR    = "u_gpuFilterLerpFactor";
   static constexpr auto* UNIFORM_GPU_MIDPOINT              = "u_gpuFilterMidpoint";
+  static constexpr auto* UNIFORM_GPU_MAX_ZOOM_ADJUSTMENT   = "u_gpuMaxZoomAdjustment";
 
   // IMPORTANT - To make proper use of HDR (which is why we're using RGBA16), we
   //             must use a floating point internal format.
@@ -591,6 +594,7 @@ auto DisplacementFilter::GetInitialGpuFilterEffectData() const noexcept -> GpuFi
       .srceDestLerpFactor  = 1.0F,
       .gpuLerpFactor       = 0.0F,
       .midpoint            = CENTRE_MIDPOINT,
+      .maxZoomAdjustment   = FilterSettingsService::DEFAULT_MAX_ZOOM_ADJUSTMENT,
   };
 }
 
@@ -768,6 +772,8 @@ auto DisplacementFilter::SetupScreenBuffers() -> void
 
 auto DisplacementFilter::CompileAndLinkShaders() -> void
 {
+  static constexpr auto MIN_ZOOM_ADJUSTMENT = FilterSettingsService::MIN_ZOOM_ADJUSTMENT;
+
   auto shaderMacros = std::unordered_map<std::string, std::string>{
       {        "LOW_COLORS_BUFF_IMAGE_UNIT",         std::to_string(LOW_COLORS_BUFF_IMAGE_UNIT)},
       {       "MAIN_COLORS_BUFF_IMAGE_UNIT",        std::to_string(MAIN_COLORS_BUFF_IMAGE_UNIT)},
@@ -783,6 +789,7 @@ auto DisplacementFilter::CompileAndLinkShaders() -> void
       {                      "ASPECT_RATIO",                      std::to_string(m_aspectRatio)},
       {              "FILTER_POS_MIN_COORD",               std::to_string(MIN_NORMALIZED_COORD)},
       {            "FILTER_POS_COORD_WIDTH",             std::to_string(NORMALIZED_COORD_WIDTH)},
+      {    "FILTER_POS_MIN_ZOOM_ADJUSTMENT",                std::to_string(MIN_ZOOM_ADJUSTMENT)},
       {                 "DEBUG_GPU_FILTERS",                  std::to_string(DEBUG_GPU_FILTERS)},
       {"DEBUG_GPU_FILTERS_RECT_INNER_WIDTH", std::to_string(DEBUG_GPU_FILTERS_RECT_INNER_WIDTH)},
       {"DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH", std::to_string(DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH)},
@@ -1159,6 +1166,8 @@ auto DisplacementFilter::UpdatePass1GpuFilterEffectDataToGl() noexcept -> void
   m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(
       UNIFORM_GPU_MIDPOINT,
       glm::vec2{m_gpuFilterEffectData.midpoint.x, m_gpuFilterEffectData.midpoint.y});
+  m_programPass1UpdateFilterBuff1AndBuff3.SetUniform(UNIFORM_GPU_MAX_ZOOM_ADJUSTMENT,
+                                                     m_gpuFilterEffectData.maxZoomAdjustment);
 
 #ifdef DEBUG_WITH_PRINTLN
   std::println("UpdatePass1GpuFilterEffectDataToGl: gpuLerpFactor = {}",

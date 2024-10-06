@@ -48,6 +48,10 @@ export namespace GOOM::FILTER_FX
 class FilterSettingsService
 {
 public:
+  static constexpr auto MIN_ZOOM_ADJUSTMENT         = -4.01F;
+  static constexpr auto MAX_MAX_ZOOM_ADJUSTMENT     = 4.01F;
+  static constexpr auto DEFAULT_MAX_ZOOM_ADJUSTMENT = 2.01F;
+
   struct ZoomFilterModeInfo
   {
     std::string_view name;
@@ -171,10 +175,8 @@ private:
 
   static constexpr auto DEFAULT_ZOOM_MID_X                             = 16U;
   static constexpr auto DEFAULT_ZOOM_MID_Y                             = 1U;
-  static constexpr auto DEFAULT_MAX_ZOOM_ADJUSTMENT                    = 2.01F;
   static constexpr auto DEFAULT_BASE_ZOOM_ADJUSTMENT_FACTOR_MULTIPLIER = 1.0F;
   static constexpr auto DEFAULT_AFTER_EFFECTS_VELOCITY_CONTRIBUTION    = 0.5F;
-  static constexpr auto MAX_MAX_ZOOM_ADJUSTMENT                        = 4.01F;
   static constexpr auto DEFAULT_MULTIPLIER_EFFECT_IS_ACTIVE            = false;
   static constexpr auto MULTIPLIER_EFFECT_FREQ_RANGE                   = NumberRange{0.5F, 20.0F};
   static constexpr auto DEFAULT_MULTIPLIER_EFFECT_X_FREQ               = 1.0F;

@@ -606,6 +606,8 @@ auto GoomControl::GoomControlImpl::UpdateFrameDataGpuFilterData() noexcept -> vo
 #endif
     }
 
+    gpuFilterEffectData.maxZoomAdjustment = filterSettings.filterEffectsSettings.maxZoomAdjustment;
+
     gpuFilterEffectData.filterTimingInfo = {
         .startTime = static_cast<float>(m_goomTime.GetCurrentTime()),
         .maxTime   = static_cast<float>(gpuFilterSettings.maxTimeToNextFilterModeChange)};

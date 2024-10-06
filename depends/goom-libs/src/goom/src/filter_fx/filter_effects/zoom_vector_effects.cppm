@@ -9,6 +9,7 @@ export module Goom.FilterFx.FilterEffects.ZoomVectorEffects;
 import Goom.FilterFx.AfterEffects.AfterEffects;
 import Goom.FilterFx.AfterEffects.ZoomVectorAfterEffects;
 import Goom.FilterFx.FilterSettings;
+import Goom.FilterFx.FilterSettingsService;
 import Goom.FilterFx.NormalizedCoords;
 import Goom.Utils.NameValuePairs;
 import Goom.Utils.Math.GoomRand;
@@ -160,9 +161,9 @@ inline auto ZoomVectorEffects::GetClampedZoomAdjustment(const Vec2dFlt& zoomCoef
 inline auto ZoomVectorEffects::GetClampedZoomAdjustment(const float zoomAdjustment) const noexcept
     -> float
 {
-  if (static constexpr auto MIN_ZOOM_ADJUSTMENT = -4.01F; zoomAdjustment < MIN_ZOOM_ADJUSTMENT)
+  if (zoomAdjustment < FilterSettingsService::MIN_ZOOM_ADJUSTMENT)
   {
-    return MIN_ZOOM_ADJUSTMENT;
+    return FilterSettingsService::MIN_ZOOM_ADJUSTMENT;
   }
   if (zoomAdjustment > m_filterEffectsSettings->maxZoomAdjustment)
   {
