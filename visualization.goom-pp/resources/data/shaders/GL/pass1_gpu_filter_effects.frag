@@ -161,7 +161,9 @@ vec2 GetReflectingPoolVelocity(const vec2 position)
     const float vX = sin((xT * p.y) + (u_reflectingPoolInnerPosXFactor * p.x));
     const float vY = cos((yT * p.x) - (u_reflectingPoolInnerPosYFactor * p.y));
 
-    const vec2 v = vec2(u_reflectingPoolXAmplitude * vX, u_reflectingPoolYAmplitude * vY);
+    vec2 v = vec2(u_reflectingPoolXAmplitude * vX, u_reflectingPoolYAmplitude * vY);
+
+    v = clamp(v, GPU_MIN_ZOOM_ADJUSTMENT, u_gpuMaxZoomAdjustment);
 
     return reflectingPoolBase + v;
 }

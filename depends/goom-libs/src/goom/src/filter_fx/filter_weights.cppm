@@ -36,9 +36,9 @@ export namespace GOOM::FILTER_FX
 // For debugging:
 
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_AMULET_MODE;
-inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
+//inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_BEAUTIFUL_FIELD_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_NONE_MODE;
-//inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
+inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_REFLECTING_POOL_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_UP_DOWN_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_VORTEX_MODE;
 //inline constexpr auto FORCED_GPU_FILTER_MODE = GPU_WAVE_MODE;
