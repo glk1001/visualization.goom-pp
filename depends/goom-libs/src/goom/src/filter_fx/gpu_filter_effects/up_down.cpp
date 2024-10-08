@@ -14,10 +14,10 @@ using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 
-static constexpr auto AMPLITUDE_RANGE        = NumberRange{0.01F, 5.0F};
+static constexpr auto AMPLITUDE_RANGE        = NumberRange{0.01F, 10.0F};
 static constexpr auto BASE_RANGE             = NumberRange{0.0F, 0.3F};
 static constexpr auto CYCLE_FREQUENCY_RANGE  = NumberRange{0.01F, 1.5F};
-static constexpr auto FREQUENCY_RANGE        = NumberRange{1.0F, 100.0F};
+static constexpr auto FREQUENCY_RANGE        = NumberRange{0.01F, 10.0F};
 static constexpr auto ROTATE_FREQUENCY_RANGE = NumberRange{0.1F, 5.0F};
 static constexpr auto MIX_FREQUENCY_RANGE    = NumberRange{0.1F, 3.0F};
 

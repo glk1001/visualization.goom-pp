@@ -10,6 +10,7 @@ import Goom.Utils.Math.GoomRand;
 using GOOM::FILTER_FX::FILTER_UTILS::RandomViewport;
 using GOOM::UTILS::NameValuePairs;
 using GOOM::UTILS::MATH::GoomRand;
+using GOOM::UTILS::MATH::NumberRange;
 
 export namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
@@ -34,13 +35,16 @@ public:
               const FilterBase& filterBase,
               const FrequencyFactor& cycleFrequency,
               const FrequencyFactor& frequencyFactor,
-              float beautifulFieldDirection) noexcept;
+              float direction,
+              bool useMultiply) noexcept;
+
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
   private:
     FrequencyFactor m_frequencyFactor{};
-    float m_beautifulFieldDirection{};
+    float m_direction{};
+    bool m_useMultiply{};
   };
 
 private:
@@ -48,6 +52,9 @@ private:
   RandomViewport m_randomViewport;
   GpuParams m_gpuParams;
   [[nodiscard]] auto GetRandomParams() const noexcept -> GpuParams;
+  [[nodiscard]] auto GetRandomFrequencyFactor() const noexcept -> FrequencyFactor;
+  [[nodiscard]] auto GetRandomFrequencyFactor(
+      const NumberRange<float>& frequencyRange) const noexcept -> FrequencyFactor;
 };
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

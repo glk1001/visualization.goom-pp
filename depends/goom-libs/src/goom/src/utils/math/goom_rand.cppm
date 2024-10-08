@@ -88,6 +88,9 @@ private:
 };
 
 template<EnumType E>
+[[nodiscard]] auto GetRandomEqualWeighted(const GoomRand& goomRand) noexcept -> E;
+
+template<EnumType E>
 class Weights
 {
 public:
@@ -317,6 +320,12 @@ inline auto GoomRand::GetRandInRange(const float x0, const float xRange) noexcep
 inline auto GoomRand::GetRandInRange(const double x0, const double xRange) noexcept -> double
 {
   return RAND::GetRandInRange(x0, xRange);
+}
+
+template<EnumType E>
+[[nodiscard]] auto GetRandomEqualWeighted(const GoomRand& goomRand) noexcept -> E
+{
+  return static_cast<E>(goomRand.GetRandInRange(NumberRange(0U, static_cast<uint32_t>(NUM<E> - 1))));
 }
 
 template<EnumType E>
