@@ -44,7 +44,7 @@ public:
     float m_frequencyFactor{};
     float m_positionFactor{};
     float m_rFactor{};
-    float m_vortexSpinSign;
+    float m_vortexSpinSign{};
   };
 
 private:

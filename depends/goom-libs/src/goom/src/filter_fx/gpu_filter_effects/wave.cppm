@@ -35,7 +35,8 @@ public:
               const FrequencyFactor& cycleFrequency,
               const FrequencyFactor& frequencyFactor,
               float reducerCoeff,
-              float sqDistPower) noexcept;
+              float sqDistPower,
+              float waveSpinSign) noexcept;
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
@@ -43,6 +44,7 @@ public:
     FrequencyFactor m_frequencyFactor{};
     float m_reducerCoeff{};
     float m_sqDistPower{};
+    float m_waveSpinSign{};
   };
 
 private:

@@ -6,8 +6,12 @@ uniform sampler2D tex_mainColorImage;        // Main colors for this frame
 uniform sampler2D tex_lowColorImage;         // Low colors for this frame
 uniform sampler2D tex_persistentColorsImage; // Colors from last frame
 
+// At the start of this pass, 'img_lowColorsBuff' contains the previous frames'
+// mapped and low colors.
 // At end of this pass, 'img_lowColorsBuff' contains the newly mapped colors plus low colors.
 layout(binding = LOW_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform image2D img_lowColorsBuff;
+// At the start of this pass, 'img_mainColorsBuff' contains the previous frames'
+// mapped and main colors.
 // At end of this pass, 'img_mainColorsBuff' contains the newly mapped colors plus main colors.
 layout(binding = MAIN_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform image2D img_mainColorsBuff;
 
@@ -62,14 +66,14 @@ void main()
     // Get and store the low color added to this frames' mapped color.
     const vec4 imageLowColor  = texture(tex_lowColorImage, texCoord);
     const float imageLowAlpha = imageLowColor.a; // Use low color alpha for main also.
-    const vec3 newLowColor     = mappedPersistentColorVal.rgb
-                                 + (u_lowColorMultiplier * imageLowColor.rgb);
+    const vec3 newLowColor    = mappedPersistentColorVal.rgb
+                                + (u_lowColorMultiplier * imageLowColor.rgb);
     imageStore(img_lowColorsBuff, deviceXY, vec4(newLowColor, imageLowAlpha));
 
-    // Get and store the main color added to this frames' buff2 color.
+    // Get and store the main color added to this frames' mapped color.
     const vec4 imageMainColor = texture(tex_mainColorImage, texCoord);
     const vec3 newMainColor   = mappedPersistentColorVal.rgb
-                                 + (u_mainColorMultiplier * imageMainColor.rgb);
+                                + (u_mainColorMultiplier * imageMainColor.rgb);
 
 #if (DEBUG_GPU_FILTERS == 0)
     imageStore(img_mainColorsBuff, deviceXY, vec4(newMainColor, imageLowAlpha));

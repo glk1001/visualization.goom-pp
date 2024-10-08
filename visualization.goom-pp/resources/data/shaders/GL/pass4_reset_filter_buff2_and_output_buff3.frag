@@ -5,12 +5,13 @@
 
 layout(location = 0) out vec4 fragColor;
 
-// 'img_lowColorsBuff' has this frames' mapped color and current low color,
-// which is persisted to 'img_persistentColorsBuff'.
+// 'img_lowColorsBuff' has this frames' mapped color and current low color.
+// This is persisted to 'img_persistentColorsBuff'.
 layout(binding=LOW_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform readonly image2D img_lowColorsBuff;
 layout(binding=PERSISTENT_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform image2D img_persistentColorsBuff;
 
-// 'img_mainColorsBuff' has this frames' mapped color and current main color. Not persisted.
+// 'img_mainColorsBuff' has this frames' mapped color and current main color.
+// Not persisted.
 layout(binding=MAIN_COLORS_BUFF_IMAGE_UNIT, rgba16f) uniform readonly image2D img_mainColorsBuff;
 
 // Luminance values for exposure correction.
@@ -42,7 +43,7 @@ void main()
 
     // Get the hdr color to work with.
     const vec4 mainColorVal = imageLoad(img_mainColorsBuff, deviceXY);
-    const vec4 hdrColor       = mainColorVal;
+    const vec4 hdrColor     = mainColorVal;
 
     // Copy the low colors buffer to the persistent colors buffer, ready for the next frame.
     const vec4 lowColorVal = imageLoad(img_lowColorsBuff, deviceXY);

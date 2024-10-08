@@ -62,7 +62,7 @@ using GOOM::UTILS::EnumMap;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
 
-static constexpr auto DEBUG_GPU_FILTERS                  = 0;
+static constexpr auto DEBUG_GPU_FILTERS                  = 1;
 static constexpr auto DEBUG_GPU_FILTERS_RECT_INNER_WIDTH = 50;
 static constexpr auto DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH = 100;
 
@@ -1280,13 +1280,13 @@ auto DisplacementFilter::BindGlImageBuffers() -> void
 
 auto DisplacementFilter::SetupGlFilterBuffers() -> void
 {
-  m_glFilterBuffers.lowColorsBuffTexture.Setup(
-      0, NULL_TEXTURE_NAME, LOW_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
   m_glFilterBuffers.persistedColorsBuffTexture.Setup(0,
                                                      PERSISTENT_COLORS_IMAGE_TEXTURE_NAME,
                                                      PERSISTENT_COLORS_BUFF_IMAGE_UNIT,
                                                      GetWidth(),
                                                      GetHeight());
+  m_glFilterBuffers.lowColorsBuffTexture.Setup(
+      0, NULL_TEXTURE_NAME, LOW_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
   m_glFilterBuffers.mainColorsBuffTexture.Setup(
       0, NULL_TEXTURE_NAME, MAIN_COLORS_BUFF_IMAGE_UNIT, GetWidth(), GetHeight());
 }

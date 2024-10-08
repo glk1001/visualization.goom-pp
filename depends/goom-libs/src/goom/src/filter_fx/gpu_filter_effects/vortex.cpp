@@ -13,12 +13,12 @@ using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
 
-static constexpr auto AMPLITUDE_RANGE       = NumberRange{1.0F, 3.0F};
+static constexpr auto AMPLITUDE_RANGE       = NumberRange{0.1F, 10.0F};
 static constexpr auto BASE_RANGE            = NumberRange{0.00F, 0.03F};
 static constexpr auto CYCLE_FREQUENCY_RANGE = NumberRange{0.1F, 0.5F};
-static constexpr auto FREQUENCY_RANGE       = NumberRange{0.005F, 0.030F};
-static constexpr auto POSITION_FACTOR_RANGE = NumberRange{0.1F, 0.2F};
-static constexpr auto R_FACTOR_RANGE        = NumberRange{5.0F, 15.0F};
+static constexpr auto FREQUENCY_RANGE       = NumberRange{0.005F, 0.1F};
+static constexpr auto POSITION_FACTOR_RANGE = NumberRange{0.01F, 1.5F};
+static constexpr auto R_FACTOR_RANGE        = NumberRange{0.01F, 15.0F};
 
 static constexpr auto VIEWPORT_BOUNDS = RandomViewport::Bounds{
     .minSideLength       = 0.1F,
