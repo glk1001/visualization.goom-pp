@@ -322,8 +322,9 @@ vec2 GetGpuFilteredPosition(const uint gpuFilterMode, const ivec2 deviceXY)
             break;
     }
 
-    //return (centredPos + velocity) + MIDPOINT;
-    return (centredPos + velocity) + u_gpuFilterMidpoint;
+    const float VEL_REDUCER = 0.5F;
+    //return (centredPos + (VEL_REDUCER * velocity)) + MIDPOINT;
+    return (centredPos + (VEL_REDUCER * velocity)) + u_gpuFilterMidpoint;
 }
 
 bool AllGpuFilterModesAreNone()

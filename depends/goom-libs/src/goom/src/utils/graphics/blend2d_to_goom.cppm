@@ -128,7 +128,7 @@ inline auto Blend2dToGoom::SetPixelBlendFunc(const DRAW::IGoomDraw::PixelBlendFu
   m_pixelBlendFunc = func;
 }
 
-inline auto Blend2dToGoom::SetIntBuffIntensity(float buffIntensity) noexcept -> void
+inline auto Blend2dToGoom::SetIntBuffIntensity(const float buffIntensity) noexcept -> void
 {
   m_intBuffIntensity = DRAW::IGoomDraw::GetIntBuffIntensity(buffIntensity);
 }

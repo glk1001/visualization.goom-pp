@@ -15,10 +15,12 @@ uniform float u_gamma;
 //#define toneMapToUse EXPOSURE_TONE_MAP
 //#define toneMapToUse REINHARD_TONE_MAP
 //#define toneMapToUse REINHARD2_TONE_MAP
+
 //#define toneMapToUse LOTTES_TONE_MAP
 #define toneMapToUse UCHIMURA_TONE_MAP
 //#define toneMapToUse ACES_TONE_MAP
 //#define toneMapToUse FILMIC_TONE_MAP
+
 //#define toneMapToUse UNCHARTED2_TONE_MAP
 //#define toneMapToUse UNREAL_TONE_MAP
 
@@ -174,17 +176,17 @@ vec3 GetToneMappedColor(const vec3 color)
   }
 #elif (toneMapToUse == REINHARD2_TONE_MAP)
   {
-    const float exposureBias = 4.0;
+    const float exposureBias = 2.5;
     return ToGamma(Reinhard2(exposureBias * color));
   }
 #elif (toneMapToUse == LOTTES_TONE_MAP)
   {
-    const float exposureBias = 3.0;
+    const float exposureBias = 1.0;
     return ToGamma(Lottes(exposureBias * color));
   }
 #elif (toneMapToUse == UCHIMURA_TONE_MAP)
   {
-    const float exposureBias = 2.0;
+    const float exposureBias = 1.0;
     return ToGamma(Uchimura(exposureBias * color));
   }
 #elif (toneMapToUse == ACES_TONE_MAP)
@@ -199,7 +201,7 @@ vec3 GetToneMappedColor(const vec3 color)
   }
 #elif (toneMapToUse == UNCHARTED2_TONE_MAP)
   {
-    const float exposureBias = 5.0;
+    const float exposureBias = 2.0;
     return ToGamma(Uncharted2(exposureBias * color));
   }
 #elif (toneMapToUse == UNREAL_TONE_MAP)

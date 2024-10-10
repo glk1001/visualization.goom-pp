@@ -43,13 +43,13 @@ private:
 
   HighContrast m_highContrast;
 
-  static constexpr HueShiftLerper::Params HUE_SHIFT_LERPER_PARAMS{
+  static constexpr auto HUE_SHIFT_LERPER_PARAMS = HueShiftLerper::Params{
       .numLerpStepsRange  = { 25U,  100U},
       .lerpConstTimeRange = {500U, 5000U},
   };
   HueShiftLerper m_hueShiftLerper;
 
-  static constexpr ShaderObjectLerper::Params CHROMA_FACTOR_LERPER_PARAMS{
+  static constexpr auto CHROMA_FACTOR_LERPER_PARAMS = ShaderObjectLerper::Params{
       .valueRange           = {0.5F, 5.0F},
       .minValueRangeDist    = 0.1F,
       .numLerpStepsRange    = { 50U, 500U},
@@ -59,8 +59,8 @@ private:
   };
   ShaderObjectLerper m_chromaFactorLerper;
 
-  static constexpr ShaderObjectLerper::Params BASE_COLOR_MULTIPLIER_LERPER_PARAMS{
-      .valueRange           = {0.96F, 1.00F},
+  static constexpr auto BASE_COLOR_MULTIPLIER_LERPER_PARAMS = ShaderObjectLerper::Params{
+      .valueRange           = {0.92F, 0.99F},
       .minValueRangeDist    = 0.025F,
       .numLerpStepsRange    = {  50U,  500U},
       .lerpConstTimeRange   = {  10U,   50U},
@@ -69,7 +69,7 @@ private:
   };
   ShaderObjectLerper m_baseColorMultiplierLerper;
 
-  static constexpr ShaderObjectLerper::Params PREV_FRAME_T_MIX_LERPER_PARAMS{
+  static constexpr auto PREV_FRAME_T_MIX_LERPER_PARAMS = ShaderObjectLerper::Params{
       .valueRange           = {0.1F, 0.9F},
       .minValueRangeDist    = 0.2F,
       .numLerpStepsRange    = { 50U, 500U},

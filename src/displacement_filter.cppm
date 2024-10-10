@@ -101,7 +101,7 @@ public:
       const ReleaseCurrentFrameDataFunc& releaseCurrentFrameDataFunc) noexcept -> void;
 
 protected:
-  static constexpr auto DEFAULT_GAMMA = 1.5F;
+  static constexpr auto DEFAULT_GAMMA = 2.0F;
 
   static constexpr auto* UNIFORM_SRCE_DEST_LERP_FACTOR     = "u_srceDestLerpFactor";
   static constexpr auto* UNIFORM_BRIGHTNESS                = "u_brightness";

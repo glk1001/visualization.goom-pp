@@ -36,18 +36,18 @@ static constexpr auto DRAWABLE_NAMES = EnumMap<GoomDrawables, std::string_view>{
 }}};
 
 static constexpr auto BUFF_INTENSITY_RANGES = EnumMap<GoomDrawables, NumberRange<float>>{{{
-    {GoomDrawables::CIRCLES, {0.50F, 0.80F}},
-    {GoomDrawables::DOTS, {0.40F, 0.70F}},
-    {GoomDrawables::IFS, {0.40F, 0.70F}},
-    {GoomDrawables::L_SYSTEM, {0.70F, 0.80F}},
-    {GoomDrawables::LINES, {0.50F, 0.70F}},
-    {GoomDrawables::IMAGE, {0.05F, 0.30F}},
-    {GoomDrawables::PARTICLES, {0.50F, 0.80F}},
-    {GoomDrawables::RAINDROPS, {0.60F, 0.80F}},
-    {GoomDrawables::SHAPES, {0.50F, 0.80F}},
-    {GoomDrawables::STARS, {0.50F, 0.60F}},
-    {GoomDrawables::TENTACLES, {0.30F, 0.50F}},
-    {GoomDrawables::TUBES, {0.70F, 0.80F}},
+    {GoomDrawables::CIRCLES, {0.90F, 0.99F}},
+    {GoomDrawables::DOTS, {0.90F, 0.99F}},
+    {GoomDrawables::IFS, {0.90F, 0.99F}},
+    {GoomDrawables::L_SYSTEM, {0.90F, 0.99F}},
+    {GoomDrawables::LINES, {0.90F, 0.99F}},
+    {GoomDrawables::IMAGE, {0.20F, 0.50F}},
+    {GoomDrawables::PARTICLES, {0.90F, 0.99F}},
+    {GoomDrawables::RAINDROPS, {0.90F, 0.99F}},
+    {GoomDrawables::SHAPES, {0.90F, 0.99F}},
+    {GoomDrawables::STARS, {0.90F, 0.99F}},
+    {GoomDrawables::TENTACLES, {0.90F, 0.99F}},
+    {GoomDrawables::TUBES, {0.90F, 0.99F}},
 }}};
 
 static constexpr auto STATE_MULTI_THREADED = EnumMap<GoomDrawables, bool>{{{
