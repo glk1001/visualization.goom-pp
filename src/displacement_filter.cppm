@@ -62,7 +62,7 @@ using GOOM::UTILS::EnumMap;
 using GOOM::UTILS::EnumToString;
 using GOOM::UTILS::NUM;
 
-static constexpr auto DEBUG_GPU_FILTERS                  = 1;
+static constexpr auto DEBUG_GPU_FILTERS                  = 0;
 static constexpr auto DEBUG_GPU_FILTERS_RECT_INNER_WIDTH = 50;
 static constexpr auto DEBUG_GPU_FILTERS_RECT_OUTER_WIDTH = 100;
 
