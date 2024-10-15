@@ -39,7 +39,7 @@ uniform bool u_useGpuFilterPositionsToGetColor = false;
 // too far away and things look too dark.
 uniform float u_baseColorMultiplier;        // Used to factor this frames' persistent color.
 uniform float u_mainColorMultiplier = 1.0F; // Used to factor this frames' main color.
-uniform float u_lowColorMultiplier  = 0.7F; // Used to factor this frames' low color.
+uniform float u_lowColorMultiplier  = 1.0F; // Used to factor this frames' low color.
 
 #include "pass1_gpu_filter_effects_consts.h_glsl"
 #include "pass1_gpu_filter_effects.frag"
