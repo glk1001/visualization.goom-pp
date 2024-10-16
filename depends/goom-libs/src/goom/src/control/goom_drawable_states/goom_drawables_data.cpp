@@ -40,7 +40,7 @@ static constexpr auto BUFF_INTENSITY_RANGES = EnumMap<GoomDrawables, NumberRange
     {GoomDrawables::DOTS, {0.90F, 0.99F}},
     {GoomDrawables::IFS, {0.90F, 0.99F}},
     {GoomDrawables::L_SYSTEM, {0.90F, 0.99F}},
-    {GoomDrawables::LINES, {0.90F, 0.99F}},
+    {GoomDrawables::LINES, {0.80F, 0.90F}},
     {GoomDrawables::IMAGE, {0.20F, 0.50F}},
     {GoomDrawables::PARTICLES, {0.90F, 0.99F}},
     {GoomDrawables::RAINDROPS, {0.90F, 0.99F}},
