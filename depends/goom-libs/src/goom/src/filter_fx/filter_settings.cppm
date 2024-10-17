@@ -63,7 +63,7 @@ struct GpuFilterEffectsSettings
   Lerper<Point2dFlt> midpoint{};
 };
 
-enum class TextureWrapType: UnderlyingEnumType
+enum class TextureWrapType : UnderlyingEnumType
 {
   REPEAT,
   MIRRORED_REPEAT,
