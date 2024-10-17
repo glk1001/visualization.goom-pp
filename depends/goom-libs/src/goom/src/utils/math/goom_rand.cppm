@@ -325,7 +325,8 @@ inline auto GoomRand::GetRandInRange(const double x0, const double xRange) noexc
 template<EnumType E>
 [[nodiscard]] auto GetRandomEqualWeighted(const GoomRand& goomRand) noexcept -> E
 {
-  return static_cast<E>(goomRand.GetRandInRange(NumberRange(0U, static_cast<uint32_t>(NUM<E> - 1))));
+  return static_cast<E>(
+      goomRand.GetRandInRange(NumberRange(0U, static_cast<uint32_t>(NUM<E> - 1))));
 }
 
 template<EnumType E>
