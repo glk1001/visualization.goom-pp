@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.BeautifulField;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -11,6 +15,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -97,11 +103,6 @@ auto BeautifulField::GetRandomFrequencyFactor(
   return {xFreq, yFreq};
 }
 
-auto BeautifulField::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 BeautifulField::GpuParams::GpuParams(const Viewport& viewport,
                                      const Amplitude& amplitude,
                                      const FilterBase& filterBase,
@@ -126,6 +127,19 @@ auto BeautifulField::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTi
   setterFuncs.setFloat("u_beautifulFieldYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_beautifulFieldDirection", m_direction);
   setterFuncs.setFloat("u_beautifulFieldUseMultiply", m_useMultiply);
+}
+
+auto BeautifulField::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "beau"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, ({:.2f},{:.2f}), {:.1f}, {}",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetFrequencyFactor().x,
+                              m_gpuParams.GetFrequencyFactor().y,
+                              m_gpuParams.GetDirection(),
+                              m_gpuParams.GetUseMultiply()))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

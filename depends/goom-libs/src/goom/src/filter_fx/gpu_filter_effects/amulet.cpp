@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.Amulet;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -10,6 +14,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -53,11 +59,6 @@ auto Amulet::GetRandomParams() const noexcept -> GpuParams
   };
 }
 
-auto Amulet::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 Amulet::GpuParams::GpuParams(const Viewport& viewport,
                              const Amplitude& amplitude,
                              const FilterBase& filterBase,
@@ -74,6 +75,16 @@ auto Amulet::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo
   OutputStandardParams(filterTimingInfo, setterFuncs);
 
   setterFuncs.setFloat("u_amuletSpinSign", m_amuletSpinSign);
+}
+
+auto Amulet::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "amulet"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, {:.2f}",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetAmuletSpinSign()))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

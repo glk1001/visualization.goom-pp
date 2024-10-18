@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.ReflectingPool;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -10,6 +14,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -84,11 +90,6 @@ auto ReflectingPool::GetRandomParams() const noexcept -> GpuParams
   };
 }
 
-auto ReflectingPool::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 ReflectingPool::GpuParams::GpuParams(const Viewport& viewport,
                                      const Amplitude& amplitude,
                                      const FilterBase& filterBase,
@@ -111,6 +112,19 @@ auto ReflectingPool::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTi
   setterFuncs.setFloat("u_reflectingPoolYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_reflectingPoolInnerPosXFactor", m_innerPosFactor.x);
   setterFuncs.setFloat("u_reflectingPoolInnerPosYFactor", m_innerPosFactor.y);
+}
+
+auto ReflectingPool::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "pool"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, ({:.2f},{:.2f}), ({:.2f},{:.2f})",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetFrequencyFactor().x,
+                              m_gpuParams.GetFrequencyFactor().y,
+                              m_gpuParams.GetInnerPosFactor().x,
+                              m_gpuParams.GetInnerPosFactor().y))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

@@ -53,6 +53,8 @@ auto GoomStateMonitor::GetCurrentState() const -> std::vector<MessageGroup>
                         .messages = GetNameValueGroups(GetZoomFilterFxNameValueParams())};
   messageGroup.at(6) = {.color    = TIA_MARIA,
                         .messages = GetNameValueGroups(GetFilterEffectsNameValueParams())};
+  messageGroup.at(7) = {.color    = CURIOUS_BLUE,
+                        .messages = GetNameValueGroups(GetGpuFilterEffectsNameValueParams())};
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
   return messageGroup;
@@ -87,6 +89,10 @@ auto GoomStateMonitor::GetStateAndFilterModeNameValueParams() const -> UTILS::Na
       GetPair(PARAM_GROUP,
               "Previous Filter Mode",
               m_filterSettingsService->GetPreviousFilterModeName()),
+      GetPair(PARAM_GROUP, "Gpu Filter", m_filterSettingsService->GetCurrentGPUFilterModeName()),
+      GetPair(PARAM_GROUP,
+              "Previous Gpu Filter",
+              m_filterSettingsService->GetPreviousGPUFilterModeName()),
   };
 }
 
@@ -124,6 +130,13 @@ inline auto GoomStateMonitor::GetFilterEffectsNameValueParams() const -> UTILS::
       GetPair(PARAM_GROUP, "Midpoint", filterEffectsSettings.zoomMidpoint),
       GetPair(PARAM_GROUP, "After Mult", filterEffectsSettings.afterEffectsVelocityMultiplier),
   };
+}
+
+inline auto GoomStateMonitor::GetGpuFilterEffectsNameValueParams() const -> UTILS::NameValuePairs
+{
+  const auto& gpuFilterEffectsSettings =
+      m_filterSettingsService->GetFilterSettings().gpuFilterEffectsSettings;
+  return {gpuFilterEffectsSettings.gpuZoomFilterEffect->GetGpuZoomFilterEffectNameValueParams()};
 }
 
 inline auto GoomStateMonitor::GetMusicSettingsNameValueParams() const -> UTILS::NameValuePairs

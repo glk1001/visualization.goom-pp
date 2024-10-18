@@ -98,6 +98,7 @@ public:
   [[nodiscard]] auto GetPreviousFilterModeName() const noexcept -> const std::string_view&;
 
   [[nodiscard]] auto GetCurrentGpuFilterMode() const noexcept -> GpuZoomFilterMode;
+  [[nodiscard]] auto GetCurrentGPUFilterModeName() const noexcept -> const std::string_view&;
   [[nodiscard]] auto GetPreviousGPUFilterModeName() const noexcept -> const std::string_view&;
 
   [[nodiscard]] auto GetFilterSettings() const noexcept -> const FilterSettings&;
@@ -264,6 +265,11 @@ inline auto FilterSettingsService::GetPreviousFilterModeName() const noexcept
   return m_filterModeData[m_previousFilterMode].name;
 }
 
+inline auto FilterSettingsService::GetCurrentGPUFilterModeName() const noexcept
+    -> const std::string_view&
+{
+  return m_gpuFilterModeData[m_gpuFilterMode].name;
+}
 inline auto FilterSettingsService::GetPreviousGPUFilterModeName() const noexcept
     -> const std::string_view&
 {

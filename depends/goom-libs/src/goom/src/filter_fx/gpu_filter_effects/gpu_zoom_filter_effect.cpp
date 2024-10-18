@@ -1,6 +1,7 @@
 module;
 
 #include <format>
+#include <string>
 
 module Goom.FilterFx.GpuFilterEffects.GpuZoomFilterEffect;
 
@@ -41,6 +42,17 @@ auto IGpuParams::OutputStandardParams(const FilterTimingInfo& filterTimingInfo,
   setterFuncs.setFloat(m_yFilterBaseUniformName, m_filterBase.y);
   setterFuncs.setFloat(m_xCycleFrequencyUniformName, m_cycleFrequency.x);
   setterFuncs.setFloat(m_yCycleFrequencyUniformName, m_cycleFrequency.y);
+}
+
+auto IGpuParams::GetFormattedInOrderParams() const noexcept -> std::string
+{
+  return std::format("({:.2f},{:.2f}), ({:.2f},{:.2f}), ({:.2f},{:.2f})",
+                     m_amplitude.x,
+                     m_amplitude.y,
+                     m_filterBase.x,
+                     m_filterBase.y,
+                     m_cycleFrequency.x,
+                     m_cycleFrequency.y);
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

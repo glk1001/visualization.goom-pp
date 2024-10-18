@@ -37,6 +37,8 @@ public:
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
+    [[nodiscard]] auto GetAmuletSpinSign() const noexcept -> float;
+
   private:
     float m_amuletSpinSign = 1.0F;
   };
@@ -61,6 +63,11 @@ inline auto Amulet::SetRandomParams() noexcept -> void
 inline auto Amulet::GetGpuParams() const noexcept -> const IGpuParams&
 {
   return m_gpuParams;
+}
+
+inline auto Amulet::GpuParams::GetAmuletSpinSign() const noexcept -> float
+{
+  return m_amuletSpinSign;
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

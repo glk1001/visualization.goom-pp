@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.Wave;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -9,6 +13,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -68,11 +74,6 @@ auto Wave::GetRandomParams() const noexcept -> GpuParams
   };
 }
 
-auto Wave::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 Wave::GpuParams::GpuParams(const Viewport& viewport,
                            const Amplitude& amplitude,
                            const FilterBase& filterBase,
@@ -99,6 +100,20 @@ auto Wave::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
   setterFuncs.setFloat("u_waveReducerCoeff", m_reducerCoeff);
   setterFuncs.setFloat("u_waveSqDistPower", m_sqDistPower);
   setterFuncs.setFloat("u_waveSpinSign", m_waveSpinSign);
+}
+
+auto Wave::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "wave"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, ({:.2f},{:.2f}), {:.2f}, {:.2f}, {:.1f}",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetFrequencyFactor().x,
+                              m_gpuParams.GetFrequencyFactor().y,
+                              m_gpuParams.GetReducerCoeff(),
+                              m_gpuParams.GetSqDistPower(),
+                              m_gpuParams.GetWaveSpinSign()))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

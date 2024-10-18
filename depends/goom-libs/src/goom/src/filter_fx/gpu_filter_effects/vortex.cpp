@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.Vortex;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -9,6 +13,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -63,11 +69,6 @@ auto Vortex::GetRandomParams() const noexcept -> GpuParams
   };
 }
 
-auto Vortex::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 Vortex::GpuParams::GpuParams(const Viewport& viewport,
                              const Amplitude& amplitude,
                              const FilterBase& filterBase,
@@ -93,6 +94,19 @@ auto Vortex::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo
   setterFuncs.setFloat("u_vortexPositionFactor", m_positionFactor);
   setterFuncs.setFloat("u_vortexRFactor", m_rFactor);
   setterFuncs.setFloat("u_vortexSpinSign", m_vortexSpinSign);
+}
+
+auto Vortex::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "vortex"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, {:.2f}, {:.2f}, {:.2f}, {:.1f}",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetFrequencyFactor(),
+                              m_gpuParams.GetPositionFactor(),
+                              m_gpuParams.GetRFactor(),
+                              m_gpuParams.GetVortexSpinSign()))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

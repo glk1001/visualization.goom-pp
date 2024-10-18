@@ -40,6 +40,11 @@ public:
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
+    [[nodiscard]] auto GetFrequencyFactor() const noexcept -> float;
+    [[nodiscard]] auto GetPositionFactor() const noexcept -> float;
+    [[nodiscard]] auto GetRFactor() const noexcept -> float;
+    [[nodiscard]] auto GetVortexSpinSign() const noexcept -> float;
+
   private:
     float m_frequencyFactor{};
     float m_positionFactor{};
@@ -67,6 +72,26 @@ inline auto Vortex::SetRandomParams() noexcept -> void
 inline auto Vortex::GetGpuParams() const noexcept -> const IGpuParams&
 {
   return m_gpuParams;
+}
+
+inline auto Vortex::GpuParams::GetFrequencyFactor() const noexcept -> float
+{
+  return m_frequencyFactor;
+}
+
+inline auto Vortex::GpuParams::GetPositionFactor() const noexcept -> float
+{
+  return m_positionFactor;
+}
+
+inline auto Vortex::GpuParams::GetRFactor() const noexcept -> float
+{
+  return m_rFactor;
+}
+
+inline auto Vortex::GpuParams::GetVortexSpinSign() const noexcept -> float
+{
+  return m_vortexSpinSign;
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

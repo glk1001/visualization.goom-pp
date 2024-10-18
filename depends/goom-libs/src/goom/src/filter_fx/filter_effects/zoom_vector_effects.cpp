@@ -77,11 +77,11 @@ auto ZoomVectorEffects::GetMultiplierEffect(const NormalizedCoords& coords,
                (multiplierSettings.yAmplitude * std::cos(multiplierSettings.yFreq * targetPointY))};
 }
 
-auto ZoomVectorEffects::GetZoomEffectsNameValueParams() const noexcept -> UTILS::NameValuePairs
+auto ZoomVectorEffects::GetZoomEffectsNameValueParams() const noexcept -> NameValuePairs
 {
   static constexpr auto* PARAM_GROUP = "Zoom Effects";
 
-  auto nameValuePairs = UTILS::NameValuePairs{
+  auto nameValuePairs = NameValuePairs{
       GetPair(PARAM_GROUP,
               "params",
               std::format("{:.2f}, {}",

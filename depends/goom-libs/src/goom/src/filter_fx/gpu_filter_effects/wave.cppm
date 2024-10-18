@@ -40,6 +40,11 @@ public:
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
+    [[nodiscard]] auto GetFrequencyFactor() const noexcept -> const FrequencyFactor&;
+    [[nodiscard]] auto GetReducerCoeff() const noexcept -> float;
+    [[nodiscard]] auto GetSqDistPower() const noexcept -> float;
+    [[nodiscard]] auto GetWaveSpinSign() const noexcept -> float;
+
   private:
     FrequencyFactor m_frequencyFactor{};
     float m_reducerCoeff{};
@@ -67,6 +72,26 @@ inline auto Wave::SetRandomParams() noexcept -> void
 inline auto Wave::GetGpuParams() const noexcept -> const IGpuParams&
 {
   return m_gpuParams;
+}
+
+inline auto Wave::GpuParams::GetFrequencyFactor() const noexcept -> const FrequencyFactor&
+{
+  return m_frequencyFactor;
+}
+
+inline auto Wave::GpuParams::GetReducerCoeff() const noexcept -> float
+{
+  return m_reducerCoeff;
+}
+
+inline auto Wave::GpuParams::GetSqDistPower() const noexcept -> float
+{
+  return m_sqDistPower;
+}
+
+inline auto Wave::GpuParams::GetWaveSpinSign() const noexcept -> float
+{
+  return m_waveSpinSign;
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

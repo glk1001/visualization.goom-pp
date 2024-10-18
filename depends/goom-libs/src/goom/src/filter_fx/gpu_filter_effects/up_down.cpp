@@ -1,3 +1,7 @@
+module;
+
+#include <format>
+
 module Goom.FilterFx.GpuFilterEffects.UpDown;
 
 import Goom.FilterFx.FilterUtils.Utils;
@@ -10,6 +14,8 @@ namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
 {
 
 using FILTER_UTILS::RandomViewport;
+using UTILS::GetFullParamGroup;
+using UTILS::GetPair;
 using UTILS::NameValuePairs;
 using UTILS::MATH::GoomRand;
 using UTILS::MATH::NumberRange;
@@ -65,11 +71,6 @@ auto UpDown::GetRandomParams() const noexcept -> GpuParams
   };
 }
 
-auto UpDown::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
-{
-  return {};
-}
-
 UpDown::GpuParams::GpuParams(const Viewport& viewport,
                              const Amplitude& amplitude,
                              const FilterBase& filterBase,
@@ -93,6 +94,19 @@ auto UpDown::GpuParams::OutputGpuParams(const FilterTimingInfo& filterTimingInfo
   setterFuncs.setFloat("u_upDownYFreq", m_frequencyFactor.y);
   setterFuncs.setFloat("u_upDownRotateFreq", m_rotateFrequencyFactor);
   setterFuncs.setFloat("u_upDownMixFreq", m_mixFrequencyFactor);
+}
+
+auto UpDown::GetGpuZoomFilterEffectNameValueParams() const noexcept -> NameValuePairs
+{
+  const auto fullParamGroup = GetFullParamGroup({PARAM_GROUP, "up down"});
+  return {GetPair(fullParamGroup,
+                  "params",
+                  std::format("{}, ({:.2f},{:.2f}), {:.2f}, {:.2f}",
+                              m_gpuParams.GetFormattedInOrderParams(),
+                              m_gpuParams.GetFrequencyFactor().x,
+                              m_gpuParams.GetFrequencyFactor().y,
+                              m_gpuParams.GetRotateFrequencyFactor(),
+                              m_gpuParams.GetMixFrequencyFactor()))};
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

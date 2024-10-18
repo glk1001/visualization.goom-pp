@@ -50,6 +50,12 @@ public:
   virtual auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                                const SetterFuncs& setterFuncs) const noexcept -> void = 0;
 
+  [[nodiscard]] auto GetAmplitude() const noexcept -> const Amplitude&;
+  [[nodiscard]] auto GetFilterBase() const noexcept -> const FilterBase&;
+  [[nodiscard]] auto GetCycleFrequency() const noexcept -> const FrequencyFactor&;
+
+  [[nodiscard]] auto GetFormattedInOrderParams() const noexcept -> std::string;
+
 protected:
   auto OutputStandardParams(const FilterTimingInfo& filterTimingInfo,
                             const SetterFuncs& setterFuncs) const noexcept -> void;
@@ -89,6 +95,29 @@ public:
 
   [[nodiscard]] virtual auto GetGpuZoomFilterEffectNameValueParams() const noexcept
       -> NameValuePairs = 0;
+
+protected:
+  static constexpr auto* PARAM_GROUP = "GPU Adj";
 };
+
+} // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
+
+namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS
+{
+
+inline auto IGpuParams::GetAmplitude() const noexcept -> const Amplitude&
+{
+  return m_amplitude;
+}
+
+inline auto IGpuParams::GetFilterBase() const noexcept -> const FilterBase&
+{
+  return m_filterBase;
+}
+
+inline auto IGpuParams::GetCycleFrequency() const noexcept -> const FrequencyFactor&
+{
+  return m_cycleFrequency;
+}
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

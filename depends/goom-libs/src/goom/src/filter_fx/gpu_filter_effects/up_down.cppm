@@ -39,6 +39,10 @@ public:
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
+    [[nodiscard]] auto GetFrequencyFactor() const noexcept -> const FrequencyFactor&;
+    [[nodiscard]] auto GetRotateFrequencyFactor() const noexcept -> float;
+    [[nodiscard]] auto GetMixFrequencyFactor() const noexcept -> float;
+
   private:
     FrequencyFactor m_frequencyFactor{};
     float m_rotateFrequencyFactor{};
@@ -67,4 +71,18 @@ inline auto UpDown::GetGpuParams() const noexcept -> const IGpuParams&
   return m_gpuParams;
 }
 
+inline auto UpDown::GpuParams::GetFrequencyFactor() const noexcept -> const FrequencyFactor&
+{
+  return m_frequencyFactor;
+}
+
+inline auto UpDown::GpuParams::GetRotateFrequencyFactor() const noexcept -> float
+{
+  return m_rotateFrequencyFactor;
+}
+
+inline auto UpDown::GpuParams::GetMixFrequencyFactor() const noexcept -> float
+{
+  return m_mixFrequencyFactor;
+}
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

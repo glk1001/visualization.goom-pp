@@ -38,6 +38,9 @@ public:
     auto OutputGpuParams(const FilterTimingInfo& filterTimingInfo,
                          const SetterFuncs& setterFuncs) const noexcept -> void override;
 
+    [[nodiscard]] auto GetFrequencyFactor() const noexcept -> const FrequencyFactor&;
+    [[nodiscard]] auto GetInnerPosFactor() const noexcept -> const FrequencyFactor&;
+
   private:
     FrequencyFactor m_frequencyFactor{};
     FrequencyFactor m_innerPosFactor{};
@@ -63,6 +66,16 @@ inline auto ReflectingPool::SetRandomParams() noexcept -> void
 inline auto ReflectingPool::GetGpuParams() const noexcept -> const IGpuParams&
 {
   return m_gpuParams;
+}
+
+inline auto ReflectingPool::GpuParams::GetFrequencyFactor() const noexcept -> const FrequencyFactor&
+{
+  return m_frequencyFactor;
+}
+
+inline auto ReflectingPool::GpuParams::GetInnerPosFactor() const noexcept -> const FrequencyFactor&
+{
+  return m_innerPosFactor;
 }
 
 } // namespace GOOM::FILTER_FX::GPU_FILTER_EFFECTS

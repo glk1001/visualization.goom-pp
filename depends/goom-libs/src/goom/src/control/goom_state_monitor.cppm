@@ -33,12 +33,13 @@ private:
   const FILTER_FX::FilterSettingsService* m_filterSettingsService;
   const FILTER_FX::FilterBuffersService* m_filterBuffersService;
 
-  static constexpr auto NUM_GROUPS = 6U;
+  static constexpr auto NUM_GROUPS = 7U;
   static_assert(NUM_GROUPS < NUM<MessageGroupColors>);
   [[nodiscard]] auto GetStateAndFilterModeNameValueParams() const -> UTILS::NameValuePairs;
   [[nodiscard]] auto GetShaderVariablesNameValueParams() const -> UTILS::NameValuePairs;
   [[nodiscard]] auto GetFilterBufferValueParams() const -> UTILS::NameValuePairs;
   [[nodiscard]] auto GetFilterEffectsNameValueParams() const -> UTILS::NameValuePairs;
+  [[nodiscard]] auto GetGpuFilterEffectsNameValueParams() const -> UTILS::NameValuePairs;
   [[nodiscard]] auto GetMusicSettingsNameValueParams() const -> UTILS::NameValuePairs;
   [[nodiscard]] auto GetZoomFilterFxNameValueParams() const -> UTILS::NameValuePairs;
 };
