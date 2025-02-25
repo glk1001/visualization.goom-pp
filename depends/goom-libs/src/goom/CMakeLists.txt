@@ -351,14 +351,12 @@ set(GoomVisualFx_modules
     src/visual_fx/circles/dot_drawer.cppm
     src/visual_fx/circles/dot_paths.cppm
     src/visual_fx/circles/helper.cppm
-    src/visual_fx/circles_fx.cppm
     src/visual_fx/flying_stars/star_colors.cppm
     src/visual_fx/flying_stars/star_colors_maker.cppm
     src/visual_fx/flying_stars/star_drawer.cppm
     src/visual_fx/flying_stars/star_maker.cppm
     src/visual_fx/flying_stars/star_types_container.cppm
     src/visual_fx/flying_stars/stars.cppm
-    src/visual_fx/flying_stars_fx.cppm
     src/visual_fx/fx_utils/dot_drawer.cppm
     src/visual_fx/fx_utils/lines.cppm
     src/visual_fx/fx_utils/random_pixel_blender.cppm
