@@ -21,7 +21,16 @@ import Goom.Lib.GoomGraphic;
 import Goom.Lib.GoomTypes;
 import Goom.Lib.Point2d;
 import Goom.PluginInfo;
+
+// TODO(glk): fix this
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimport-implementation-partition-unit-in-interface-unit"
+#endif
 import :StarColorsMaker;
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic pop
+#endif
 
 using GOOM::COLOR::GetUnweightedRandomColorMaps;
 using GOOM::COLOR::WeightedRandomColorMaps;

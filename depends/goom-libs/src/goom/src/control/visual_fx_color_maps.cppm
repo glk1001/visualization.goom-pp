@@ -5,8 +5,17 @@ import Goom.Color.RandomColorMapsGroups;
 import Goom.Control.GoomEffects;
 import Goom.Utils.EnumUtils;
 import Goom.Utils.Math.GoomRand;
+
+// TODO(glk): fix this
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimport-implementation-partition-unit-in-interface-unit"
+#endif
 import :VisualFxColorMatchedSets;
 import :VisualFxWeightedColorMaps;
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic pop
+#endif
 
 using GOOM::COLOR::RandomColorMapsGroups;
 using GOOM::COLOR::WeightedRandomColorMaps;

@@ -7,6 +7,12 @@ module;
 
 export module Goom.Lib.GoomPaths;
 
+// TODO(glk): fix this
+#ifdef __clang__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wctad-maybe-unsupported"
+#endif
+
 // NOLINTBEGIN(cppcoreguidelines-explicit-constructor-and-conversion,
 //             google-explicit-constructor)
 template<size_t N>
@@ -111,3 +117,7 @@ template<typename... Types>
 }
 
 } // namespace GOOM
+
+#ifdef __clang__
+#pragma GCC diagnostic pop
+#endif

@@ -9,9 +9,18 @@ import Goom.Utils.Math.TValues;
 import Goom.Utils.Math.GoomRand;
 import Goom.Lib.AssertUtils;
 import Goom.Lib.Point2d;
+
+// TODO(glk): fix this
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimport-implementation-partition-unit-in-interface-unit"
+#endif
 import :StarTypesContainer;
 import :StarColorsMaker;
 import :Stars;
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic pop
+#endif
 
 using GOOM::UTILS::MATH::GoomRand;
 using GOOM::UTILS::MATH::NumberRange;

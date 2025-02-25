@@ -10,6 +10,12 @@
 
 import Goom.Lib.GoomTypes;
 
+// TODO(glk): fix this
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdecls-in-multiple-modules"
+#endif
+
 namespace GOOM
 {
 
@@ -328,4 +334,8 @@ inline auto SetLogLevelForFiles(GOOM::GoomLogger& logger, const GOOM::GoomLogger
 #define LogError(logger, ...) \
   (logger).Log(GOOM::GoomLogger::LogLevel::ERR, __LINE__, __func__, __VA_ARGS__)
 // NOLINTEND: Remove these macros with C++20.
+#endif
+
+#if defined(__clang_major__) && __clang_major__ >= 20
+#pragma GCC diagnostic pop
 #endif
